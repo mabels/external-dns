@@ -131,7 +131,7 @@ func getDNSRecordFromRecordParams(rp any) cloudflare.DNSRecord {
 	}
 }
 
-func (m *mockCloudFlareClient) CreateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.CreateDNSRecordParams) (*cloudflare.DNSRecordResponse, error) {
+func (m *mockCloudFlareClient) CreateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.CreateDNSRecordParams) (cloudflare.DNSRecord, error) {
 	recordData := getDNSRecordFromRecordParams(rp)
 	m.Actions = append(m.Actions, MockAction{
 		Name:       "Create",
@@ -142,7 +142,7 @@ func (m *mockCloudFlareClient) CreateDNSRecord(ctx context.Context, rc *cloudfla
 	if zone, ok := m.Records[rc.Identifier]; ok {
 		zone[rp.ID] = recordData
 	}
-	return nil, nil
+	return recordData, nil
 }
 
 func (m *mockCloudFlareClient) ListDNSRecords(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.ListDNSRecordsParams) ([]cloudflare.DNSRecord, *cloudflare.ResultInfo, error) {
@@ -186,7 +186,7 @@ func (m *mockCloudFlareClient) ListDNSRecords(ctx context.Context, rc *cloudflar
 	}, nil
 }
 
-func (m *mockCloudFlareClient) UpdateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.UpdateDNSRecordParams) error {
+func (m *mockCloudFlareClient) UpdateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.UpdateDNSRecordParams) (cloudflare.DNSRecord, error) {
 	recordData := getDNSRecordFromRecordParams(rp)
 	m.Actions = append(m.Actions, MockAction{
 		Name:       "Update",
@@ -199,7 +199,7 @@ func (m *mockCloudFlareClient) UpdateDNSRecord(ctx context.Context, rc *cloudfla
 			zone[rp.ID] = recordData
 		}
 	}
-	return nil
+	return recordData, nil
 }
 
 func (m *mockCloudFlareClient) DeleteDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, recordID string) error {
@@ -591,17 +591,7 @@ func TestCloudflareSetProxied(t *testing.T) {
 					Proxied: testCase.proxiable,
 				},
 			},
-		},
-			[]string{
-				endpoint.RecordTypeCNAME,
-				endpoint.RecordTypeTXT,
-				endpoint.RecordTypeMX,
-				endpoint.RecordTypeNS,
-				"SPF",
-				"SRV",
-				endpoint.RecordTypeA,
-			},
-			testCase.recordType+" record on "+testCase.domain)
+		}, endpoint.AllRecordTypes, testCase.recordType+" record on "+testCase.domain)
 	}
 }
 
@@ -1072,7 +1062,9 @@ func TestCloudflareGroupByNameAndType(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		assert.ElementsMatch(t, groupByNameAndType(tc.Records), tc.ExpectedEndpoints)
+		t.Run(tc.Name, func(t *testing.T) {
+			assert.ElementsMatch(t, groupByNameAndType(tc.Records), tc.ExpectedEndpoints)
+		})
 	}
 }
 

@@ -1051,3 +1051,26 @@ func TestShouldUpdateProviderSpecific(tt *testing.T) {
 		})
 	}
 }
+
+func TestPlanSanitize(t *testing.T) {
+	pt := newPlanTable()
+	toFix := &endpoint.Endpoint{
+		DNSName:       " foo.bar.com.  ",
+		RecordType:    "   a   ",
+		SetIdentifier: " Seti ",
+	}
+	ok := &endpoint.Endpoint{
+		DNSName:       "foo.bar.com",
+		RecordType:    "A",
+		SetIdentifier: "Seti",
+	}
+	pt.addCurrent(toFix)
+	pt.addCurrent(ok)
+	pt.addCandidate(toFix)
+	pt.addCandidate(ok)
+
+	for _, ptr := range pt.rows {
+		assert.Equal(t, ptr.currents, []*endpoint.Endpoint{ok, ok})
+		assert.Equal(t, ptr.candidates, []*endpoint.Endpoint{ok, ok})
+	}
+}

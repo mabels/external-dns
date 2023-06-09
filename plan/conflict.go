@@ -306,7 +306,7 @@ func (wes wrapEndpoints) append(ep *endpoint.Endpoint, isCurrent bool) (wrapEndp
 		prev := wes[len(wes)-1]
 		// ensure that the group is homogeneous
 		if !equalEndpointKey(prev.endpoint, ep) {
-			return wes, fmt.Errorf("cannot append endpoint %v to group %v", ep, wes)
+			return wes, fmt.Errorf("cannot append endpoint %v to group %v", ep, prev.endpoint)
 		}
 	}
 	order := len(wes)

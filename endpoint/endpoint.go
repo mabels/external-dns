@@ -44,7 +44,37 @@ const (
 	RecordTypePTR = "PTR"
 	// RecordTypeMX is a RecordType enum value
 	RecordTypeMX = "MX"
+	// RecordTypeSOA is a RecordType enum value
+	RecordTypeSOA = "SOA"
+	// RecordTypeSPF is a RecordType enum value
+	RecordTypeSPF = "SPF"
 )
+
+func getSupportedTypes() []string {
+	return []string{
+		RecordTypeA,
+		RecordTypeAAAA,
+		RecordTypeMX,
+		RecordTypeSRV,
+		RecordTypeTXT,
+		RecordTypeCNAME,
+		RecordTypeNS,
+		RecordTypeSOA,
+		RecordTypePTR,
+		RecordTypeSPF,
+	}
+}
+
+var AllRecordTypes = getSupportedTypes()
+
+func IsValidRecordType(recordType string) bool {
+	for _, t := range AllRecordTypes {
+		if t == recordType {
+			return true
+		}
+	}
+	return false
+}
 
 // TTL is a structure defining the TTL of a DNS record
 type TTL int64

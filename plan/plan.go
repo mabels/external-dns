@@ -113,24 +113,37 @@ func (t planTableRow) String() string {
 	return fmt.Sprintf("planTableRow{current=%v, candidates=%v}", t.currents, t.candidates)
 }
 
-func (t planTable) addCurrent(e *endpoint.Endpoint) {
-	key := t.newPlanKey(e)
-	t.rows[key].currents = append(t.rows[key].currents, e)
+func (t planTable) addCurrent(se *endpoint.Endpoint) {
+	se = sanitizeKey(se)
+	key := t.newPlanKey(se)
+	t.rows[key].currents = append(t.rows[key].currents, se)
 }
 
-func (t planTable) addCandidate(e *endpoint.Endpoint) {
-	key := t.newPlanKey(e)
-	t.rows[key].candidates = append(t.rows[key].candidates, e)
+func (t planTable) addCandidate(se *endpoint.Endpoint) {
+	se = sanitizeKey(se)
+	key := t.newPlanKey(se)
+	t.rows[key].candidates = append(t.rows[key].candidates, se)
 }
 
-func (t *planTable) newPlanKey(e *endpoint.Endpoint) planKey {
+func sanitizeKey(e *endpoint.Endpoint) *endpoint.Endpoint {
 	dnsName := normalizeDNSName(e.DNSName)
 	recordType := strings.ToUpper(strings.TrimSpace(e.RecordType))
 	setIdentifier := strings.TrimSpace(e.SetIdentifier)
+	ret := e
+	if e.DNSName != dnsName || e.RecordType != recordType || e.SetIdentifier != setIdentifier {
+		ret = e.DeepCopy()
+		ret.DNSName = normalizeDNSName(e.DNSName)
+		ret.RecordType = strings.ToUpper(strings.TrimSpace(e.RecordType))
+		ret.SetIdentifier = strings.TrimSpace(e.SetIdentifier)
+	}
+	return ret
+}
+
+func (t *planTable) newPlanKey(e *endpoint.Endpoint) planKey {
 	key := planKey{
-		dnsName:       dnsName,
-		setIdentifier: setIdentifier,
-		recordType:    recordType,
+		dnsName:       e.DNSName,
+		setIdentifier: e.SetIdentifier,
+		recordType:    e.RecordType,
 	}
 	if _, ok := t.rows[key]; !ok {
 		t.rows[key] = &planTableRow{}
@@ -310,10 +323,7 @@ func filterRecordsForPlan(records []*endpoint.Endpoint, domainFilter endpoint.Do
 // normalizeDNSName converts a DNS name to a canonical form, so that we can use string equality
 // it: removes space, converts to lower case, ensures there is a trailing dot
 func normalizeDNSName(dnsName string) string {
-	s := strings.TrimSpace(strings.ToLower(dnsName))
-	if !strings.HasSuffix(s, ".") {
-		s += "."
-	}
+	s := strings.TrimRight(strings.TrimSpace(strings.ToLower(dnsName)), ".")
 	return s
 }
 

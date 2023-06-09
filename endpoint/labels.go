@@ -32,6 +32,8 @@ const (
 	heritage = "external-dns"
 	// OwnerLabelKey is the name of the label that defines the owner of an Endpoint.
 	OwnerLabelKey = "owner"
+	// RecordTypeLabel is the name of the label that defines the owner of an Endpoint.
+	RecordTypeLabel = "record-type"
 	// ResourceLabelKey is the name of the label that identifies k8s resource which wants to acquire the DNS name
 	ResourceLabelKey = "resource"
 	// OwnedRecordLabelKey is the name of the label that identifies the record that is owned by the labeled TXT registry record

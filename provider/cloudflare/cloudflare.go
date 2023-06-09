@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -69,9 +70,9 @@ type cloudFlareDNS interface {
 	ListZonesContext(ctx context.Context, opts ...cloudflare.ReqOption) (cloudflare.ZonesResponse, error)
 	ZoneDetails(ctx context.Context, zoneID string) (cloudflare.Zone, error)
 	ListDNSRecords(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.ListDNSRecordsParams) ([]cloudflare.DNSRecord, *cloudflare.ResultInfo, error)
-	CreateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.CreateDNSRecordParams) (*cloudflare.DNSRecordResponse, error)
+	CreateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.CreateDNSRecordParams) (cloudflare.DNSRecord, error)
 	DeleteDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, recordID string) error
-	UpdateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.UpdateDNSRecordParams) error
+	UpdateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.UpdateDNSRecordParams) (cloudflare.DNSRecord, error)
 }
 
 type zoneService struct {
@@ -90,7 +91,7 @@ func (z zoneService) ZoneIDByName(zoneName string) (string, error) {
 	return z.service.ZoneIDByName(zoneName)
 }
 
-func (z zoneService) CreateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.CreateDNSRecordParams) (*cloudflare.DNSRecordResponse, error) {
+func (z zoneService) CreateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.CreateDNSRecordParams) (cloudflare.DNSRecord, error) {
 	return z.service.CreateDNSRecord(ctx, rc, rp)
 }
 
@@ -98,7 +99,7 @@ func (z zoneService) ListDNSRecords(ctx context.Context, rc *cloudflare.Resource
 	return z.service.ListDNSRecords(ctx, rc, rp)
 }
 
-func (z zoneService) UpdateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.UpdateDNSRecordParams) error {
+func (z zoneService) UpdateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.UpdateDNSRecordParams) (cloudflare.DNSRecord, error) {
 	return z.service.UpdateDNSRecord(ctx, rc, rp)
 }
 
@@ -133,18 +134,32 @@ type cloudFlareChange struct {
 }
 
 // RecordParamsTypes is a typeset of the possible Record Params that can be passed to cloudflare-go library
-type RecordParamsTypes interface {
-	cloudflare.UpdateDNSRecordParams | cloudflare.CreateDNSRecordParams
-}
+// type RecordParamsTypes interface {
+// 	cloudflare.CreateDNSRecordParams | cloudflare.UpdateDNSRecordParams
+// }
 
 // getRecordParam is a generic function that returns the appropriate Record Param based on the cloudFlareChange passed in
-func getRecordParam[T RecordParamsTypes](cfc cloudFlareChange) T {
-	return T{
-		Name:    cfc.ResourceRecord.Name,
-		TTL:     cfc.ResourceRecord.TTL,
-		Proxied: cfc.ResourceRecord.Proxied,
-		Type:    cfc.ResourceRecord.Type,
-		Content: cfc.ResourceRecord.Content,
+func getCreateDNSRecordParams(cfc cloudFlareChange) cloudflare.CreateDNSRecordParams {
+	return cloudflare.CreateDNSRecordParams{
+		Name:     cfc.ResourceRecord.Name,
+		TTL:      cfc.ResourceRecord.TTL,
+		Proxied:  cfc.ResourceRecord.Proxied,
+		Type:     cfc.ResourceRecord.Type,
+		Content:  cfc.ResourceRecord.Content,
+		Priority: cfc.ResourceRecord.Priority,
+		Data:     cfc.ResourceRecord.Data,
+	}
+}
+
+func getUpdateDNSRecordParam(cfc cloudFlareChange) cloudflare.UpdateDNSRecordParams {
+	return cloudflare.UpdateDNSRecordParams{
+		Name:     cfc.ResourceRecord.Name,
+		TTL:      cfc.ResourceRecord.TTL,
+		Proxied:  cfc.ResourceRecord.Proxied,
+		Type:     cfc.ResourceRecord.Type,
+		Content:  cfc.ResourceRecord.Content,
+		Priority: cfc.ResourceRecord.Priority,
+		Data:     cfc.ResourceRecord.Data,
 	}
 }
 
@@ -334,9 +349,9 @@ func (p *CloudFlareProvider) submitChanges(ctx context.Context, changes []*cloud
 					log.WithFields(logFields).Errorf("failed to find previous record: %v", change.ResourceRecord)
 					continue
 				}
-				recordParam := getRecordParam[cloudflare.UpdateDNSRecordParams](*change)
+				recordParam := getUpdateDNSRecordParam(*change)
 				recordParam.ID = recordID
-				err := p.Client.UpdateDNSRecord(ctx, resourceContainer, recordParam)
+				_, err := p.Client.UpdateDNSRecord(ctx, resourceContainer, recordParam)
 				if err != nil {
 					log.WithFields(logFields).Errorf("failed to update record: %v", err)
 				}
@@ -351,7 +366,7 @@ func (p *CloudFlareProvider) submitChanges(ctx context.Context, changes []*cloud
 					log.WithFields(logFields).Errorf("failed to delete record: %v", err)
 				}
 			} else if change.Action == cloudFlareCreate {
-				recordParam := getRecordParam[cloudflare.CreateDNSRecordParams](*change)
+				recordParam := getCreateDNSRecordParams(*change)
 				_, err := p.Client.CreateDNSRecord(ctx, resourceContainer, recordParam)
 				if err != nil {
 					log.WithFields(logFields).Errorf("failed to create record: %v", err)
@@ -368,6 +383,26 @@ func (p *CloudFlareProvider) AdjustEndpoints(endpoints []*endpoint.Endpoint) []*
 	for _, e := range endpoints {
 		if shouldBeProxied(e, p.proxiedByDefault) {
 			e.RecordTTL = 0
+		}
+		found := false
+		for _, ps := range e.ProviderSpecific {
+			if ps.Name == source.CloudflareProxiedKey {
+				found = true
+				break
+			}
+		}
+		if !found {
+			e.ProviderSpecific = append(e.ProviderSpecific, endpoint.ProviderSpecificProperty{
+				Name:  source.CloudflareProxiedKey,
+				Value: strconv.FormatBool(p.proxiedByDefault),
+			})
+		}
+		switch e.RecordType {
+		case endpoint.RecordTypeCNAME, endpoint.RecordTypeMX:
+			// cloudflare strips the trailing dot from CNAME/MX records
+			// so we do the same to ensure idempotency in the read
+			// records from k8s
+			e.Targets = []string{strings.TrimRight(e.Targets[0], ".")}
 		}
 		adjustedEndpoints = append(adjustedEndpoints, e)
 	}
@@ -405,6 +440,60 @@ func (p *CloudFlareProvider) getRecordID(records []cloudflare.DNSRecord, record 
 	return ""
 }
 
+var reDNSRecordTypeMX = regexp.MustCompile(`^(\d+)\s+(.+)$`)
+var reDNSRecordTypeSRV = regexp.MustCompile(`^(\d+)\s+(\d+)\s+(\d+)\s+(.+)$`)
+var reDNSNameSRV = regexp.MustCompile(`^([^\.]+)\.([^\.]+)\.(.+)$`)
+
+type cfSrvData struct {
+	Name     string `json:"name"`
+	Port     uint16 `json:"port"`
+	Priority uint16 `json:"priority"`
+	Proto    string `json:"proto"`
+	Service  string `json:"service"`
+	Target   string `json:"target"`
+	Weight   uint16 `json:"weight"`
+}
+
+func applyRecordType(ep *endpoint.Endpoint, target string, rrec *cloudflare.DNSRecord) *cloudflare.DNSRecord {
+	switch ep.RecordType {
+	case endpoint.RecordTypeSRV:
+		// 10 5 443 matrix.test.com.
+		parsed := reDNSRecordTypeSRV.FindStringSubmatch(target)
+		if len(parsed) == 5 {
+			priority, _ := strconv.ParseUint(parsed[1], 10, 16)
+			prio16 := uint16(priority)
+			rrec.Priority = &prio16
+			weight, _ := strconv.ParseUint(parsed[2], 10, 16)
+			port, _ := strconv.ParseUint(parsed[3], 10, 16)
+			rrec.Content = fmt.Sprintf("%d\t%d\t%d\t%s", priority, weight, port, parsed[4])
+			parsedName := reDNSNameSRV.FindStringSubmatch(strings.TrimRight(ep.DNSName, "."))
+			if len(parsedName) == 4 {
+				rrec.Data = cfSrvData{
+					Name:     parsedName[3],
+					Port:     uint16(port),
+					Priority: uint16(priority),
+					Proto:    parsedName[2],
+					Service:  parsedName[1],
+					Target:   parsed[4],
+					Weight:   uint16(weight),
+				}
+			}
+		}
+
+	case endpoint.RecordTypeMX:
+		parsed := reDNSRecordTypeMX.FindStringSubmatch(target)
+		if len(parsed) == 3 {
+			priority, err := strconv.ParseUint(parsed[1], 10, 16)
+			if err == nil {
+				prio16 := uint16(priority)
+				rrec.Priority = &prio16
+			}
+			rrec.Content = parsed[2]
+		}
+	}
+	return rrec
+}
+
 func (p *CloudFlareProvider) newCloudFlareChange(action string, endpoint *endpoint.Endpoint, target string) *cloudFlareChange {
 	ttl := defaultCloudFlareRecordTTL
 	proxied := shouldBeProxied(endpoint, p.proxiedByDefault)
@@ -412,16 +501,17 @@ func (p *CloudFlareProvider) newCloudFlareChange(action string, endpoint *endpoi
 	if endpoint.RecordTTL.IsConfigured() {
 		ttl = int(endpoint.RecordTTL)
 	}
-
+	rrec := cloudflare.DNSRecord{
+		Name:    endpoint.DNSName,
+		TTL:     ttl,
+		Proxied: &proxied,
+		Type:    endpoint.RecordType,
+		Content: target,
+	}
+	applyRecordType(endpoint, target, &rrec)
 	return &cloudFlareChange{
-		Action: action,
-		ResourceRecord: cloudflare.DNSRecord{
-			Name:    endpoint.DNSName,
-			TTL:     ttl,
-			Proxied: &proxied,
-			Type:    endpoint.RecordType,
-			Content: target,
-		},
+		Action:         action,
+		ResourceRecord: rrec,
 	}
 }
 
@@ -473,9 +563,9 @@ func groupByNameAndType(records []cloudflare.DNSRecord) []*endpoint.Endpoint {
 	groups := map[string][]cloudflare.DNSRecord{}
 
 	for _, r := range records {
-		if !provider.SupportedRecordType(r.Type) {
-			continue
-		}
+		// if !provider.SupportedRecordType(r.Type) {
+		// 	continue
+		// }
 
 		groupBy := r.Name + r.Type
 		if _, ok := groups[groupBy]; !ok {
@@ -490,6 +580,26 @@ func groupByNameAndType(records []cloudflare.DNSRecord) []*endpoint.Endpoint {
 		targets := make([]string, len(records))
 		for i, record := range records {
 			targets[i] = record.Content
+		}
+		if !endpoint.IsValidRecordType(records[0].Type) {
+			continue
+		}
+		switch records[0].Type {
+		case endpoint.RecordTypeMX:
+			// cloudflare returns MX records without priority in the content
+			for i, target := range targets {
+				targets[i] = fmt.Sprintf("%d %s", *records[i].Priority, target)
+			}
+		case endpoint.RecordTypeSRV:
+			// cloudflare returns SRV records without priority and weight in the content
+			for i, record := range records {
+				data := record.Data.(map[string]interface{})
+				weight := uint16(data["weight"].(float64))
+				port := uint16(data["port"].(float64))
+				target := data["target"].(string)
+				targets[i] = fmt.Sprintf("%d %d %d %s", *record.Priority,
+					weight, port, target)
+			}
 		}
 		endpoints = append(endpoints,
 			endpoint.NewEndpointWithTTL(
