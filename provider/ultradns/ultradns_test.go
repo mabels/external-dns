@@ -19,7 +19,6 @@ package ultradns
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -153,7 +152,7 @@ func TestUltraDNSProvider_Records(t *testing.T) {
 	records, err := provider.Records(context.Background())
 	assert.Nil(t, err)
 	for _, v := range records {
-		assert.Equal(t, fmt.Sprintf("%s.", v.DNSName), expected[0].OwnerName)
+		assert.Equal(t, v.Name.FqdnDot(), expected[0].OwnerName)
 		assert.Equal(t, v.RecordType, expected[0].RRType)
 		assert.Equal(t, int(v.RecordTTL), expected[0].TTL)
 	}
@@ -173,14 +172,14 @@ func TestUltraDNSProvider_ApplyChanges(t *testing.T) {
 	}
 
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "test-ultradns-provider.com", Targets: endpoint.Targets{"1.1.1.1"}, RecordType: "A"},
-		{DNSName: "ttl.test-ultradns-provider.com", Targets: endpoint.Targets{"1.1.1.1"}, RecordType: "A", RecordTTL: 100},
+		{Name: endpoint.NewEndpointNameCommon("test-ultradns-provider.com"), Targets: endpoint.Targets{"1.1.1.1"}, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("ttl.test-ultradns-provider.com"), Targets: endpoint.Targets{"1.1.1.1"}, RecordType: "A", RecordTTL: 100},
 	}
-	changes.Create = []*endpoint.Endpoint{{DNSName: "test-ultradns-provider.com", Targets: endpoint.Targets{"1.1.1.2"}, RecordType: "A"}}
-	changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "test-ultradns-provider.com", Targets: endpoint.Targets{"1.1.2.2"}, RecordType: "A", RecordTTL: 100}}
-	changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "test-ultradns-provider.com", Targets: endpoint.Targets{"1.1.2.2", "1.1.2.3", "1.1.2.4"}, RecordType: "A", RecordTTL: 100}}
-	changes.Delete = []*endpoint.Endpoint{{DNSName: "test-ultradns-provider.com", Targets: endpoint.Targets{"1.1.2.2", "1.1.2.3", "1.1.2.4"}, RecordType: "A", RecordTTL: 100}}
-	changes.Delete = []*endpoint.Endpoint{{DNSName: "ttl.test-ultradns-provider.com", Targets: endpoint.Targets{"1.1.1.1"}, RecordType: "A", RecordTTL: 100}}
+	changes.Create = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test-ultradns-provider.com"), Targets: endpoint.Targets{"1.1.1.2"}, RecordType: "A"}}
+	changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test-ultradns-provider.com"), Targets: endpoint.Targets{"1.1.2.2"}, RecordType: "A", RecordTTL: 100}}
+	changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test-ultradns-provider.com"), Targets: endpoint.Targets{"1.1.2.2", "1.1.2.3", "1.1.2.4"}, RecordType: "A", RecordTTL: 100}}
+	changes.Delete = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test-ultradns-provider.com"), Targets: endpoint.Targets{"1.1.2.2", "1.1.2.3", "1.1.2.4"}, RecordType: "A", RecordTTL: 100}}
+	changes.Delete = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("ttl.test-ultradns-provider.com"), Targets: endpoint.Targets{"1.1.1.1"}, RecordType: "A", RecordTTL: 100}}
 	err := provider.ApplyChanges(context.Background(), changes)
 	assert.Nilf(t, err, "Should not fail %s", "formatted")
 }
@@ -220,8 +219,8 @@ func TestUltraDNSProvider_ApplyChangesCNAME(t *testing.T) {
 	}
 
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "test-ultradns-provider.com", Targets: endpoint.Targets{"1.1.1.1"}, RecordType: "CNAME"},
-		{DNSName: "test-ultradns-provider.com", Targets: endpoint.Targets{"1.1.1.1"}, RecordType: "TXT"},
+		{Name: endpoint.NewEndpointNameCommon("test-ultradns-provider.com"), Targets: endpoint.Targets{"1.1.1.1"}, RecordType: "CNAME"},
+		{Name: endpoint.NewEndpointNameCommon("test-ultradns-provider.com"), Targets: endpoint.Targets{"1.1.1.1"}, RecordType: "TXT"},
 	}
 
 	err := provider.ApplyChanges(context.Background(), changes)
@@ -238,8 +237,8 @@ func TestUltraDNSProvider_ApplyChanges_Integration(t *testing.T) {
 		providerUltradns, err := NewUltraDNSProvider(endpoint.NewDomainFilter([]string{"kubernetes-ultradns-provider-test.com"}), false)
 		changes := &plan.Changes{}
 		changes.Create = []*endpoint.Endpoint{
-			{DNSName: "kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"1.1.1.1"}, RecordType: "A"},
-			{DNSName: "ttl.kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"2001:0db8:85a3:0000:0000:8a2e:0370:7334"}, RecordType: "AAAA", RecordTTL: 100},
+			{Name: endpoint.NewEndpointNameCommon("kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"1.1.1.1"}, RecordType: "A"},
+			{Name: endpoint.NewEndpointNameCommon("ttl.kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"2001:0db8:85a3:0000:0000:8a2e:0370:7334"}, RecordType: "AAAA", RecordTTL: 100},
 		}
 
 		err = providerUltradns.ApplyChanges(context.Background(), changes)
@@ -265,8 +264,8 @@ func TestUltraDNSProvider_ApplyChanges_Integration(t *testing.T) {
 
 		changes = &plan.Changes{}
 		changes.UpdateNew = []*endpoint.Endpoint{
-			{DNSName: "kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"1.1.2.2"}, RecordType: "A", RecordTTL: 100},
-			{DNSName: "ttl.kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"2001:0db8:85a3:0000:0000:8a2e:0370:7335"}, RecordType: "AAAA", RecordTTL: 100},
+			{Name: endpoint.NewEndpointNameCommon("kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"1.1.2.2"}, RecordType: "A", RecordTTL: 100},
+			{Name: endpoint.NewEndpointNameCommon("ttl.kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"2001:0db8:85a3:0000:0000:8a2e:0370:7335"}, RecordType: "AAAA", RecordTTL: 100},
 		}
 		err = providerUltradns.ApplyChanges(context.Background(), changes)
 		assert.Nil(t, err)
@@ -291,8 +290,8 @@ func TestUltraDNSProvider_ApplyChanges_Integration(t *testing.T) {
 
 		changes = &plan.Changes{}
 		changes.Delete = []*endpoint.Endpoint{
-			{DNSName: "ttl.kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"2001:0db8:85a3:0000:0000:8a2e:0370:7335"}, RecordType: "AAAA", RecordTTL: 100},
-			{DNSName: "kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"1.1.2.2"}, RecordType: "A", RecordTTL: 100},
+			{Name: endpoint.NewEndpointNameCommon("ttl.kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"2001:0db8:85a3:0000:0000:8a2e:0370:7335"}, RecordType: "AAAA", RecordTTL: 100},
+			{Name: endpoint.NewEndpointNameCommon("kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"1.1.2.2"}, RecordType: "A", RecordTTL: 100},
 		}
 
 		err = providerUltradns.ApplyChanges(context.Background(), changes)
@@ -317,7 +316,7 @@ func TestUltraDNSProvider_ApplyChanges_MultipleTarget_integeration(t *testing.T)
 		provider, err := NewUltraDNSProvider(endpoint.NewDomainFilter([]string{"kubernetes-ultradns-provider-test.com"}), false)
 		changes := &plan.Changes{}
 		changes.Create = []*endpoint.Endpoint{
-			{DNSName: "kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"1.1.1.1", "1.1.2.2"}, RecordType: "A"},
+			{Name: endpoint.NewEndpointNameCommon("kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"1.1.1.1", "1.1.2.2"}, RecordType: "A"},
 		}
 
 		err = provider.ApplyChanges(context.Background(), changes)
@@ -333,7 +332,7 @@ func TestUltraDNSProvider_ApplyChanges_MultipleTarget_integeration(t *testing.T)
 		assert.Equal(t, rrsets[0].RData, []string{"1.1.1.1", "1.1.2.2"})
 
 		changes = &plan.Changes{}
-		changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"1.1.2.2", "192.168.0.24", "1.2.3.4"}, RecordType: "A", RecordTTL: 100}}
+		changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"1.1.2.2", "192.168.0.24", "1.2.3.4"}, RecordType: "A", RecordTTL: 100}}
 
 		err = provider.ApplyChanges(context.Background(), changes)
 		assert.Nil(t, err)
@@ -348,7 +347,7 @@ func TestUltraDNSProvider_ApplyChanges_MultipleTarget_integeration(t *testing.T)
 		assert.Equal(t, rrsets[0].RData, []string{"1.1.2.2", "192.168.0.24", "1.2.3.4"})
 
 		changes = &plan.Changes{}
-		changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"1.1.2.2"}, RecordType: "A", RecordTTL: 100}}
+		changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"1.1.2.2"}, RecordType: "A", RecordTTL: 100}}
 
 		err = provider.ApplyChanges(context.Background(), changes)
 
@@ -364,7 +363,7 @@ func TestUltraDNSProvider_ApplyChanges_MultipleTarget_integeration(t *testing.T)
 		assert.Equal(t, rrsets[0].RData, []string{"1.1.2.2"})
 
 		changes = &plan.Changes{}
-		changes.Delete = []*endpoint.Endpoint{{DNSName: "kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"1.1.2.2", "192.168.0.24"}, RecordType: "A"}}
+		changes.Delete = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"1.1.2.2", "192.168.0.24"}, RecordType: "A"}}
 
 		err = provider.ApplyChanges(context.Background(), changes)
 
@@ -389,7 +388,7 @@ func TestUltraDNSProvider_newSBPoolObjectCreation(t *testing.T) {
 	}
 	sbpoolRDataList := []udnssdk.SBRDataInfo{}
 	changes := &plan.Changes{}
-	changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "kubernetes-ultradns-provider-test.com.", Targets: endpoint.Targets{"1.1.2.2", "192.168.0.24"}, RecordType: "A", RecordTTL: 100}}
+	changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("kubernetes-ultradns-provider-test.com."), Targets: endpoint.Targets{"1.1.2.2", "192.168.0.24"}, RecordType: "A", RecordTTL: 100}}
 	changesList := &UltraDNSChanges{
 		Action: "UPDATE",
 		ResourceRecordSetUltraDNS: udnssdk.RRSet{
@@ -437,7 +436,7 @@ func TestUltraDNSProvider_MultipleTargetAAAA(t *testing.T) {
 		provider, _ := NewUltraDNSProvider(endpoint.NewDomainFilter([]string{"kubernetes-ultradns-provider-test.com"}), false)
 		changes := &plan.Changes{}
 		changes.Create = []*endpoint.Endpoint{
-			{DNSName: "ttl.kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"2001:0db8:85a3:0000:0000:8a2e:0370:7334", "2001:0db8:85a3:0000:0000:8a2e:0370:7335"}, RecordType: "AAAA", RecordTTL: 100},
+			{Name: endpoint.NewEndpointNameCommon("ttl.kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"2001:0db8:85a3:0000:0000:8a2e:0370:7334", "2001:0db8:85a3:0000:0000:8a2e:0370:7335"}, RecordType: "AAAA", RecordTTL: 100},
 		}
 		err := provider.ApplyChanges(context.Background(), changes)
 		assert.NotNilf(t, err, "We wanted it to fail since multiple AAAA targets are not allowed %s", "formatted")
@@ -458,7 +457,7 @@ func TestUltraDNSProvider_MultipleTargetAAAARDPool(t *testing.T) {
 		provider, _ := NewUltraDNSProvider(endpoint.NewDomainFilter([]string{"kubernetes-ultradns-provider-test.com"}), false)
 		changes := &plan.Changes{}
 		changes.Create = []*endpoint.Endpoint{
-			{DNSName: "ttl.kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"2001:0db8:85a3:0000:0000:8a2e:0370:7334", "2001:0db8:85a3:0000:0000:8a2e:0370:7335"}, RecordType: "AAAA", RecordTTL: 100},
+			{Name: endpoint.NewEndpointNameCommon("ttl.kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"2001:0db8:85a3:0000:0000:8a2e:0370:7334", "2001:0db8:85a3:0000:0000:8a2e:0370:7335"}, RecordType: "AAAA", RecordTTL: 100},
 		}
 		err := provider.ApplyChanges(context.Background(), changes)
 		assert.Nilf(t, err, " multiple AAAA targets are allowed when pool is RDPool %s", "formatted")
@@ -467,7 +466,7 @@ func TestUltraDNSProvider_MultipleTargetAAAARDPool(t *testing.T) {
 		assert.Equal(t, resp.Status, "200 OK")
 
 		changes = &plan.Changes{}
-		changes.Delete = []*endpoint.Endpoint{{DNSName: "ttl.kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"2001:0db8:85a3:0000:0000:8a2e:0370:7334", "2001:0db8:85a3:0000:0000:8a2e:0370:7335"}, RecordType: "AAAA"}}
+		changes.Delete = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("ttl.kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"2001:0db8:85a3:0000:0000:8a2e:0370:7334", "2001:0db8:85a3:0000:0000:8a2e:0370:7335"}, RecordType: "AAAA"}}
 
 		err = provider.ApplyChanges(context.Background(), changes)
 
@@ -489,7 +488,7 @@ func TestUltraDNSProvider_MultipleTargetCNAME(t *testing.T) {
 		changes := &plan.Changes{}
 
 		changes.Create = []*endpoint.Endpoint{
-			{DNSName: "ttl.kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"nginx.loadbalancer.com.", "nginx1.loadbalancer.com."}, RecordType: "CNAME", RecordTTL: 100},
+			{Name: endpoint.NewEndpointNameCommon("ttl.kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"nginx.loadbalancer.com.", "nginx1.loadbalancer.com."}, RecordType: "CNAME", RecordTTL: 100},
 		}
 		err = provider.ApplyChanges(context.Background(), changes)
 
@@ -512,7 +511,7 @@ func TestUltraDNSProvider_newRDPoolObjectCreation(t *testing.T) {
 		},
 	}
 	changes := &plan.Changes{}
-	changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "kubernetes-ultradns-provider-test.com.", Targets: endpoint.Targets{"1.1.2.2", "192.168.0.24"}, RecordType: "A", RecordTTL: 100}}
+	changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("kubernetes-ultradns-provider-test.com."), Targets: endpoint.Targets{"1.1.2.2", "192.168.0.24"}, RecordType: "A", RecordTTL: 100}}
 	changesList := &UltraDNSChanges{
 		Action: "UPDATE",
 		ResourceRecordSetUltraDNS: udnssdk.RRSet{
@@ -630,7 +629,7 @@ func TestUltraDNSProvider_PoolConversionCase(t *testing.T) {
 		_ = os.Setenv("ULTRADNS_POOL_TYPE", "sbpool")
 		provider, _ := NewUltraDNSProvider(endpoint.NewDomainFilter([]string{"kubernetes-ultradns-provider-test.com"}), false)
 		changes := &plan.Changes{}
-		changes.Create = []*endpoint.Endpoint{{DNSName: "ttl.kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"1.1.1.1", "1.2.3.4"}, RecordType: "A", RecordTTL: 100}}
+		changes.Create = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("ttl.kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"1.1.1.1", "1.2.3.4"}, RecordType: "A", RecordTTL: 100}}
 		err := provider.ApplyChanges(context.Background(), changes)
 		assert.Nilf(t, err, " multiple A record creation with SBPool %s", "formatted")
 
@@ -641,7 +640,7 @@ func TestUltraDNSProvider_PoolConversionCase(t *testing.T) {
 		_ = os.Setenv("ULTRADNS_POOL_TYPE", "rdpool")
 		provider, _ = NewUltraDNSProvider(endpoint.NewDomainFilter([]string{"kubernetes-ultradns-provider-test.com"}), false)
 		changes = &plan.Changes{}
-		changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "ttl.kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"1.1.1.1", "1.2.3.5"}, RecordType: "A"}}
+		changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("ttl.kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"1.1.1.1", "1.2.3.5"}, RecordType: "A"}}
 		err = provider.ApplyChanges(context.Background(), changes)
 		assert.Nil(t, err)
 		resp, _ = provider.client.Do("GET", "zones/kubernetes-ultradns-provider-test.com./rrsets/A/ttl.kubernetes-ultradns-provider-test.com.", nil, udnssdk.RRSetListDTO{})
@@ -651,7 +650,7 @@ func TestUltraDNSProvider_PoolConversionCase(t *testing.T) {
 		_ = os.Setenv("ULTRADNS_POOL_TYPE", "sbpool")
 		provider, _ = NewUltraDNSProvider(endpoint.NewDomainFilter([]string{"kubernetes-ultradns-provider-test.com"}), false)
 		changes = &plan.Changes{}
-		changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "ttl.kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"1.1.1.1", "1.2.3.4"}, RecordType: "A"}}
+		changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("ttl.kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"1.1.1.1", "1.2.3.4"}, RecordType: "A"}}
 		err = provider.ApplyChanges(context.Background(), changes)
 		assert.Nil(t, err)
 		resp, _ = provider.client.Do("GET", "zones/kubernetes-ultradns-provider-test.com./rrsets/A/ttl.kubernetes-ultradns-provider-test.com.", nil, udnssdk.RRSetListDTO{})
@@ -659,7 +658,7 @@ func TestUltraDNSProvider_PoolConversionCase(t *testing.T) {
 
 		// Deleting Record
 		changes = &plan.Changes{}
-		changes.Delete = []*endpoint.Endpoint{{DNSName: "ttl.kubernetes-ultradns-provider-test.com", Targets: endpoint.Targets{"1.1.1.1", "1.2.3.4"}, RecordType: "A"}}
+		changes.Delete = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("ttl.kubernetes-ultradns-provider-test.com"), Targets: endpoint.Targets{"1.1.1.1", "1.2.3.4"}, RecordType: "A"}}
 		err = provider.ApplyChanges(context.Background(), changes)
 		assert.Nil(t, err)
 		resp, _ = provider.client.Do("GET", "zones/kubernetes-ultradns-provider-test.com./rrsets/A/kubernetes-ultradns-provider-test.com.", nil, udnssdk.RRSetListDTO{})

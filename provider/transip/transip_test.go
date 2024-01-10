@@ -107,36 +107,38 @@ func TestTransIPGetMinimalValidTTL(t *testing.T) {
 
 func TestTransIPRecordNameForEndpoint(t *testing.T) {
 	ep := &endpoint.Endpoint{
-		DNSName: "example.org",
+		Name: endpoint.NewEndpointNameCommon("example.org"),
 	}
-	d := domain.Domain{
-		Name: "example.org",
+	// d := domain.Domain{
+	// 	Name: "example.org",
+	// }
+
+	assert.Equal(t, "@", ep.Name.AtHost())
+
+	ep = &endpoint.Endpoint{
+		Name: endpoint.NewEndpointNameCommon("www.example.org"),
 	}
-
-	assert.Equal(t, "@", recordNameForEndpoint(ep, d.Name))
-
-	ep.DNSName = "www.example.org"
-	assert.Equal(t, "www", recordNameForEndpoint(ep, d.Name))
+	assert.Equal(t, "www", ep.Name.AtHost())
 }
 
-func TestTransIPEndpointNameForRecord(t *testing.T) {
-	r := domain.DNSEntry{
-		Name: "@",
-	}
-	d := domain.Domain{
-		Name: "example.org",
-	}
+// func TestTransIPEndpointNameForRecord(t *testing.T) {
+// 	r := domain.DNSEntry{
+// 		Name: "@",
+// 	}
+// 	d := domain.Domain{
+// 		Name: "example.org",
+// 	}
 
-	assert.Equal(t, d.Name, endpointNameForRecord(r, d.Name))
+// 	assert.Equal(t, d.Name, endpointNameForRecord(r, d.Name))
 
-	r.Name = "www"
-	assert.Equal(t, "www.example.org", endpointNameForRecord(r, d.Name))
-}
+// 	r.Name = "www"
+// 	assert.Equal(t, "www.example.org", endpointNameForRecord(r, d.Name))
+// }
 
 func TestTransIPAddEndpointToEntries(t *testing.T) {
 	// prepare endpoint
 	ep := &endpoint.Endpoint{
-		DNSName:    "www.example.org",
+		Name:       endpoint.NewEndpointNameCommon("www.example.org"),
 		RecordType: "A",
 		RecordTTL:  1800,
 		Targets: []string{
@@ -146,12 +148,12 @@ func TestTransIPAddEndpointToEntries(t *testing.T) {
 	}
 
 	// prepare zone with DNS entry set
-	zone := domain.Domain{
-		Name: "example.org",
-	}
+	// zone := domain.Domain{
+	// 	Name: "example.org",
+	// }
 
 	// add endpoint to zone's entries
-	result := dnsEntriesForEndpoint(ep, zone.Name)
+	result := dnsEntriesForEndpoint(ep) // , zone.Name)
 
 	if assert.Equal(t, 2, len(result)) {
 		assert.Equal(t, "www", result[0].Name)
@@ -167,7 +169,7 @@ func TestTransIPAddEndpointToEntries(t *testing.T) {
 	// try again with CNAME
 	ep.RecordType = "CNAME"
 	ep.Targets = []string{"foo.bar"}
-	result = dnsEntriesForEndpoint(ep, zone.Name)
+	result = dnsEntriesForEndpoint(ep)
 	if assert.Equal(t, 1, len(result)) {
 		assert.Equal(t, "CNAME", result[0].Type)
 		assert.Equal(t, "foo.bar.", result[0].Content)
@@ -243,7 +245,11 @@ func TestProviderRecords(t *testing.T) {
 		case strings.HasSuffix(req.Endpoint, "/dns"):
 			// return list of DNS entries
 			// also some unsupported types
-			data = []byte(`{"dnsEntries":[{"name":"www", "expire":1234, "type":"CNAME", "content":"@"},{"type":"MX"},{"type":"AAAA"}]}`)
+			data = []byte(`{"dnsEntries":[
+								{"name":"www", "expire":1234, "type":"CNAME", "content":"@"},
+								{"type":"MX"},
+								{"type":"AAAA"}
+							]}`)
 		}
 
 		// unmarshal the prepared return data into the given destination type
@@ -256,8 +262,8 @@ func TestProviderRecords(t *testing.T) {
 
 	endpoints, err := p.Records(context.TODO())
 	if assert.NoError(t, err) {
-		if assert.Equal(t, 4, len(endpoints)) {
-			assert.Equal(t, "www.example.org", endpoints[0].DNSName)
+		if assert.Equal(t, 6, len(endpoints)) {
+			assert.Equal(t, "www.example.org", endpoints[0].Name.Fqdn())
 			assert.EqualValues(t, "@", endpoints[0].Targets[0])
 			assert.Equal(t, "CNAME", endpoints[0].RecordType)
 			assert.Equal(t, 0, len(endpoints[0].Labels))
@@ -276,8 +282,8 @@ func TestProviderEntriesForEndpoint(t *testing.T) {
 	p.zoneMap.Add("example.com", "example.com")
 
 	// get entries for endpoint with unknown zone
-	_, _, err := p.entriesForEndpoint(&endpoint.Endpoint{
-		DNSName: "www.example.org",
+	_, err := p.entriesForEndpoint(&endpoint.Endpoint{
+		Name: endpoint.NewEndpointNameCommon("www.example.org"),
 	})
 	if assert.Error(t, err) {
 		assert.Equal(t, "could not find zoneName for www.example.org", err.Error())
@@ -285,13 +291,13 @@ func TestProviderEntriesForEndpoint(t *testing.T) {
 
 	// get entries for endpoint with known zone but client returns error
 	// we leave GET functions undefined so we know which error to expect
-	zoneName, _, err := p.entriesForEndpoint(&endpoint.Endpoint{
-		DNSName: "www.example.com",
+	_, err = p.entriesForEndpoint(&endpoint.Endpoint{
+		Name: endpoint.NewEndpointNameCommon("www.example.com"),
 	})
 	if assert.Error(t, err) {
 		assert.Equal(t, "GET not defined", err.Error())
 	}
-	assert.Equal(t, "example.com", zoneName)
+	// assert.Equal(t, "example.com", d)
 
 	// to be able to return a valid set of DNS entries through the API, we define
 	// some first, then JSON encode them and have the fake API client's Get function
@@ -336,8 +342,8 @@ func TestProviderEntriesForEndpoint(t *testing.T) {
 		// unmarshal the prepared return data into the given dnsEntriesWrapper
 		return json.Unmarshal(returnData, &dest)
 	}
-	_, entries, err := p.entriesForEndpoint(&endpoint.Endpoint{
-		DNSName:    "www.example.com",
+	entries, err := p.entriesForEndpoint(&endpoint.Endpoint{
+		Name:       endpoint.NewEndpointNameCommon("www.example.com"),
 		RecordType: "A",
 	})
 	if assert.NoError(t, err) {

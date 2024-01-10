@@ -101,7 +101,7 @@ func (ep *ExoscaleProvider) ApplyChanges(ctx context.Context, changes *plan.Chan
 	}
 
 	for _, epoint := range changes.Create {
-		if ep.domain.Match(epoint.DNSName) {
+		if ep.domain.Match(epoint.Name.Fqdn()) {
 			if zoneID, name := ep.filter.EndpointZoneID(epoint, zones); zoneID != 0 {
 				rec := egoscale.DNSRecord{
 					Name:       name,
@@ -117,7 +117,7 @@ func (ep *ExoscaleProvider) ApplyChanges(ctx context.Context, changes *plan.Chan
 		}
 	}
 	for _, epoint := range changes.UpdateNew {
-		if ep.domain.Match(epoint.DNSName) {
+		if ep.domain.Match(epoint.Name.Fqdn()) {
 			if zoneID, name := ep.filter.EndpointZoneID(epoint, zones); zoneID != 0 {
 				records, err := ep.client.GetRecords(ctx, zones[zoneID])
 				if err != nil {
@@ -151,7 +151,7 @@ func (ep *ExoscaleProvider) ApplyChanges(ctx context.Context, changes *plan.Chan
 	}
 
 	for _, epoint := range changes.Delete {
-		if ep.domain.Match(epoint.DNSName) {
+		if ep.domain.Match(epoint.Name.Fqdn()) {
 			if zoneID, name := ep.filter.EndpointZoneID(epoint, zones); zoneID != 0 {
 				records, err := ep.client.GetRecords(ctx, zones[zoneID])
 				if err != nil {
@@ -194,7 +194,9 @@ func (ep *ExoscaleProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, 
 			default:
 				continue
 			}
-			ep := endpoint.NewEndpointWithTTL(r.Name+"."+d.Name, r.RecordType, endpoint.TTL(r.TTL), r.Content)
+			ep := endpoint.NewEndpointWithTTL(
+				endpoint.NewEndpointName(r.Name, d.Name),
+				r.RecordType, endpoint.TTL(r.TTL), r.Content)
 			endpoints = append(endpoints, ep)
 		}
 	}
@@ -251,10 +253,10 @@ func (f *zoneFilter) EndpointZoneID(endpoint *endpoint.Endpoint, zones map[int64
 	var matchZoneID int64
 	var matchZoneName string
 	for zoneID, zoneName := range zones {
-		if strings.HasSuffix(endpoint.DNSName, "."+zoneName) && len(zoneName) > len(matchZoneName) {
+		if strings.HasSuffix(endpoint.Name.Fqdn(), "."+zoneName) && len(zoneName) > len(matchZoneName) {
 			matchZoneName = zoneName
 			matchZoneID = zoneID
-			name = strings.TrimSuffix(endpoint.DNSName, "."+zoneName)
+			name = strings.TrimSuffix(endpoint.Name.Fqdn(), "."+zoneName)
 		}
 	}
 	return matchZoneID, name
@@ -263,7 +265,7 @@ func (f *zoneFilter) EndpointZoneID(endpoint *endpoint.Endpoint, zones map[int64
 func merge(updateOld, updateNew []*endpoint.Endpoint) []*endpoint.Endpoint {
 	findMatch := func(template *endpoint.Endpoint) *endpoint.Endpoint {
 		for _, new := range updateNew {
-			if template.DNSName == new.DNSName &&
+			if template.Name.Fqdn() == new.Name.Fqdn() &&
 				template.RecordType == new.RecordType {
 				return new
 			}

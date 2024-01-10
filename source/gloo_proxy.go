@@ -19,7 +19,6 @@ package source
 import (
 	"context"
 	"encoding/json"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -144,7 +143,9 @@ func (gs *glooSource) generateEndpointsFromProxy(ctx context.Context, proxy *pro
 			}
 			providerSpecific, setIdentifier := getProviderSpecificAnnotations(annotations)
 			for _, domain := range virtualHost.Domains {
-				endpoints = append(endpoints, endpointsForHostname(strings.TrimSuffix(domain, "."), targets, ttl, providerSpecific, setIdentifier)...)
+				endpoints = append(endpoints, endpointsForHostname(
+					endpoint.NewEndpointNameNoZone(domain),
+					targets, ttl, providerSpecific, setIdentifier)...)
 			}
 		}
 	}

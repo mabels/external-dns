@@ -153,13 +153,13 @@ func TestLinodeStripRecordName(t *testing.T) {
 	assert.Equal(t, "api", getStrippedRecordName(linodego.Domain{
 		Domain: "example.com",
 	}, endpoint.Endpoint{
-		DNSName: "api.example.com",
+		Name: endpoint.NewEndpointNameCommon("api.example.com",),
 	}))
 
 	assert.Equal(t, "", getStrippedRecordName(linodego.Domain{
 		Domain: "example.com",
 	}, endpoint.Endpoint{
-		DNSName: "example.com",
+		Name: endpoint.NewEndpointNameCommon("example.com",),
 	}))
 }
 
@@ -216,13 +216,13 @@ func TestLinodeGetStrippedRecordName(t *testing.T) {
 	assert.Equal(t, "", getStrippedRecordName(linodego.Domain{
 		Domain: "foo.com",
 	}, endpoint.Endpoint{
-		DNSName: "foo.com",
+		Name: endpoint.NewEndpointNameCommon("foo.com",),
 	}))
 
 	assert.Equal(t, "api", getStrippedRecordName(linodego.Domain{
 		Domain: "foo.com",
 	}, endpoint.Endpoint{
-		DNSName: "api.foo.com",
+		Name: endpoint.NewEndpointNameCommon("api.foo.com",),
 	}))
 }
 
@@ -264,12 +264,12 @@ func TestLinodeRecords(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := []*endpoint.Endpoint{
-		{DNSName: "foo.com", Targets: []string{"targetFoo"}, RecordType: "A", RecordTTL: 0, Labels: endpoint.NewLabels()},
-		{DNSName: "foo.com", Targets: []string{"txt"}, RecordType: "TXT", RecordTTL: 0, Labels: endpoint.NewLabels()},
-		{DNSName: "baz.com", Targets: []string{"targetBaz"}, RecordType: "A", RecordTTL: 0, Labels: endpoint.NewLabels()},
-		{DNSName: "baz.com", Targets: []string{"txt"}, RecordType: "TXT", RecordTTL: 0, Labels: endpoint.NewLabels()},
-		{DNSName: "api.baz.com", Targets: []string{"targetBaz"}, RecordType: "A", RecordTTL: 0, Labels: endpoint.NewLabels()},
-		{DNSName: "api.baz.com", Targets: []string{"txt"}, RecordType: "TXT", RecordTTL: 0, Labels: endpoint.NewLabels()},
+		{Name: endpoint.NewEndpointNameCommon("foo.com",), Targets: []string{"targetFoo"}, RecordType: "A", RecordTTL: 0, Labels: endpoint.NewLabels()},
+		{Name: endpoint.NewEndpointNameCommon("foo.com",), Targets: []string{"txt"}, RecordType: "TXT", RecordTTL: 0, Labels: endpoint.NewLabels()},
+		{Name: endpoint.NewEndpointNameCommon("baz.com",), Targets: []string{"targetBaz"}, RecordType: "A", RecordTTL: 0, Labels: endpoint.NewLabels()},
+		{Name: endpoint.NewEndpointNameCommon("baz.com",), Targets: []string{"txt"}, RecordType: "TXT", RecordTTL: 0, Labels: endpoint.NewLabels()},
+		{Name: endpoint.NewEndpointNameCommon("api.baz.com",), Targets: []string{"targetBaz"}, RecordType: "A", RecordTTL: 0, Labels: endpoint.NewLabels()},
+		{Name: endpoint.NewEndpointNameCommon("api.baz.com",), Targets: []string{"txt"}, RecordType: "TXT", RecordTTL: 0, Labels: endpoint.NewLabels()},
 	}
 
 	mockDomainClient.AssertExpectations(t)
@@ -359,23 +359,23 @@ func TestLinodeApplyChanges(t *testing.T) {
 
 	err := provider.ApplyChanges(context.Background(), &plan.Changes{
 		Create: []*endpoint.Endpoint{{
-			DNSName:    "create.bar.io",
+			Name: endpoint.NewEndpointNameCommon("create.bar.io",),
 			RecordType: "A",
 			Targets:    []string{"targetBar"},
 		}, {
-			DNSName:    "bar.io",
+			Name: endpoint.NewEndpointNameCommon("bar.io",),
 			RecordType: "A",
 			Targets:    []string{"targetBar"},
 		}},
 		Delete: []*endpoint.Endpoint{{
-			DNSName:    "api.baz.com",
+			Name: endpoint.NewEndpointNameCommon("api.baz.com",),
 			RecordType: "A",
 		}, {
-			DNSName:    "api.baz.com",
+			Name: endpoint.NewEndpointNameCommon("api.baz.com",),
 			RecordType: "TXT",
 		}},
 		UpdateNew: []*endpoint.Endpoint{{
-			DNSName:    "foo.com",
+			Name: endpoint.NewEndpointNameCommon("foo.com",),
 			RecordType: "A",
 			RecordTTL:  300,
 			Targets:    []string{"targetFoo"},
@@ -435,7 +435,7 @@ func TestLinodeApplyChangesTargetAdded(t *testing.T) {
 	err := provider.ApplyChanges(context.Background(), &plan.Changes{
 		// From 1 target to 2
 		UpdateNew: []*endpoint.Endpoint{{
-			DNSName:    "example.com",
+			Name: endpoint.NewEndpointNameCommon("example.com",),
 			RecordType: "A",
 			Targets:    []string{"targetA", "targetB"},
 		}},
@@ -491,7 +491,7 @@ func TestLinodeApplyChangesTargetRemoved(t *testing.T) {
 	err := provider.ApplyChanges(context.Background(), &plan.Changes{
 		// From 2 targets to 1
 		UpdateNew: []*endpoint.Endpoint{{
-			DNSName:    "example.com",
+			Name: endpoint.NewEndpointNameCommon("example.com",),
 			RecordType: "A",
 			Targets:    []string{"targetB"},
 		}},

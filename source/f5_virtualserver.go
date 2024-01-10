@@ -158,7 +158,7 @@ func (vs *f5VirtualServerSource) endpointsFromVirtualServers(virtualServers []*f
 					virtualServer.Spec.VirtualServerAddress,
 				},
 				RecordType: "A",
-				DNSName:    virtualServer.Spec.Host,
+				Name:       endpoint.NewEndpointNameNoZone(virtualServer.Spec.Host),
 				Labels:     endpoint.NewLabels(),
 				RecordTTL:  ttl,
 			}
@@ -174,7 +174,7 @@ func (vs *f5VirtualServerSource) endpointsFromVirtualServers(virtualServers []*f
 					virtualServer.Status.VSAddress,
 				},
 				RecordType: "A",
-				DNSName:    virtualServer.Spec.Host,
+				Name:       endpoint.NewEndpointNameNoZone(virtualServer.Spec.Host),
 				Labels:     endpoint.NewLabels(),
 				RecordTTL:  ttl,
 			}

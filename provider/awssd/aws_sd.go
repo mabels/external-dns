@@ -186,14 +186,12 @@ func (p *AWSSDProvider) Records(ctx context.Context) (endpoints []*endpoint.Endp
 }
 
 func (p *AWSSDProvider) instancesToEndpoint(ns *sd.NamespaceSummary, srv *sd.Service, instances []*sd.InstanceSummary) *endpoint.Endpoint {
-	// DNS name of the record is a concatenation of service and namespace
-	recordName := *srv.Name + "." + *ns.Name
-
 	labels := endpoint.NewLabels()
 	labels[endpoint.AWSSDDescriptionLabel] = aws.StringValue(srv.Description)
 
 	newEndpoint := &endpoint.Endpoint{
-		DNSName:   recordName,
+		// DNS name of the record is a concatenation of service and namespace
+		Name:      endpoint.NewEndpointName(*srv.Name, *ns.Name),
 		RecordTTL: endpoint.TTL(aws.Int64Value(srv.DnsConfig.DnsRecords[0].TTL)),
 		Targets:   make(endpoint.Targets, 0, len(instances)),
 		Labels:    labels,
@@ -263,11 +261,11 @@ func (p *AWSSDProvider) ApplyChanges(ctx context.Context, changes *plan.Changes)
 func (p *AWSSDProvider) updatesToCreates(changes *plan.Changes) (creates []*endpoint.Endpoint, deletes []*endpoint.Endpoint) {
 	updateNewMap := map[string]*endpoint.Endpoint{}
 	for _, e := range changes.UpdateNew {
-		updateNewMap[e.DNSName] = e
+		updateNewMap[e.Name.Fqdn()] = e
 	}
 
 	for _, old := range changes.UpdateOld {
-		current := updateNewMap[old.DNSName]
+		current := updateNewMap[old.Name.Fqdn()]
 
 		if !old.Targets.Same(current.Targets) {
 			// when targets differ the old instances need to be de-registered first
@@ -291,7 +289,7 @@ func (p *AWSSDProvider) submitCreates(namespaces []*sd.NamespaceSummary, changes
 		}
 
 		for _, ch := range changeList {
-			_, srvName := p.parseHostname(ch.DNSName)
+			_, srvName := p.parseHostname(ch.Name.Fqdn())
 
 			srv := services[srvName]
 			if srv == nil {
@@ -330,7 +328,7 @@ func (p *AWSSDProvider) submitDeletes(namespaces []*sd.NamespaceSummary, changes
 		}
 
 		for _, ch := range changeList {
-			hostname := ch.DNSName
+			hostname := ch.Name.Fqdn()
 			_, srvName := p.parseHostname(hostname)
 
 			srv := services[srvName]
@@ -645,8 +643,7 @@ func (p *AWSSDProvider) changesByNamespaceID(namespaces []*sd.NamespaceSummary, 
 
 	for _, c := range changes {
 		// trim the trailing dot from hostname if any
-		hostname := strings.TrimSuffix(c.DNSName, ".")
-		nsName, _ := p.parseHostname(hostname)
+		nsName, _ := p.parseHostname(c.Name.Fqdn())
 
 		matchingNamespaces := matchingNamespaces(nsName, namespaces)
 		if len(matchingNamespaces) == 0 {

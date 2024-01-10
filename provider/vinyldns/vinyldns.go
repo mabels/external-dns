@@ -117,7 +117,9 @@ func (p *vinyldnsProvider) Records(ctx context.Context) (endpoints []*endpoint.E
 						}
 					}
 
-					endpoints = append(endpoints, endpoint.NewEndpointWithTTL(r.Name+"."+zone.Name, r.Type, endpoint.TTL(r.TTL), targets...))
+					endpoints = append(endpoints, endpoint.NewEndpointWithTTL(
+						endpoint.NewEndpointName(r.Name, zone.Name),
+						r.Type, endpoint.TTL(r.TTL), targets...))
 				}
 			}
 		}
@@ -262,7 +264,7 @@ func newVinylDNSChange(action string, endpoint *endpoint.Endpoint) *vinyldnsChan
 	change := &vinyldnsChange{
 		Action: action,
 		ResourceRecordSet: vinyldns.RecordSet{
-			Name:    endpoint.DNSName,
+			Name:    endpoint.Name.Fqdn(),
 			Type:    endpoint.RecordType,
 			TTL:     ttl,
 			Records: records,

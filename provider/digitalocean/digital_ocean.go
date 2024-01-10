@@ -121,7 +121,7 @@ func mergeEndpointsByNameType(endpoints []*endpoint.Endpoint) []*endpoint.Endpoi
 	endpointsByNameType := map[string][]*endpoint.Endpoint{}
 
 	for _, e := range endpoints {
-		key := fmt.Sprintf("%s-%s", e.DNSName, e.RecordType)
+		key := fmt.Sprintf("%s-%s", e.Name.Fqdn(), e.RecordType)
 		endpointsByNameType[key] = append(endpointsByNameType[key], e)
 	}
 
@@ -133,7 +133,7 @@ func mergeEndpointsByNameType(endpoints []*endpoint.Endpoint) []*endpoint.Endpoi
 	// Otherwise, construct a new list of endpoints with the endpoints merged.
 	var result []*endpoint.Endpoint
 	for _, endpoints := range endpointsByNameType {
-		dnsName := endpoints[0].DNSName
+		dnsName := endpoints[0].Name.Fqdn()
 		recordType := endpoints[0].RecordType
 
 		targets := make([]string, len(endpoints))
@@ -164,15 +164,9 @@ func (p *DigitalOceanProvider) Records(ctx context.Context) ([]*endpoint.Endpoin
 
 		for _, r := range records {
 			if provider.SupportedRecordType(r.Type) {
-				name := r.Name + "." + zone.Name
-
-				// root name is identified by @ and should be
-				// translated to zone name for the endpoint entry.
-				if r.Name == "@" {
-					name = zone.Name
-				}
-
-				ep := endpoint.NewEndpointWithTTL(name, r.Type, endpoint.TTL(r.TTL), r.Data)
+				ep := endpoint.NewEndpointWithTTL(
+					endpoint.NewEndpointName(r.Name, zone.Name),
+					r.Type, endpoint.TTL(r.TTL), r.Data)
 
 				endpoints = append(endpoints, ep)
 			}
@@ -370,7 +364,7 @@ func endpointsByZone(zoneNameIDMapper provider.ZoneIDName, endpoints []*endpoint
 	endpointsByZone := make(map[string][]*endpoint.Endpoint)
 
 	for _, ep := range endpoints {
-		zoneID, _ := zoneNameIDMapper.FindZone(ep.DNSName)
+		zoneID, _ := zoneNameIDMapper.FindZone(ep.Name.Fqdn())
 		if zoneID == "" {
 			log.Debugf("Skipping record %s because no hosted zone matching record DNS Name was detected", ep.DNSName)
 			continue
@@ -420,7 +414,7 @@ func processCreateActions(
 			if len(matchingRecords) > 0 {
 				log.WithFields(log.Fields{
 					"domain":     domain,
-					"dnsName":    ep.DNSName,
+					"dnsName":    ep.Name.Fqdn(),
 					"recordType": ep.RecordType,
 				}).Warn("Preexisting records exist which should not exist for creation actions.")
 			}
@@ -430,7 +424,7 @@ func processCreateActions(
 			for _, target := range ep.Targets {
 				changes.Creates = append(changes.Creates, &digitalOceanChangeCreate{
 					Domain:  domain,
-					Options: makeDomainEditRequest(domain, ep.DNSName, ep.RecordType, target, ttl),
+					Options: makeDomainEditRequest(domain, ep.Name.Fqdn(), ep.RecordType, target, ttl),
 				})
 			}
 		}
@@ -470,7 +464,7 @@ func processUpdateActions(
 			if len(matchingRecords) == 0 {
 				log.WithFields(log.Fields{
 					"domain":     domain,
-					"dnsName":    ep.DNSName,
+					"dnsName":    ep.Name.Fqdn(),
 					"recordType": ep.RecordType,
 				}).Warn("Planning an update but no existing records found.")
 			}
@@ -487,7 +481,7 @@ func processUpdateActions(
 				if record, ok := matchingRecordsByTarget[target]; ok {
 					log.WithFields(log.Fields{
 						"domain":     domain,
-						"dnsName":    ep.DNSName,
+						"dnsName":    ep.Name.Fqdn(),
 						"recordType": ep.RecordType,
 						"target":     target,
 					}).Warn("Updating existing target")
@@ -495,7 +489,7 @@ func processUpdateActions(
 					changes.Updates = append(changes.Updates, &digitalOceanChangeUpdate{
 						Domain:       domain,
 						DomainRecord: record,
-						Options:      makeDomainEditRequest(domain, ep.DNSName, ep.RecordType, target, ttl),
+						Options:      makeDomainEditRequest(domain, ep.Name.Fqdn(), ep.RecordType, target, ttl),
 					})
 
 					delete(matchingRecordsByTarget, target)
@@ -503,14 +497,14 @@ func processUpdateActions(
 					// Record did not previously exist, create new 'target'
 					log.WithFields(log.Fields{
 						"domain":     domain,
-						"dnsName":    ep.DNSName,
+						"dnsName":    ep.Name.Fqdn(),
 						"recordType": ep.RecordType,
 						"target":     target,
 					}).Warn("Creating new target")
 
 					changes.Creates = append(changes.Creates, &digitalOceanChangeCreate{
 						Domain:  domain,
-						Options: makeDomainEditRequest(domain, ep.DNSName, ep.RecordType, target, ttl),
+						Options: makeDomainEditRequest(domain, ep.Name.Fqdn(), ep.RecordType, target, ttl),
 					})
 				}
 			}
@@ -519,7 +513,7 @@ func processUpdateActions(
 			for _, record := range matchingRecordsByTarget {
 				log.WithFields(log.Fields{
 					"domain":     domain,
-					"dnsName":    ep.DNSName,
+					"dnsName":    ep.Name.Fqdn(),
 					"recordType": ep.RecordType,
 					"target":     record.Data,
 				}).Warn("Deleting target")
@@ -557,7 +551,7 @@ func processDeleteActions(
 			if len(matchingRecords) == 0 {
 				log.WithFields(log.Fields{
 					"domain":     domain,
-					"dnsName":    ep.DNSName,
+					"dnsName":    ep.Name.Fqdn(),
 					"recordType": ep.RecordType,
 				}).Warn("Records to delete not found.")
 			}

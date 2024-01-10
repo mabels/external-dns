@@ -52,7 +52,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateNothing() {
 	// empty current and candidates -> create == empty, create == empty, delete == empty
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -60,7 +60,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateNothing() {
 	}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -78,7 +78,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSeeMerge() {
 	// empty current and candidates -> create == empty, create == empty, delete == empty
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:       "wl.example.com",
+			Name:          endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:       endpoint.Targets{"1.1.1.1"},
 			RecordType:    "A",
 			RecordTTL:     300,
@@ -94,7 +94,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSeeMerge() {
 			},
 		},
 		{
-			DNSName:       "wl.example.com",
+			Name:          endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:       endpoint.Targets{"1.1.1.2"},
 			RecordType:    "A",
 			RecordTTL:     300,
@@ -113,7 +113,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSeeMerge() {
 	}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:       "wl.example.com",
+			Name:          endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:       endpoint.Targets{"1.1.1.3"},
 			RecordType:    "A",
 			RecordTTL:     300,
@@ -130,7 +130,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSeeMerge() {
 			},
 		},
 		{
-			DNSName:       "wl.example.com",
+			Name:          endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:       endpoint.Targets{"1.1.1.1"},
 			RecordType:    "A",
 			RecordTTL:     300,
@@ -152,7 +152,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSeeMerge() {
 			},
 		},
 		{
-			DNSName:       "wl.example.com",
+			Name:          endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:       endpoint.Targets{"1.1.1.1"},
 			RecordType:    "A",
 			RecordTTL:     300,
@@ -182,7 +182,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSeeMerge() {
 	suite.Len(changes.UpdateNew, 1)
 	suite.Equal(changes.UpdateNew, []*endpoint.Endpoint{
 		{
-			DNSName:       "wl.example.com",
+			Name:          endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:       endpoint.Targets{"1.1.1.1", "1.1.1.3"},
 			RecordType:    "A",
 			SetIdentifier: "server",
@@ -223,7 +223,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSeeMerge() {
 func (suite *ResolverSuite) TestStrictResolveUpdateUpdateOld() {
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -232,7 +232,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateUpdateOld() {
 			},
 		},
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.2"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -243,7 +243,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateUpdateOld() {
 	}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -264,13 +264,13 @@ func (suite *ResolverSuite) TestStrictResolveUpdateNothingDuplicated() {
 	// empty current and candidates -> create == empty, create == empty, delete == empty
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
 		},
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -278,21 +278,21 @@ func (suite *ResolverSuite) TestStrictResolveUpdateNothingDuplicated() {
 	}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
 		},
 
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
 		},
 
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -311,13 +311,13 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleCreate() {
 	current := []*endpoint.Endpoint{}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"v2"},
 			RecordType: "MX",
 			RecordTTL:  300,
 		},
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"v1"},
 			RecordType: "MX",
 			RecordTTL:  300,
@@ -327,7 +327,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleCreate() {
 	suite.Nil(err)
 	suite.Len(changes.Create, 1)
 	suite.Equal(*changes.Create[0], endpoint.Endpoint{
-		DNSName:    "wl.example.com",
+		Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 		Targets:    endpoint.Targets{"v1", "v2"},
 		RecordType: "MX",
 		RecordTTL:  300,
@@ -342,13 +342,13 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleCreateCNAMEError() {
 	current := []*endpoint.Endpoint{}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"v2"},
 			RecordType: "CNAME",
 			RecordTTL:  300,
 		},
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"v1"},
 			RecordType: "CNAME",
 			RecordTTL:  300,
@@ -362,13 +362,13 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleDelete() {
 	// empty current and candidates -> create == empty, create == empty, delete == empty
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
 		},
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.2"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -387,7 +387,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateTarget() {
 	// empty current and candidates -> create == empty, create == empty, delete == empty
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -398,7 +398,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateTarget() {
 	}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.2"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -408,7 +408,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateTarget() {
 	suite.Nil(err)
 	suite.Len(changes.UpdateOld, 1)
 	suite.Equal(*changes.UpdateOld[0], endpoint.Endpoint{
-		DNSName:    "wl.example.com",
+		Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 		Targets:    endpoint.Targets{"1.1.1.1"},
 		RecordType: "A",
 		RecordTTL:  300,
@@ -418,7 +418,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateTarget() {
 	})
 	suite.Len(changes.UpdateNew, 1)
 	suite.Equal(*changes.UpdateNew[0], endpoint.Endpoint{
-		DNSName:    "wl.example.com",
+		Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 		Targets:    endpoint.Targets{"1.1.1.2"},
 		RecordType: "A",
 		RecordTTL:  300,
@@ -434,7 +434,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateTTL() {
 	// empty current and candidates -> create == empty, create == empty, delete == empty
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -445,7 +445,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateTTL() {
 	}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.2"},
 			RecordType: "A",
 			RecordTTL:  400,
@@ -454,7 +454,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateTTL() {
 			},
 		},
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.3", "1.1.1.1", "1.1.1.2"},
 			RecordType: "A",
 			RecordTTL:  400,
@@ -469,7 +469,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateTTL() {
 	suite.Equal(changes.UpdateOld, current)
 	suite.Len(changes.UpdateNew, 1)
 	suite.Equal(changes.UpdateNew[0], &endpoint.Endpoint{
-		DNSName:    "wl.example.com",
+		Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 		Targets:    endpoint.Targets{"1.1.1.1", "1.1.1.2", "1.1.1.3"},
 		RecordType: "A",
 		RecordTTL:  400,
@@ -487,7 +487,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateLabels() {
 	// empty current and candidates -> create == empty, create == empty, delete == empty
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -499,7 +499,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateLabels() {
 	}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -510,7 +510,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateLabels() {
 	suite.Nil(err)
 	suite.Len(changes.UpdateOld, 1)
 	suite.Equal(*changes.UpdateOld[0], endpoint.Endpoint{
-		DNSName:    "wl.example.com",
+		Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 		Targets:    endpoint.Targets{"1.1.1.1"},
 		RecordType: "A",
 		RecordTTL:  300,
@@ -522,7 +522,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateLabels() {
 
 	suite.Len(changes.UpdateNew, 1)
 	suite.Equal(*changes.UpdateNew[0], endpoint.Endpoint{
-		DNSName:    "wl.example.com",
+		Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 		Targets:    endpoint.Targets{"1.1.1.1"},
 		RecordType: "A",
 		RecordTTL:  300,
@@ -539,7 +539,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateProviderSpecific(
 	// empty current and candidates -> create == empty, create == empty, delete == empty
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -557,7 +557,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSimpleUpdateProviderSpecific(
 	}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -587,13 +587,13 @@ func (suite *ResolverSuite) TestStrictResolveUpdateErrorRecordTTL() {
 	current := []*endpoint.Endpoint{}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.3"},
 			RecordType: "A",
 			RecordTTL:  300,
 		},
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  400,
@@ -606,14 +606,14 @@ func (suite *ResolverSuite) TestStrictResolveUpdateErrorSetIdentifier() {
 	current := []*endpoint.Endpoint{}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:       "wl.example.com",
+			Name:          endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:       endpoint.Targets{"1.1.1.3"},
 			RecordType:    "A",
 			RecordTTL:     300,
 			SetIdentifier: "server",
 		},
 		{
-			DNSName:       "wl.example.com",
+			Name:          endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:       endpoint.Targets{"1.1.1.1"},
 			RecordType:    "A",
 			RecordTTL:     300,
@@ -628,7 +628,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateMixed() {
 	// we delete other Types (is this right)
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -636,7 +636,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateMixed() {
 	}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"fd00::4"},
 			RecordType: "AAAA",
 			RecordTTL:  300,
@@ -656,7 +656,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateMultipleCandidateTargets() {
 	// empty current and candidates -> create == empty, create == empty, delete == empty
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -664,7 +664,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateMultipleCandidateTargets() {
 	}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.2", "1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -678,7 +678,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateMultipleCandidateTargets() {
 	suite.Equal(*changes.UpdateOld[0], *current[0])
 	suite.Len(changes.UpdateNew, 1)
 	suite.Equal(*changes.UpdateNew[0], endpoint.Endpoint{
-		DNSName:    "wl.example.com",
+		Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 		Targets:    endpoint.Targets{"1.1.1.1", "1.1.1.2"},
 		RecordType: "A",
 		RecordTTL:  300,
@@ -689,7 +689,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSplitCandidateTargets() {
 	// empty current and candidates -> create == empty, create == empty, delete == empty
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -697,13 +697,13 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSplitCandidateTargets() {
 	}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.2"},
 			RecordType: "A",
 			RecordTTL:  300,
 		},
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -715,14 +715,14 @@ func (suite *ResolverSuite) TestStrictResolveUpdateSplitCandidateTargets() {
 	suite.Len(changes.Create, 0)
 	suite.Len(changes.UpdateOld, 1)
 	suite.Equal(*changes.UpdateOld[0], endpoint.Endpoint{
-		DNSName:    "wl.example.com",
+		Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 		Targets:    endpoint.Targets{"1.1.1.1"},
 		RecordType: "A",
 		RecordTTL:  300,
 	})
 	suite.Len(changes.UpdateNew, 1)
 	suite.Equal(*changes.UpdateNew[0], endpoint.Endpoint{
-		DNSName:    "wl.example.com",
+		Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 		Targets:    endpoint.Targets{"1.1.1.1", "1.1.1.2"},
 		RecordType: "A",
 		RecordTTL:  300,
@@ -733,7 +733,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateOldOnly() {
 	// empty current and candidates -> create == empty, create == empty, delete == empty
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.2"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -743,7 +743,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateOldOnly() {
 			},
 		},
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1", "1.1.1.2"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -753,7 +753,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateOldOnly() {
 			},
 		},
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -766,7 +766,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateOldOnly() {
 	}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -785,7 +785,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateOldOnly() {
 	suite.Len(changes.UpdateOld, 2)
 	suite.Equal(changes.UpdateOld, []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.2"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -795,7 +795,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateOldOnly() {
 			},
 		},
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1", "1.1.1.2"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -814,7 +814,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateOldMerge() {
 	// empty current and candidates -> create == empty, create == empty, delete == empty
 	current := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.2"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -824,7 +824,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateOldMerge() {
 			},
 		},
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1", "1.1.1.2"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -834,7 +834,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateOldMerge() {
 			},
 		},
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -846,7 +846,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateOldMerge() {
 	}
 	candidates := []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,
@@ -859,7 +859,7 @@ func (suite *ResolverSuite) TestStrictResolveUpdateOldMerge() {
 	suite.Len(changes.UpdateNew, 1)
 	suite.Equal(changes.UpdateNew, []*endpoint.Endpoint{
 		{
-			DNSName:    "wl.example.com",
+			Name:       endpoint.NewEndpointNameCommon("wl.example.com"),
 			Targets:    endpoint.Targets{"1.1.1.1"},
 			RecordType: "A",
 			RecordTTL:  300,

@@ -18,6 +18,8 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -31,134 +33,143 @@ import (
 	"sigs.k8s.io/external-dns/source"
 )
 
-var (
-	registryErrorsTotal = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Namespace: "external_dns",
-			Subsystem: "registry",
-			Name:      "errors_total",
-			Help:      "Number of Registry errors.",
-		},
-	)
-	sourceErrorsTotal = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Namespace: "external_dns",
-			Subsystem: "source",
-			Name:      "errors_total",
-			Help:      "Number of Source errors.",
-		},
-	)
-	sourceEndpointsTotal = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: "external_dns",
-			Subsystem: "source",
-			Name:      "endpoints_total",
-			Help:      "Number of Endpoints in all sources",
-		},
-	)
-	registryEndpointsTotal = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: "external_dns",
-			Subsystem: "registry",
-			Name:      "endpoints_total",
-			Help:      "Number of Endpoints in the registry",
-		},
-	)
-	lastSyncTimestamp = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: "external_dns",
-			Subsystem: "controller",
-			Name:      "last_sync_timestamp_seconds",
-			Help:      "Timestamp of last successful sync with the DNS provider",
-		},
-	)
-	controllerNoChangesTotal = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Namespace: "external_dns",
-			Subsystem: "controller",
-			Name:      "no_op_runs_total",
-			Help:      "Number of reconcile loops ending up with no changes on the DNS provider side.",
-		},
-	)
-	deprecatedRegistryErrors = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Subsystem: "registry",
-			Name:      "errors_total",
-			Help:      "Number of Registry errors.",
-		},
-	)
-	deprecatedSourceErrors = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Subsystem: "source",
-			Name:      "errors_total",
-			Help:      "Number of Source errors.",
-		},
-	)
-	registryARecords = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: "external_dns",
-			Subsystem: "registry",
-			Name:      "a_records",
-			Help:      "Number of Registry A records.",
-		},
-	)
-	registryAAAARecords = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: "external_dns",
-			Subsystem: "registry",
-			Name:      "aaaa_records",
-			Help:      "Number of Registry AAAA records.",
-		},
-	)
-	sourceARecords = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: "external_dns",
-			Subsystem: "source",
-			Name:      "a_records",
-			Help:      "Number of Source A records.",
-		},
-	)
-	sourceAAAARecords = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: "external_dns",
-			Subsystem: "source",
-			Name:      "aaaa_records",
-			Help:      "Number of Source AAAA records.",
-		},
-	)
-	verifiedARecords = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: "external_dns",
-			Subsystem: "controller",
-			Name:      "verified_a_records",
-			Help:      "Number of DNS A-records that exists both in source and registry.",
-		},
-	)
-	verifiedAAAARecords = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: "external_dns",
-			Subsystem: "controller",
-			Name:      "verified_aaaa_records",
-			Help:      "Number of DNS AAAA-records that exists both in source and registry.",
-		},
-	)
-)
+func prometheusByRecordType(sub string, name_template string, help_template string) map[string]prometheus.Gauge {
+	ret := make(map[string]prometheus.Gauge)
+	for _, recordType := range endpoint.AllRecordTypes {
+		ret[recordType] = prometheus.NewGauge(
+			prometheus.GaugeOpts{
+				Namespace: "external_dns",
+				Subsystem: sub,
+				Name:      fmt.Sprintf(name_template, strings.ToLower(recordType)),
+				Help:      fmt.Sprintf(help_template, strings.Title(sub), recordType),
+			},
+		)
 
-func init() {
-	prometheus.MustRegister(registryErrorsTotal)
-	prometheus.MustRegister(sourceErrorsTotal)
-	prometheus.MustRegister(sourceEndpointsTotal)
-	prometheus.MustRegister(registryEndpointsTotal)
-	prometheus.MustRegister(lastSyncTimestamp)
-	prometheus.MustRegister(deprecatedRegistryErrors)
-	prometheus.MustRegister(deprecatedSourceErrors)
-	prometheus.MustRegister(controllerNoChangesTotal)
-	prometheus.MustRegister(registryARecords)
-	prometheus.MustRegister(registryAAAARecords)
-	prometheus.MustRegister(sourceARecords)
-	prometheus.MustRegister(sourceAAAARecords)
-	prometheus.MustRegister(verifiedARecords)
-	prometheus.MustRegister(verifiedAAAARecords)
+	}
+	return ret
+
+}
+
+type prometheusStat struct {
+	registryErrorsTotal      prometheus.Counter
+	sourceErrorsTotal        prometheus.Counter
+	sourceEndpointsTotal     prometheus.Gauge
+	registryEndpointsTotal   prometheus.Gauge
+	lastSyncTimestamp        prometheus.Gauge
+	controllerNoChangesTotal prometheus.Counter
+	deprecatedRegistryErrors prometheus.Counter
+	deprecatedSourceErrors   prometheus.Counter
+	registryByRecordType     map[string]prometheus.Gauge
+	sourceByRecordType       map[string]prometheus.Gauge
+	verifiedByRecordType     map[string]prometheus.Gauge
+}
+
+func newPrometheusStat() *prometheusStat {
+	ps := &prometheusStat{
+		registryErrorsTotal: prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Namespace: "external_dns",
+				Subsystem: "registry",
+				Name:      "errors_total",
+				Help:      "Number of Registry errors.",
+			},
+		),
+		sourceErrorsTotal: prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Namespace: "external_dns",
+				Subsystem: "source",
+				Name:      "errors_total",
+				Help:      "Number of Source errors.",
+			},
+		),
+		sourceEndpointsTotal: prometheus.NewGauge(
+			prometheus.GaugeOpts{
+				Namespace: "external_dns",
+				Subsystem: "source",
+				Name:      "endpoints_total",
+				Help:      "Number of Endpoints in all sources",
+			},
+		),
+		registryEndpointsTotal: prometheus.NewGauge(
+			prometheus.GaugeOpts{
+				Namespace: "external_dns",
+				Subsystem: "registry",
+				Name:      "endpoints_total",
+				Help:      "Number of Endpoints in the registry",
+			},
+		),
+		lastSyncTimestamp: prometheus.NewGauge(
+			prometheus.GaugeOpts{
+				Namespace: "external_dns",
+				Subsystem: "controller",
+				Name:      "last_sync_timestamp_seconds",
+				Help:      "Timestamp of last successful sync with the DNS provider",
+			},
+		),
+		controllerNoChangesTotal: prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Namespace: "external_dns",
+				Subsystem: "controller",
+				Name:      "no_op_runs_total",
+				Help:      "Number of reconcile loops ending up with no changes on the DNS provider side.",
+			},
+		),
+		deprecatedRegistryErrors: prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Subsystem: "registry",
+				Name:      "errors_total",
+				Help:      "Number of Registry errors.",
+			},
+		),
+		deprecatedSourceErrors: prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Subsystem: "source",
+				Name:      "errors_total",
+				Help:      "Number of Source errors.",
+			},
+		),
+		registryByRecordType: prometheusByRecordType("registry", "%s_records", "Number of Registry %s records."),
+		sourceByRecordType:   prometheusByRecordType("source", "%s_records", "Number of Source %s records."),
+		verifiedByRecordType: prometheusByRecordType("controller", "verified_%s_records", "Number of DNS %s-records that exists both in source and registry."),
+	}
+	prometheus.Register(ps.registryErrorsTotal)
+	prometheus.Register(ps.sourceErrorsTotal)
+	prometheus.Register(ps.sourceEndpointsTotal)
+	prometheus.Register(ps.registryEndpointsTotal)
+	prometheus.Register(ps.lastSyncTimestamp)
+	prometheus.Register(ps.deprecatedRegistryErrors)
+	prometheus.Register(ps.deprecatedSourceErrors)
+	prometheus.Register(ps.controllerNoChangesTotal)
+	for _, p := range ps.registryByRecordType {
+		prometheus.Register(p)
+	}
+	for _, p := range ps.sourceByRecordType {
+		prometheus.Register(p)
+	}
+	for _, p := range ps.verifiedByRecordType {
+		prometheus.Unregister(p)
+	}
+	return ps
+}
+
+func (ps *prometheusStat) unregister() {
+	prometheus.Unregister(ps.registryErrorsTotal)
+	prometheus.Unregister(ps.sourceErrorsTotal)
+	prometheus.Unregister(ps.sourceEndpointsTotal)
+	prometheus.Unregister(ps.registryEndpointsTotal)
+	prometheus.Unregister(ps.lastSyncTimestamp)
+	prometheus.Unregister(ps.deprecatedRegistryErrors)
+	prometheus.Unregister(ps.deprecatedSourceErrors)
+	prometheus.Unregister(ps.controllerNoChangesTotal)
+	for _, p := range ps.registryByRecordType {
+		prometheus.Unregister(p)
+	}
+	for _, p := range ps.sourceByRecordType {
+		prometheus.Unregister(p)
+	}
+	for _, p := range ps.verifiedByRecordType {
+		prometheus.Unregister(p)
+	}
 }
 
 // Controller is responsible for orchestrating the different components.
@@ -184,65 +195,70 @@ type Controller struct {
 	ManagedRecordTypes []string
 	// MinEventSyncInterval is used as window for batching events
 	MinEventSyncInterval time.Duration
+
+	ps *prometheusStat
+}
+
+func StartController(c *Controller) *Controller {
+	if c.ps == nil {
+		c.ps = newPrometheusStat()
+	}
+	return c
+}
+
+func (c *Controller) Stop() {
+	c.ps.unregister()
+}
+
+func applyOwnershipRecords(eps []*endpoint.Endpoint) []*endpoint.Endpoint {
+
+	return eps
 }
 
 // RunOnce runs a single iteration of a reconciliation loop.
 func (c *Controller) RunOnce(ctx context.Context) error {
 	records, err := c.Registry.Records(ctx)
 	if err != nil {
-		registryErrorsTotal.Inc()
-		deprecatedRegistryErrors.Inc()
+		c.ps.registryErrorsTotal.Inc()
+		c.ps.deprecatedRegistryErrors.Inc()
 		return err
 	}
 
-	missingRecords := c.Registry.MissingRecords()
+	// missingRecords := c.Registry.MissingRecords()
 
-	registryEndpointsTotal.Set(float64(len(records)))
-	regARecords, regAAAARecords := countAddressRecords(records)
-	registryARecords.Set(float64(regARecords))
-	registryAAAARecords.Set(float64(regAAAARecords))
+	c.ps.registryEndpointsTotal.Set(float64(len(records)))
+	for rt, cnt := range countAddressRecords(records) {
+		p, ok := c.ps.registryByRecordType[rt]
+		if ok {
+			p.Set(float64(cnt))
+		}
+	}
 	ctx = context.WithValue(ctx, provider.RecordsContextKey, records)
 
 	endpoints, err := c.Source.Endpoints(ctx)
-	if err != nil {
-		sourceErrorsTotal.Inc()
-		deprecatedSourceErrors.Inc()
-		return err
-	}
-	sourceEndpointsTotal.Set(float64(len(endpoints)))
-	srcARecords, srcAAAARecords := countAddressRecords(endpoints)
-	sourceARecords.Set(float64(srcARecords))
-	sourceAAAARecords.Set(float64(srcAAAARecords))
-	vARecords, vAAAARecords := countMatchingAddressRecords(endpoints, records)
-	verifiedARecords.Set(float64(vARecords))
-	verifiedAAAARecords.Set(float64(vAAAARecords))
+
+	// add ownership records
+	endpoints = c.Registry.EnsureOwnerShipRecords(endpoints)
+
+	// let the provider adjust the endpoints
 	endpoints = c.Registry.AdjustEndpoints(endpoints)
 
-	if len(missingRecords) > 0 {
-		// Add missing records before the actual plan is applied.
-		// This prevents the problems when the missing TXT record needs to be
-		// created and deleted/upserted in the same batch.
-		missingRecordsPlan := &plan.Plan{
-			Policies:           []plan.Policy{c.Policy},
-			Missing:            missingRecords,
-			DomainFilter:       endpoint.MatchAllDomainFilters{c.DomainFilter, c.Registry.GetDomainFilter()},
-			PropertyComparator: c.Registry.PropertyValuesEqual,
-			ManagedRecords:     c.ManagedRecordTypes,
+	if err != nil {
+		c.ps.sourceErrorsTotal.Inc()
+		c.ps.deprecatedSourceErrors.Inc()
+		return err
+	}
+	c.ps.sourceEndpointsTotal.Set(float64(len(endpoints)))
+	for rt, cnt := range countAddressRecords(endpoints) {
+		p, ok := c.ps.sourceByRecordType[rt]
+		if ok {
+			p.Set(float64(cnt))
 		}
-		missingRecordsPlan, err = missingRecordsPlan.CalculateWithError()
-		if err != nil {
-			sourceErrorsTotal.Inc()
-			deprecatedSourceErrors.Inc()
-			return err
-		}
-		if missingRecordsPlan.Changes.HasChanges() {
-			err = c.Registry.ApplyChanges(ctx, missingRecordsPlan.Changes)
-			if err != nil {
-				registryErrorsTotal.Inc()
-				deprecatedRegistryErrors.Inc()
-				return err
-			}
-			log.Info("All missing records are created")
+	}
+	for rt, cnt := range countMatchingAddressRecords(endpoints, records) {
+		p, ok := c.ps.verifiedByRecordType[rt]
+		if ok {
+			p.Set(float64(cnt))
 		}
 	}
 
@@ -252,70 +268,60 @@ func (c *Controller) RunOnce(ctx context.Context) error {
 		Desired:            endpoints,
 		DomainFilter:       endpoint.MatchAllDomainFilters{c.DomainFilter, c.Registry.GetDomainFilter()},
 		PropertyComparator: c.Registry.PropertyValuesEqual,
-		ManagedRecords:     c.ManagedRecordTypes,
+		// we need to add TXT records to the managed records
+		// the ownership records are already added to the endpoints
+		ManagedRecords: append(c.ManagedRecordTypes, endpoint.RecordTypeTXT),
 	}
 
-	plan, err = plan.CalculateWithError()
+	plan, err = plan.Calculate()
 	if err != nil {
-		sourceErrorsTotal.Inc()
-		deprecatedSourceErrors.Inc()
+		c.ps.sourceErrorsTotal.Inc()
+		c.ps.deprecatedSourceErrors.Inc()
 		return err
 	}
 
 	if plan.Changes.HasChanges() {
 		err = c.Registry.ApplyChanges(ctx, plan.Changes)
 		if err != nil {
-			registryErrorsTotal.Inc()
-			deprecatedRegistryErrors.Inc()
+			c.ps.registryErrorsTotal.Inc()
+			c.ps.deprecatedRegistryErrors.Inc()
 			return err
 		}
 	} else {
-		controllerNoChangesTotal.Inc()
+		c.ps.controllerNoChangesTotal.Inc()
 		log.Info("All records are already up to date")
 	}
 
-	lastSyncTimestamp.SetToCurrentTime()
+	c.ps.lastSyncTimestamp.SetToCurrentTime()
 	return nil
 }
 
 // Counts the intersections of A and AAAA records in endpoint and registry.
-func countMatchingAddressRecords(endpoints []*endpoint.Endpoint, registryRecords []*endpoint.Endpoint) (int, int) {
+func countMatchingAddressRecords(endpoints []*endpoint.Endpoint, registryRecords []*endpoint.Endpoint) map[string]int {
 	recordsMap := make(map[string]map[string]struct{})
 	for _, regRecord := range registryRecords {
-		if _, found := recordsMap[regRecord.DNSName]; !found {
-			recordsMap[regRecord.DNSName] = make(map[string]struct{})
+		if _, found := recordsMap[regRecord.Name.Fqdn()]; !found {
+			recordsMap[regRecord.Name.Fqdn()] = make(map[string]struct{})
 		}
-		recordsMap[regRecord.DNSName][regRecord.RecordType] = struct{}{}
+		recordsMap[regRecord.Name.Fqdn()][regRecord.RecordType] = struct{}{}
 	}
-	aCount := 0
-	aaaaCount := 0
+	ret := make(map[string]int)
 	for _, sourceRecord := range endpoints {
-		if _, found := recordsMap[sourceRecord.DNSName]; found {
-			if _, found := recordsMap[sourceRecord.DNSName][sourceRecord.RecordType]; found {
-				switch sourceRecord.RecordType {
-				case endpoint.RecordTypeA:
-					aCount++
-				case endpoint.RecordTypeAAAA:
-					aaaaCount++
-				}
+		if _, found := recordsMap[sourceRecord.Name.Fqdn()]; found {
+			if _, found := recordsMap[sourceRecord.Name.Fqdn()][sourceRecord.RecordType]; found {
+				ret[sourceRecord.RecordType] = ret[sourceRecord.RecordType] + 1
 			}
 		}
 	}
-	return aCount, aaaaCount
+	return ret
 }
 
-func countAddressRecords(endpoints []*endpoint.Endpoint) (int, int) {
-	aCount := 0
-	aaaaCount := 0
+func countAddressRecords(endpoints []*endpoint.Endpoint) map[string]int {
+	recordsMap := make(map[string]int)
 	for _, endPoint := range endpoints {
-		switch endPoint.RecordType {
-		case endpoint.RecordTypeA:
-			aCount++
-		case endpoint.RecordTypeAAAA:
-			aaaaCount++
-		}
+		recordsMap[endPoint.RecordType] = recordsMap[endPoint.RecordType] + 1
 	}
-	return aCount, aaaaCount
+	return recordsMap
 }
 
 // ScheduleRunOnce makes sure execution happens at most once per interval.

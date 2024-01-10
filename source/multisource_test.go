@@ -44,8 +44,8 @@ func testMultiSourceImplementsSource(t *testing.T) {
 
 // testMultiSourceEndpoints tests merged endpoints from children are returned.
 func testMultiSourceEndpoints(t *testing.T) {
-	foo := &endpoint.Endpoint{DNSName: "foo", Targets: endpoint.Targets{"8.8.8.8"}}
-	bar := &endpoint.Endpoint{DNSName: "bar", Targets: endpoint.Targets{"8.8.4.4"}}
+	foo := &endpoint.Endpoint{Name: endpoint.NewEndpointNameCommon("foo"), Targets: endpoint.Targets{"8.8.8.8"}}
+	bar := &endpoint.Endpoint{Name: endpoint.NewEndpointNameCommon("bar"), Targets: endpoint.Targets{"8.8.4.4"}}
 
 	for _, tc := range []struct {
 		title           string
@@ -132,14 +132,14 @@ func testMultiSourceEndpointsDefaultTargets(t *testing.T) {
 
 	// Create the expected endpoints
 	expectedEndpoints := []*endpoint.Endpoint{
-		{DNSName: "foo", Targets: defaultTargets},
-		{DNSName: "bar", Targets: defaultTargets},
+		{Name: endpoint.NewEndpointNameCommon("foo"), Targets: defaultTargets},
+		{Name: endpoint.NewEndpointNameCommon("bar"), Targets: defaultTargets},
 	}
 
 	// Create the source endpoints with different targets
 	sourceEndpoints := []*endpoint.Endpoint{
-		{DNSName: "foo", Targets: endpoint.Targets{"8.8.8.8"}},
-		{DNSName: "bar", Targets: endpoint.Targets{"8.8.4.4"}},
+		{Name: endpoint.NewEndpointNameCommon("foo"), Targets: endpoint.Targets{"8.8.8.8"}},
+		{Name: endpoint.NewEndpointNameCommon("bar"), Targets: endpoint.Targets{"8.8.4.4"}},
 	}
 
 	// Create a mocked source returning source targets

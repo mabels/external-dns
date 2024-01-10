@@ -164,7 +164,7 @@ func (p *NS1Provider) Records(ctx context.Context) ([]*endpoint.Endpoint, error)
 		for _, record := range zoneData.Records {
 			if provider.SupportedRecordType(record.Type) {
 				endpoints = append(endpoints, endpoint.NewEndpointWithTTL(
-					record.Domain,
+					endpoint.NewEndpointName(record.Domain, zone.Zone),
 					record.Type,
 					endpoint.TTL(record.TTL),
 					record.ShortAns...,
@@ -179,7 +179,7 @@ func (p *NS1Provider) Records(ctx context.Context) ([]*endpoint.Endpoint, error)
 
 // ns1BuildRecord returns a dns.Record for a change set
 func (p *NS1Provider) ns1BuildRecord(zoneName string, change *ns1Change) *dns.Record {
-	record := dns.NewRecord(zoneName, change.Endpoint.DNSName, change.Endpoint.RecordType)
+	record := dns.NewRecord(zoneName, change.Endpoint.Name.Fqdn(), change.Endpoint.RecordType)
 	for _, v := range change.Endpoint.Targets {
 		record.AddAnswer(dns.NewAnswer(strings.Split(v, " ")))
 	}
@@ -313,9 +313,9 @@ func ns1ChangesByZone(zones []*dns.Zone, changeSets []*ns1Change) map[string][]*
 	}
 
 	for _, c := range changeSets {
-		zone, _ := zoneNameIDMapper.FindZone(c.Endpoint.DNSName)
+		zone, _ := zoneNameIDMapper.FindZone(c.Endpoint.Name.Fqdn())
 		if zone == "" {
-			log.Debugf("Skipping record %s because no hosted zone matching record DNS Name was detected", c.Endpoint.DNSName)
+			log.Debugf("Skipping record %s because no hosted zone matching record DNS Name was detected", c.Endpoint.Name.Fqdn())
 			continue
 		}
 		changes[zone] = append(changes[zone], c)

@@ -128,11 +128,12 @@ func (p *AzureProvider) Records(ctx context.Context) (endpoints []*endpoint.Endp
 				ttl = endpoint.TTL(*recordSet.TTL)
 			}
 
-			ep := endpoint.NewEndpointWithTTL(name, recordType, ttl, targets...)
+			ep := endpoint.NewEndpointWithTTL(
+				endpoint.NewEndpointName(name, *zone.Name), recordType, ttl, targets...)
 			log.Debugf(
 				"Found %s record for '%s' with target '%s'.",
 				ep.RecordType,
-				ep.DNSName,
+				ep.Name.Fqdn(),
 				ep.Targets,
 			)
 			endpoints = append(endpoints, ep)
@@ -234,11 +235,11 @@ func (p *AzureProvider) mapChanges(zones []dns.Zone, changes *plan.Changes) (azu
 		}
 	}
 	mapChange := func(changeMap azureChangeMap, change *endpoint.Endpoint) {
-		zone, _ := zoneNameIDMapper.FindZone(change.DNSName)
+		zone, _ := zoneNameIDMapper.FindZone(change.Name.Fqdn())
 		if zone == "" {
-			if _, ok := ignored[change.DNSName]; !ok {
-				ignored[change.DNSName] = true
-				log.Infof("Ignoring changes to '%s' because a suitable Azure DNS zone was not found.", change.DNSName)
+			if _, ok := ignored[change.Name.Fqdn()]; !ok {
+				ignored[change.Name.Fqdn()] = true
+				log.Infof("Ignoring changes to '%s' because a suitable Azure DNS zone was not found.", change.Name.Fqdn())
 			}
 			return
 		}
@@ -265,8 +266,8 @@ func (p *AzureProvider) deleteRecords(ctx context.Context, deleted azureChangeMa
 	for zone, endpoints := range deleted {
 		for _, ep := range endpoints {
 			name := p.recordSetNameForZone(zone, ep)
-			if !p.domainFilter.Match(ep.DNSName) {
-				log.Debugf("Skipping deletion of record %s because it was filtered out by the specified --domain-filter", ep.DNSName)
+			if !p.domainFilter.Match(ep.Name.Fqdn()) {
+				log.Debugf("Skipping deletion of record %s because it was filtered out by the specified --domain-filter", ep.Name.Fqdn())
 				continue
 			}
 			if p.dryRun {
@@ -291,8 +292,8 @@ func (p *AzureProvider) updateRecords(ctx context.Context, updated azureChangeMa
 	for zone, endpoints := range updated {
 		for _, ep := range endpoints {
 			name := p.recordSetNameForZone(zone, ep)
-			if !p.domainFilter.Match(ep.DNSName) {
-				log.Debugf("Skipping update of record %s because it was filtered out by the specified --domain-filter", ep.DNSName)
+			if !p.domainFilter.Match(ep.Name.Fqdn()) {
+				log.Debugf("Skipping update of record %s because it was filtered out by the specified --domain-filter", ep.Name.Fqdn())
 				continue
 			}
 			if p.dryRun {
@@ -343,7 +344,7 @@ func (p *AzureProvider) updateRecords(ctx context.Context, updated azureChangeMa
 
 func (p *AzureProvider) recordSetNameForZone(zone string, endpoint *endpoint.Endpoint) string {
 	// Remove the zone from the record set
-	name := endpoint.DNSName
+	name := endpoint.Name.Fqdn()
 	name = name[:len(name)-len(zone)]
 	name = strings.TrimSuffix(name, ".")
 

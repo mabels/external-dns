@@ -257,7 +257,7 @@ func (p *CloudFlareProvider) Records(ctx context.Context) ([]*endpoint.Endpoint,
 		// As CloudFlare does not support "sets" of targets, but instead returns
 		// a single entry for each name/type/target, we have to group by name
 		// and record to allow the planner to calculate the correct plan. See #992.
-		endpoints = append(endpoints, groupByNameAndType(records)...)
+		endpoints = append(endpoints, groupByNameAndType(zone.Name, records)...)
 	}
 
 	return endpoints, nil
@@ -397,13 +397,7 @@ func (p *CloudFlareProvider) AdjustEndpoints(endpoints []*endpoint.Endpoint) []*
 				Value: strconv.FormatBool(p.proxiedByDefault),
 			})
 		}
-		switch e.RecordType {
-		case endpoint.RecordTypeCNAME, endpoint.RecordTypeMX:
-			// cloudflare strips the trailing dot from CNAME/MX records
-			// so we do the same to ensure idempotency in the read
-			// records from k8s
-			e.Targets = []string{strings.TrimRight(e.Targets[0], ".")}
-		}
+
 		adjustedEndpoints = append(adjustedEndpoints, e)
 	}
 	return adjustedEndpoints
@@ -455,7 +449,17 @@ type cfSrvData struct {
 }
 
 func applyRecordType(ep *endpoint.Endpoint, target string, rrec *cloudflare.DNSRecord) *cloudflare.DNSRecord {
+	// switch e.RecordType {
+	// case endpoint.RecordTypeCNAME, endpoint.RecordTypeMX:
+	// 	// cloudflare strips the trailing dot from CNAME/MX records
+	// 	// so we do the same to ensure idempotency in the read
+	// 	// records from k8s
+	// 	e.Targets = []string{strings.TrimRight(e.Targets[0], ".")}
+	// }
+
 	switch ep.RecordType {
+	case endpoint.RecordTypeCNAME:
+		rrec.Content = strings.TrimRight(target, ".")
 	case endpoint.RecordTypeSRV:
 		// 10 5 443 matrix.test.com.
 		parsed := reDNSRecordTypeSRV.FindStringSubmatch(target)
@@ -465,8 +469,8 @@ func applyRecordType(ep *endpoint.Endpoint, target string, rrec *cloudflare.DNSR
 			rrec.Priority = &prio16
 			weight, _ := strconv.ParseUint(parsed[2], 10, 16)
 			port, _ := strconv.ParseUint(parsed[3], 10, 16)
-			rrec.Content = fmt.Sprintf("%d\t%d\t%d\t%s", priority, weight, port, parsed[4])
-			parsedName := reDNSNameSRV.FindStringSubmatch(strings.TrimRight(ep.DNSName, "."))
+			rrec.Content = fmt.Sprintf("%d\t%d\t%d\t%s", priority, weight, port, strings.TrimRight(parsed[4], "."))
+			parsedName := reDNSNameSRV.FindStringSubmatch(strings.TrimRight(ep.Name.Fqdn(), "."))
 			if len(parsedName) == 4 {
 				rrec.Data = cfSrvData{
 					Name:     parsedName[3],
@@ -488,7 +492,7 @@ func applyRecordType(ep *endpoint.Endpoint, target string, rrec *cloudflare.DNSR
 				prio16 := uint16(priority)
 				rrec.Priority = &prio16
 			}
-			rrec.Content = parsed[2]
+			rrec.Content = strings.TrimRight(parsed[2], ".")
 		}
 	}
 	return rrec
@@ -502,7 +506,7 @@ func (p *CloudFlareProvider) newCloudFlareChange(action string, endpoint *endpoi
 		ttl = int(endpoint.RecordTTL)
 	}
 	rrec := cloudflare.DNSRecord{
-		Name:    endpoint.DNSName,
+		Name:    endpoint.Name.Fqdn(),
 		TTL:     ttl,
 		Proxied: &proxied,
 		Type:    endpoint.RecordType,
@@ -556,7 +560,7 @@ func shouldBeProxied(endpoint *endpoint.Endpoint, proxiedByDefault bool) bool {
 	return proxied
 }
 
-func groupByNameAndType(records []cloudflare.DNSRecord) []*endpoint.Endpoint {
+func groupByNameAndType(zoneName string, records []cloudflare.DNSRecord) []*endpoint.Endpoint {
 	endpoints := []*endpoint.Endpoint{}
 
 	// group supported records by name and type
@@ -603,7 +607,7 @@ func groupByNameAndType(records []cloudflare.DNSRecord) []*endpoint.Endpoint {
 		}
 		endpoints = append(endpoints,
 			endpoint.NewEndpointWithTTL(
-				records[0].Name,
+				endpoint.NewEndpointName(records[0].Name, zoneName),
 				records[0].Type,
 				endpoint.TTL(records[0].TTL),
 				targets...).

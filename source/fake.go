@@ -22,7 +22,6 @@ package source
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"net"
 	"time"
@@ -91,7 +90,7 @@ func generateIPAddress() string {
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyz")
 
-func generateDNSName(prefixLength int, dnsName string) string {
+func generateDNSName(prefixLength int, dnsName string) endpoint.EndpointName {
 	prefixBytes := make([]rune, prefixLength)
 
 	for i := range prefixBytes {
@@ -99,6 +98,5 @@ func generateDNSName(prefixLength int, dnsName string) string {
 	}
 
 	prefixStr := string(prefixBytes)
-
-	return fmt.Sprintf("%s.%s", prefixStr, dnsName)
+	return endpoint.NewEndpointName(prefixStr, dnsName)
 }

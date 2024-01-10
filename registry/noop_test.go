@@ -50,7 +50,7 @@ func testNoopRecords(t *testing.T) {
 	p.CreateZone("org")
 	inmemoryRecords := []*endpoint.Endpoint{
 		{
-			DNSName:    "example.org",
+			Name:       endpoint.NewEndpointNameCommon("example.org"),
 			Targets:    endpoint.Targets{"example-lb.com"},
 			RecordType: endpoint.RecordTypeCNAME,
 		},
@@ -72,19 +72,19 @@ func testNoopApplyChanges(t *testing.T) {
 	p.CreateZone("org")
 	inmemoryRecords := []*endpoint.Endpoint{
 		{
-			DNSName:    "example.org",
+			Name:       endpoint.NewEndpointNameCommon("example.org"),
 			Targets:    endpoint.Targets{"old-lb.com"},
 			RecordType: endpoint.RecordTypeCNAME,
 		},
 	}
 	expectedUpdate := []*endpoint.Endpoint{
 		{
-			DNSName:    "example.org",
+			Name:       endpoint.NewEndpointNameCommon("example.org"),
 			Targets:    endpoint.Targets{"new-example-lb.com"},
 			RecordType: endpoint.RecordTypeCNAME,
 		},
 		{
-			DNSName:    "new-record.org",
+			Name:       endpoint.NewEndpointNameCommon("new-record.org"),
 			Targets:    endpoint.Targets{"new-lb.org"},
 			RecordType: endpoint.RecordTypeCNAME,
 		},
@@ -100,7 +100,7 @@ func testNoopApplyChanges(t *testing.T) {
 	err := r.ApplyChanges(ctx, &plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "example.org",
+				Name:       endpoint.NewEndpointNameCommon("example.org"),
 				Targets:    endpoint.Targets{"lb.com"},
 				RecordType: endpoint.RecordTypeCNAME,
 			},
@@ -112,21 +112,21 @@ func testNoopApplyChanges(t *testing.T) {
 	require.NoError(t, r.ApplyChanges(ctx, &plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "new-record.org",
+				Name:       endpoint.NewEndpointNameCommon("new-record.org"),
 				Targets:    endpoint.Targets{"new-lb.org"},
 				RecordType: endpoint.RecordTypeCNAME,
 			},
 		},
 		UpdateNew: []*endpoint.Endpoint{
 			{
-				DNSName:    "example.org",
+				Name:       endpoint.NewEndpointNameCommon("example.org"),
 				Targets:    endpoint.Targets{"new-example-lb.com"},
 				RecordType: endpoint.RecordTypeCNAME,
 			},
 		},
 		UpdateOld: []*endpoint.Endpoint{
 			{
-				DNSName:    "example.org",
+				Name:       endpoint.NewEndpointNameCommon("example.org"),
 				Targets:    endpoint.Targets{"old-lb.com"},
 				RecordType: endpoint.RecordTypeCNAME,
 			},

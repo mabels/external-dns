@@ -131,7 +131,9 @@ func (p *BluecatProvider) Records(ctx context.Context) (endpoints []*endpoint.En
 			return nil, errors.Wrapf(err, "could not fetch TXT records for zone: %v", zone)
 		}
 		for _, rec := range resT {
-			tempEndpoint := endpoint.NewEndpoint(rec.Name, endpoint.RecordTypeTXT, rec.Properties)
+			tempEndpoint := endpoint.NewEndpoint(
+				endpoint.NewEndpointName(rec.Name, zone),
+				endpoint.RecordTypeTXT, rec.Properties)
 			tempEndpoint.Labels[endpoint.OwnerLabelKey], err = extractOwnerfromTXTRecord(rec.Properties)
 			if err != nil {
 				log.Debugf("External DNS Owner %s", err)
@@ -154,9 +156,12 @@ func (p *BluecatProvider) Records(ctx context.Context) (endpoints []*endpoint.En
 					if err != nil {
 						return nil, errors.Wrapf(err, "could not parse ttl '%d' as int for host record %v", ttl, rec.Name)
 					}
-					ep = endpoint.NewEndpointWithTTL(propMap["absoluteName"], endpoint.RecordTypeA, endpoint.TTL(ttl), ip)
+					ep = endpoint.NewEndpointWithTTL(
+						endpoint.NewEndpointName(propMap["absoluteName"], zone),
+						endpoint.RecordTypeA, endpoint.TTL(ttl), ip)
 				} else {
-					ep = endpoint.NewEndpoint(propMap["absoluteName"], endpoint.RecordTypeA, ip)
+					ep = endpoint.NewEndpoint(
+						endpoint.NewEndpointName(propMap["absoluteName"], zone), endpoint.RecordTypeA, ip)
 				}
 				for _, txtRec := range resT {
 					if strings.Compare(p.TxtPrefix+rec.Name+p.TxtSuffix, txtRec.Name) == 0 {
@@ -183,9 +188,10 @@ func (p *BluecatProvider) Records(ctx context.Context) (endpoints []*endpoint.En
 				if err != nil {
 					return nil, errors.Wrapf(err, "could not parse ttl '%d' as int for CNAME record %v", ttl, rec.Name)
 				}
-				ep = endpoint.NewEndpointWithTTL(propMap["absoluteName"], endpoint.RecordTypeCNAME, endpoint.TTL(ttl), propMap["linkedRecordName"])
+				ep = endpoint.NewEndpointWithTTL(endpoint.NewEndpointName(propMap["absoluteName"], zone), endpoint.RecordTypeCNAME, endpoint.TTL(ttl), propMap["linkedRecordName"])
 			} else {
-				ep = endpoint.NewEndpoint(propMap["absoluteName"], endpoint.RecordTypeCNAME, propMap["linkedRecordName"])
+				ep = endpoint.NewEndpoint(
+					endpoint.NewEndpointName(propMap["absoluteName"], zone), endpoint.RecordTypeCNAME, propMap["linkedRecordName"])
 			}
 			for _, txtRec := range resT {
 				if strings.Compare(p.TxtPrefix+rec.Name+p.TxtSuffix, txtRec.Name) == 0 {
@@ -247,9 +253,9 @@ func (p *BluecatProvider) mapChanges(zones []string, changes *plan.Changes) (blu
 	deleted := bluecatChangeMap{}
 
 	mapChange := func(changeMap bluecatChangeMap, change *endpoint.Endpoint) {
-		zone := p.findZone(zones, change.DNSName)
+		zone := p.findZone(zones, change.Name.Fqdn())
 		if zone == "" {
-			log.Debugf("ignoring changes to '%s' because a suitable Bluecat DNS zone was not found", change.DNSName)
+			log.Debugf("ignoring changes to '%s' because a suitable Bluecat DNS zone was not found", change.Name.Fqdn())
 			return
 		}
 		changeMap[zone] = append(changeMap[zone], change)
@@ -323,7 +329,7 @@ func (p *BluecatProvider) createRecords(created bluecatChangeMap) {
 			if p.dryRun {
 				log.Infof("would create %s record named '%s' to '%s' for Bluecat DNS zone '%s'.",
 					ep.RecordType,
-					ep.DNSName,
+					ep.Name.Fqdn(),
 					ep.Targets,
 					zone,
 				)
@@ -332,7 +338,7 @@ func (p *BluecatProvider) createRecords(created bluecatChangeMap) {
 
 			log.Infof("creating %s record named '%s' to '%s' for Bluecat DNS zone '%s'.",
 				ep.RecordType,
-				ep.DNSName,
+				ep.Name.Fqdn(),
 				ep.Targets,
 				zone,
 			)
@@ -342,7 +348,7 @@ func (p *BluecatProvider) createRecords(created bluecatChangeMap) {
 				log.Errorf(
 					"Failed to retrieve %s record named '%s' to '%s' for Bluecat DNS zone '%s': %v",
 					ep.RecordType,
-					ep.DNSName,
+					ep.Name.Fqdn(),
 					ep.Targets,
 					zone,
 					err,
@@ -363,7 +369,7 @@ func (p *BluecatProvider) createRecords(created bluecatChangeMap) {
 				log.Errorf(
 					"Failed to create %s record named '%s' to '%s' for Bluecat DNS zone '%s': %v",
 					ep.RecordType,
-					ep.DNSName,
+					ep.Name.Fqdn(),
 					ep.Targets,
 					zone,
 					err,
@@ -380,14 +386,14 @@ func (p *BluecatProvider) deleteRecords(deleted bluecatChangeMap) {
 			if p.dryRun {
 				log.Infof("would delete %s record named '%s' for Bluecat DNS zone '%s'.",
 					ep.RecordType,
-					ep.DNSName,
+					ep.Name.Fqdn(),
 					zone,
 				)
 				continue
 			} else {
 				log.Infof("deleting %s record named '%s' for Bluecat DNS zone '%s'.",
 					ep.RecordType,
-					ep.DNSName,
+					ep.Name.Fqdn(),
 					zone,
 				)
 
@@ -396,7 +402,7 @@ func (p *BluecatProvider) deleteRecords(deleted bluecatChangeMap) {
 					log.Errorf(
 						"Failed to retrieve %s record named '%s' to '%s' for Bluecat DNS zone '%s': %v",
 						ep.RecordType,
-						ep.DNSName,
+						ep.Name.Fqdn(),
 						ep.Targets,
 						zone,
 						err,
@@ -421,7 +427,7 @@ func (p *BluecatProvider) deleteRecords(deleted bluecatChangeMap) {
 				if err != nil {
 					log.Errorf("Failed to delete %s record named '%s' for Bluecat DNS zone '%s': %v",
 						ep.RecordType,
-						ep.DNSName,
+						ep.Name.Fqdn(),
 						zone,
 						err)
 				}
@@ -436,14 +442,14 @@ func (p *BluecatProvider) recordSet(ep *endpoint.Endpoint, getObject bool) (blue
 	case endpoint.RecordTypeA:
 		var res []api.BluecatHostRecord
 		obj := api.BluecatCreateHostRecordRequest{
-			AbsoluteName: ep.DNSName,
+			AbsoluteName: ep.Name.Fqdn(),
 			IP4Address:   ep.Targets[0],
 			TTL:          int(ep.RecordTTL),
 			Properties:   "",
 		}
 		if getObject {
 			var record api.BluecatHostRecord
-			err := p.gatewayClient.GetHostRecord(ep.DNSName, &record)
+			err := p.gatewayClient.GetHostRecord(ep.Name.Fqdn(), &record)
 			if err != nil {
 				return bluecatRecordSet{}, err
 			}
@@ -456,14 +462,14 @@ func (p *BluecatProvider) recordSet(ep *endpoint.Endpoint, getObject bool) (blue
 	case endpoint.RecordTypeCNAME:
 		var res []api.BluecatCNAMERecord
 		obj := api.BluecatCreateCNAMERecordRequest{
-			AbsoluteName: ep.DNSName,
+			AbsoluteName: ep.Name.Fqdn(),
 			LinkedRecord: ep.Targets[0],
 			TTL:          int(ep.RecordTTL),
 			Properties:   "",
 		}
 		if getObject {
 			var record api.BluecatCNAMERecord
-			err := p.gatewayClient.GetCNAMERecord(ep.DNSName, &record)
+			err := p.gatewayClient.GetCNAMERecord(ep.Name.Fqdn(), &record)
 			if err != nil {
 				return bluecatRecordSet{}, err
 			}
@@ -478,12 +484,12 @@ func (p *BluecatProvider) recordSet(ep *endpoint.Endpoint, getObject bool) (blue
 		// TODO: Allow setting TTL
 		// This is not implemented in the Bluecat Gateway
 		obj := api.BluecatCreateTXTRecordRequest{
-			AbsoluteName: ep.DNSName,
+			AbsoluteName: ep.Name.Fqdn(),
 			Text:         ep.Targets[0],
 		}
 		if getObject {
 			var record api.BluecatTXTRecord
-			err := p.gatewayClient.GetTXTRecord(ep.DNSName, &record)
+			err := p.gatewayClient.GetTXTRecord(ep.Name.Fqdn(), &record)
 			if err != nil {
 				return bluecatRecordSet{}, err
 			}

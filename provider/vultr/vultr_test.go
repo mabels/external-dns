@@ -158,7 +158,7 @@ func TestVultrProvider_Records(t *testing.T) {
 	}
 
 	for _, v := range records {
-		assert.Equal(t, strings.TrimSuffix(v.DNSName, ".test.com"), expected[0].Name)
+		assert.Equal(t, strings.TrimSuffix(v.Name.Fqdn(), ".test.com"), expected[0].Name)
 		assert.Equal(t, v.RecordType, expected[0].Type)
 		assert.Equal(t, int(v.RecordTTL), expected[0].TTL)
 	}
@@ -177,12 +177,12 @@ func TestVultrProvider_ApplyChanges(t *testing.T) {
 	}
 
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "test.com", Targets: endpoint.Targets{"target"}},
-		{DNSName: "ttl.test.com", Targets: endpoint.Targets{"target"}, RecordTTL: 100},
+		{Name: endpoint.NewEndpointNameCommon("test.com"), Targets: endpoint.Targets{"target"}},
+		{Name: endpoint.NewEndpointNameCommon("ttl.test.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 100},
 	}
 
-	changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "test.test.com", Targets: endpoint.Targets{"target-new"}, RecordType: "A", RecordTTL: 100}}
-	changes.Delete = []*endpoint.Endpoint{{DNSName: "test.test.com", Targets: endpoint.Targets{"target"}, RecordType: "A"}}
+	changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test.test.com"), Targets: endpoint.Targets{"target-new"}, RecordType: "A", RecordTTL: 100}}
+	changes.Delete = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test.test.com"), Targets: endpoint.Targets{"target"}, RecordType: "A"}}
 	err := provider.ApplyChanges(context.Background(), changes)
 	if err != nil {
 		t.Errorf("should not fail, %s", err)

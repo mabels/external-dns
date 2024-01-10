@@ -166,16 +166,16 @@ func (p *SafeDNSProvider) ApplyChanges(ctx context.Context, changes *plan.Change
 	}
 
 	for _, endpoint := range changes.Create {
-		_, ZoneName := zoneNameIDMapper.FindZone(endpoint.DNSName)
+		_, ZoneName := zoneNameIDMapper.FindZone(endpoint.Name.Zone())
 		for _, target := range endpoint.Targets {
 			request := safedns.CreateRecordRequest{
-				Name:    endpoint.DNSName,
+				Name:    endpoint.Name.Fqdn(),
 				Type:    endpoint.RecordType,
 				Content: target,
 			}
 			log.WithFields(log.Fields{
 				"zoneID":     ZoneName,
-				"dnsName":    endpoint.DNSName,
+				"dnsName":    endpoint.Name.Fqdn(),
 				"recordType": endpoint.RecordType,
 				"Value":      target,
 			}).Info("Creating record")
@@ -193,7 +193,7 @@ func (p *SafeDNSProvider) ApplyChanges(ctx context.Context, changes *plan.Change
 		var zoneRecord ZoneRecord
 		for _, target := range endpoint.Targets {
 			for _, zr := range zoneRecords {
-				if zr.Name == endpoint.DNSName && zr.Content == target {
+				if zr.Name == endpoint.Name.Zone() && zr.Content == target {
 					zoneRecord = zr
 					break
 				}
@@ -201,7 +201,7 @@ func (p *SafeDNSProvider) ApplyChanges(ctx context.Context, changes *plan.Change
 
 			newTTL := safedns.RecordTTL(int(endpoint.RecordTTL))
 			newRecord := safedns.PatchRecordRequest{
-				Name:    endpoint.DNSName,
+				Name:    endpoint.Name.Fqdn(),
 				Content: target,
 				TTL:     &newTTL,
 				Type:    endpoint.RecordType,
@@ -223,7 +223,7 @@ func (p *SafeDNSProvider) ApplyChanges(ctx context.Context, changes *plan.Change
 		// As above, currently iterates in O(n^2). May be a good start for optimisations.
 		var zoneRecord ZoneRecord
 		for _, zr := range zoneRecords {
-			if zr.Name == endpoint.DNSName && string(zr.Type) == endpoint.RecordType {
+			if zr.Name == endpoint.Name.Zone() && string(zr.Type) == endpoint.RecordType {
 				zoneRecord = zr
 				break
 			}

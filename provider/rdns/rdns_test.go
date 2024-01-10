@@ -122,8 +122,8 @@ func TestARecordTranslation(t *testing.T) {
 	}
 
 	ep := endpoints[0]
-	if ep.DNSName != expectedDNSName {
-		t.Errorf("got unexpected DNS name: %s != %s", ep.DNSName, expectedDNSName)
+	if ep.Name.Fqdn() != expectedDNSName {
+		t.Errorf("got unexpected DNS name: %s != %s", ep.Name.Fqdn(), expectedDNSName)
 	}
 	assert.Contains(t, expectedTargets, ep.Targets[0])
 	assert.Contains(t, expectedTargets, ep.Targets[1])
@@ -155,8 +155,8 @@ func TestTXTRecordTranslation(t *testing.T) {
 	if len(endpoints) != 1 {
 		t.Fatalf("got unexpected number of endpoints: %d", len(endpoints))
 	}
-	if endpoints[0].DNSName != expectedDNSName {
-		t.Errorf("got unexpected DNS name: %s != %s", endpoints[0].DNSName, expectedDNSName)
+	if endpoints[0].Name.Fqdn() != expectedDNSName {
+		t.Errorf("got unexpected DNS name: %s != %s", endpoints[0].Name.Fqdn(), expectedDNSName)
 	}
 	if endpoints[0].Targets[0] != expectedTarget {
 		t.Errorf("got unexpected DNS target: %s != %s", endpoints[0].Targets[0], expectedTarget)
@@ -201,8 +201,8 @@ func TestAWithTXTRecordTranslation(t *testing.T) {
 		}
 		delete(expectedTargets, ep.RecordType)
 
-		if ep.DNSName != expectedDNSName {
-			t.Errorf("got unexpected DNS name: %s != %s", ep.DNSName, expectedDNSName)
+		if ep.Name.Fqdn() != expectedDNSName {
+			t.Errorf("got unexpected DNS name: %s != %s", ep.Name.Fqdn(), expectedDNSName)
 		}
 
 		if ep.Targets[0] != expectedTarget {
@@ -223,8 +223,8 @@ func TestRDNSApplyChanges(t *testing.T) {
 
 	changes1 := &plan.Changes{
 		Create: []*endpoint.Endpoint{
-			endpoint.NewEndpoint("p1xaf1.lb.rancher.cloud", endpoint.RecordTypeA, "5.5.5.5", "6.6.6.6"),
-			endpoint.NewEndpoint("p1xaf1.lb.rancher.cloud", endpoint.RecordTypeTXT, "string1"),
+			endpoint.NewEndpoint(endpoint.NewEndpointName("p1xaf1.lb.rancher.cloud", "lb.rancher.cloud"), endpoint.RecordTypeA, "5.5.5.5", "6.6.6.6"),
+			endpoint.NewEndpoint(endpoint.NewEndpointName("p1xaf1.lb.rancher.cloud", "lb.rancher.cloud"), endpoint.RecordTypeTXT, "string1"),
 		},
 	}
 
@@ -241,16 +241,16 @@ func TestRDNSApplyChanges(t *testing.T) {
 
 	changes2 := &plan.Changes{
 		Create: []*endpoint.Endpoint{
-			endpoint.NewEndpoint("abx1v1.lb.rancher.cloud", endpoint.RecordTypeA, "7.7.7.7"),
+			endpoint.NewEndpoint(endpoint.NewEndpointName("abx1v1.lb.rancher.cloud", "lb.rancher.cloud"), endpoint.RecordTypeA, "7.7.7.7"),
 		},
 		UpdateNew: []*endpoint.Endpoint{
-			endpoint.NewEndpoint("p1xaf1.lb.rancher.cloud", endpoint.RecordTypeA, "8.8.8.8", "9.9.9.9"),
+			endpoint.NewEndpoint(endpoint.NewEndpointName("p1xaf1.lb.rancher.cloud", "lb.rancher.cloud"), endpoint.RecordTypeA, "8.8.8.8", "9.9.9.9"),
 		},
 	}
 
 	records, _ := provider.Records(context.Background())
 	for _, ep := range records {
-		if ep.DNSName == "p1xaf1.lb.rancher.cloud" {
+		if ep.Name.Fqdn() == "p1xaf1.lb.rancher.cloud" {
 			changes2.UpdateOld = append(changes2.UpdateOld, ep)
 		}
 	}
@@ -269,7 +269,7 @@ func TestRDNSApplyChanges(t *testing.T) {
 
 	changes3 := &plan.Changes{
 		Delete: []*endpoint.Endpoint{
-			endpoint.NewEndpoint("p1xaf1.lb.rancher.cloud", endpoint.RecordTypeA, "8.8.8.8", "9.9.9.9"),
+			endpoint.NewEndpoint(endpoint.NewEndpointName("p1xaf1.lb.rancher.cloud", "lb.rancher.cloud"), endpoint.RecordTypeA, "8.8.8.8", "9.9.9.9"),
 		},
 	}
 

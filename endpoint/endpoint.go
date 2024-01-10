@@ -51,7 +51,7 @@ const (
 )
 
 func getSupportedTypes() []string {
-	return []string{
+	ret := []string{
 		RecordTypeA,
 		RecordTypeAAAA,
 		RecordTypeMX,
@@ -63,9 +63,22 @@ func getSupportedTypes() []string {
 		RecordTypePTR,
 		RecordTypeSPF,
 	}
+	sort.Strings(ret)
+	return ret
+}
+
+func reverseAllRecordTypes() []string {
+	ret := getSupportedTypes()
+	for i := 0; i < len(ret)/2; i++ {
+		ret[i], ret[len(ret)-(1+i)] = ret[len(ret)-(1+i)], ret[i]
+	}
+	return ret
 }
 
 var AllRecordTypes = getSupportedTypes()
+
+// to prevent matching "A" when searching for "AAAA"
+var ReverseAllRecordTypes = reverseAllRecordTypes()
 
 func IsValidRecordType(recordType string) bool {
 	for _, t := range AllRecordTypes {
@@ -192,10 +205,70 @@ type ProviderSpecificProperty struct {
 // ProviderSpecific holds configuration which is specific to individual DNS providers
 type ProviderSpecific []ProviderSpecificProperty
 
+type EndpointName interface {
+	Zone() string
+	Host() string
+	AtHost() string
+	Fqdn() string
+	FqdnPtr() *string
+	FqdnDot() string
+}
+
+type fqdnEndpointName struct {
+	fqdn      string
+	zoneStart int
+}
+
+func NewEndpointNameCommon(fqdn string) EndpointName {
+	panic("need to impl")
+	// return fqdnEndpointName{
+	// 	fqdn:      fqdn,
+	// 	zoneStart: len(fqdn)
+	// }
+}
+
+func NewEndpointNameNoZone(fqdn string) EndpointName {
+	panic("need to impl")
+	// return fqdnEndpointName{
+	// 	fqdn:      fqdn,
+	// 	zoneStart: len(fqdn)
+	// }
+}
+
+func NewEndpointName(fqdn, zone string) EndpointName {
+	return fqdnEndpointName{
+		fqdn:      fqdn,
+		zoneStart: len(fqdn) - len(zone),
+	}
+}
+
+func (f fqdnEndpointName) Zone() string {
+	return f.fqdn[f.zoneStart:]
+}
+func (f fqdnEndpointName) Host() string {
+	return f.fqdn[0:f.zoneStart]
+}
+func (f fqdnEndpointName) AtHost() string {
+	return f.fqdn[0:f.zoneStart]
+}
+func (f fqdnEndpointName) Fqdn() string {
+	return f.fqdn
+}
+
+func (f fqdnEndpointName) FqdnDot() string {
+	return f.fqdn
+}
+
+func (f fqdnEndpointName) FqdnPtr() *string {
+	return &f.fqdn
+}
+
 // Endpoint is a high-level way of a connection between a service and an IP
 type Endpoint struct {
 	// The hostname of the DNS record
-	DNSName string `json:"dnsName,omitempty"`
+	Name EndpointName
+	// xDNSName string `json:"dnsName,omitempty"`
+	// xZone    string `json:"zone,omitempty"`
 	// The targets the DNS record points to
 	Targets Targets `json:"targets,omitempty"`
 	// RecordType type of record, e.g. CNAME, A, AAAA, SRV, TXT etc
@@ -213,26 +286,30 @@ type Endpoint struct {
 }
 
 // NewEndpoint initialization method to be used to create an endpoint
-func NewEndpoint(dnsName, recordType string, targets ...string) *Endpoint {
-	return NewEndpointWithTTL(dnsName, recordType, TTL(0), targets...)
+func NewEndpoint(en EndpointName, recordType string, targets ...string) *Endpoint {
+	return NewEndpointWithTTL(en, recordType, TTL(0), targets...)
 }
 
 // NewEndpointWithTTL initialization method to be used to create an endpoint with a TTL struct
-func NewEndpointWithTTL(dnsName, recordType string, ttl TTL, targets ...string) *Endpoint {
+func NewEndpointWithTTL(en EndpointName, recordType string, ttl TTL, targets ...string) *Endpoint {
 	cleanTargets := make([]string, len(targets))
 	for idx, target := range targets {
-		cleanTargets[idx] = strings.TrimSuffix(target, ".")
+		cleanTargets[idx] = strings.TrimSpace(target)
 	}
 
-	for _, label := range strings.Split(dnsName, ".") {
+	for _, label := range strings.Split(en.Fqdn(), ".") {
 		if len(label) > 63 {
-			log.Errorf("label %s in %s is longer than 63 characters. Cannot create endpoint", label, dnsName)
+			log.Errorf("label %s in %s is longer than 63 characters. Cannot create endpoint", label, en.Fqdn())
 			return nil
 		}
 	}
+	// if !strings.HasSuffix(dnsName, zone) {
+	// 	log.Errorf("zone %s is not a suffix of %s. Cannot create endpoint", zone, dnsName)
+	// 	return nil
+	// }
 
 	return &Endpoint{
-		DNSName:    strings.TrimSuffix(dnsName, "."),
+		Name:       en,
 		Targets:    cleanTargets,
 		RecordType: recordType,
 		Labels:     NewLabels(),
@@ -271,7 +348,7 @@ func (e *Endpoint) GetProviderSpecificProperty(key string) (ProviderSpecificProp
 }
 
 func (e *Endpoint) String() string {
-	return fmt.Sprintf("%s %d IN %s %s %s %s", e.DNSName, e.RecordTTL, e.RecordType, e.SetIdentifier, e.Targets, e.ProviderSpecific)
+	return fmt.Sprintf("%s %d IN %s %s %s %s", e.Name.Fqdn(), e.RecordTTL, e.RecordType, e.SetIdentifier, e.Targets, e.ProviderSpecific)
 }
 
 // DNSEndpointSpec defines the desired state of DNSEndpoint

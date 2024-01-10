@@ -290,9 +290,9 @@ func TestAWSSDProvider_Records(t *testing.T) {
 	}
 
 	expectedEndpoints := []*endpoint.Endpoint{
-		{DNSName: "service1.private.com", Targets: endpoint.Targets{"1.2.3.4", "1.2.3.5"}, RecordType: endpoint.RecordTypeA, RecordTTL: 100, Labels: map[string]string{endpoint.AWSSDDescriptionLabel: "owner-id"}},
-		{DNSName: "service2.private.com", Targets: endpoint.Targets{"load-balancer.us-east-1.elb.amazonaws.com"}, RecordType: endpoint.RecordTypeCNAME, RecordTTL: 100, Labels: map[string]string{endpoint.AWSSDDescriptionLabel: "owner-id"}},
-		{DNSName: "service3.private.com", Targets: endpoint.Targets{"cname.target.com"}, RecordType: endpoint.RecordTypeCNAME, RecordTTL: 80, Labels: map[string]string{endpoint.AWSSDDescriptionLabel: "owner-id"}},
+		{Name: endpoint.NewEndpointNameCommon("service1.private.com"), Targets: endpoint.Targets{"1.2.3.4", "1.2.3.5"}, RecordType: endpoint.RecordTypeA, RecordTTL: 100, Labels: map[string]string{endpoint.AWSSDDescriptionLabel: "owner-id"}},
+		{Name: endpoint.NewEndpointNameCommon("service2.private.com"), Targets: endpoint.Targets{"load-balancer.us-east-1.elb.amazonaws.com"}, RecordType: endpoint.RecordTypeCNAME, RecordTTL: 100, Labels: map[string]string{endpoint.AWSSDDescriptionLabel: "owner-id"}},
+		{Name: endpoint.NewEndpointNameCommon("service3.private.com"), Targets: endpoint.Targets{"cname.target.com"}, RecordType: endpoint.RecordTypeCNAME, RecordTTL: 80, Labels: map[string]string{endpoint.AWSSDDescriptionLabel: "owner-id"}},
 	}
 
 	api := &AWSSDClientStub{
@@ -324,9 +324,9 @@ func TestAWSSDProvider_ApplyChanges(t *testing.T) {
 	}
 
 	expectedEndpoints := []*endpoint.Endpoint{
-		{DNSName: "service1.private.com", Targets: endpoint.Targets{"1.2.3.4", "1.2.3.5"}, RecordType: endpoint.RecordTypeA, RecordTTL: 60},
-		{DNSName: "service2.private.com", Targets: endpoint.Targets{"load-balancer.us-east-1.elb.amazonaws.com"}, RecordType: endpoint.RecordTypeCNAME, RecordTTL: 80},
-		{DNSName: "service3.private.com", Targets: endpoint.Targets{"cname.target.com"}, RecordType: endpoint.RecordTypeCNAME, RecordTTL: 100},
+		{Name: endpoint.NewEndpointNameCommon("service1.private.com"), Targets: endpoint.Targets{"1.2.3.4", "1.2.3.5"}, RecordType: endpoint.RecordTypeA, RecordTTL: 60},
+		{Name: endpoint.NewEndpointNameCommon("service2.private.com"), Targets: endpoint.Targets{"load-balancer.us-east-1.elb.amazonaws.com"}, RecordType: endpoint.RecordTypeCNAME, RecordTTL: 80},
+		{Name: endpoint.NewEndpointNameCommon("service3.private.com"), Targets: endpoint.Targets{"cname.target.com"}, RecordType: endpoint.RecordTypeCNAME, RecordTTL: 100},
 	}
 
 	provider := newTestAWSSDProvider(api, endpoint.NewDomainFilter([]string{}), "", "")
@@ -784,7 +784,7 @@ func TestAWSSDProvider_RegisterInstance(t *testing.T) {
 	// IP-based instance
 	provider.RegisterInstance(services["private"]["a-srv"], &endpoint.Endpoint{
 		RecordType: endpoint.RecordTypeA,
-		DNSName:    "service1.private.com.",
+		Name:       endpoint.NewEndpointNameCommon("service1.private.com."),
 		RecordTTL:  300,
 		Targets:    endpoint.Targets{"1.2.3.4", "1.2.3.5"},
 	})
@@ -804,7 +804,7 @@ func TestAWSSDProvider_RegisterInstance(t *testing.T) {
 	// AWS ELB instance (ALIAS)
 	provider.RegisterInstance(services["private"]["alias-srv"], &endpoint.Endpoint{
 		RecordType: endpoint.RecordTypeCNAME,
-		DNSName:    "service1.private.com.",
+		Name:       endpoint.NewEndpointNameCommon("service1.private.com."),
 		RecordTTL:  300,
 		Targets:    endpoint.Targets{"load-balancer.us-east-1.elb.amazonaws.com", "load-balancer.us-west-2.elb.amazonaws.com"},
 	})
@@ -824,7 +824,7 @@ func TestAWSSDProvider_RegisterInstance(t *testing.T) {
 	// AWS NLB instance (ALIAS)
 	provider.RegisterInstance(services["private"]["alias-srv"], &endpoint.Endpoint{
 		RecordType: endpoint.RecordTypeCNAME,
-		DNSName:    "service1.private.com.",
+		Name:       endpoint.NewEndpointNameCommon("service1.private.com."),
 		RecordTTL:  300,
 		Targets:    endpoint.Targets{"load-balancer.elb.us-west-2.amazonaws.com"},
 	})
@@ -838,7 +838,7 @@ func TestAWSSDProvider_RegisterInstance(t *testing.T) {
 	// CNAME instance
 	provider.RegisterInstance(services["private"]["cname-srv"], &endpoint.Endpoint{
 		RecordType: endpoint.RecordTypeCNAME,
-		DNSName:    "service2.private.com.",
+		Name:       endpoint.NewEndpointNameCommon("service2.private.com."),
 		RecordTTL:  300,
 		Targets:    endpoint.Targets{"cname.target.com"},
 	})
@@ -896,7 +896,8 @@ func TestAWSSDProvider_DeregisterInstance(t *testing.T) {
 
 	provider := newTestAWSSDProvider(api, endpoint.NewDomainFilter([]string{}), "", "")
 
-	provider.DeregisterInstance(services["private"]["srv1"], endpoint.NewEndpoint("srv1.private.com.", endpoint.RecordTypeA, "1.2.3.4"))
+	provider.DeregisterInstance(services["private"]["srv1"], endpoint.NewEndpoint(
+		endpoint.NewEndpointNameCommon("srv1.private.com."), endpoint.RecordTypeA, "1.2.3.4"))
 
 	assert.Len(t, instances["srv1"], 0)
 }

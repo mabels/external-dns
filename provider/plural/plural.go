@@ -112,7 +112,7 @@ func makeChange(change string, target []string, endpoint *endpoint.Endpoint) *Re
 	return &RecordChange{
 		Action: change,
 		Record: &DnsRecord{
-			Name:    endpoint.DNSName,
+			Name:    endpoint.Name.Fqdn(),
 			Type:    endpoint.RecordType,
 			Records: target,
 		},

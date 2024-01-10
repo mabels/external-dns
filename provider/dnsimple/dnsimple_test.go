@@ -168,15 +168,15 @@ func testDnsimpleProviderRecords(t *testing.T) {
 func testDnsimpleProviderApplyChanges(t *testing.T) {
 	changes := &plan.Changes{}
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "example.example.com", Targets: endpoint.Targets{"target"}, RecordType: endpoint.RecordTypeCNAME},
-		{DNSName: "custom-ttl.example.com", RecordTTL: 60, Targets: endpoint.Targets{"target"}, RecordType: endpoint.RecordTypeCNAME},
+		{Name: endpoint.NewEndpointNameCommon("example.example.com"), Targets: endpoint.Targets{"target"}, RecordType: endpoint.RecordTypeCNAME},
+		{Name: endpoint.NewEndpointNameCommon("custom-ttl.example.com"), RecordTTL: 60, Targets: endpoint.Targets{"target"}, RecordType: endpoint.RecordTypeCNAME},
 	}
 	changes.Delete = []*endpoint.Endpoint{
-		{DNSName: "example-beta.example.com", Targets: endpoint.Targets{"127.0.0.1"}, RecordType: endpoint.RecordTypeA},
+		{Name: endpoint.NewEndpointNameCommon("example-beta.example.com"), Targets: endpoint.Targets{"127.0.0.1"}, RecordType: endpoint.RecordTypeA},
 	}
 	changes.UpdateNew = []*endpoint.Endpoint{
-		{DNSName: "example.example.com", Targets: endpoint.Targets{"target"}, RecordType: endpoint.RecordTypeCNAME},
-		{DNSName: "example.com", Targets: endpoint.Targets{"127.0.0.1"}, RecordType: endpoint.RecordTypeA},
+		{Name: endpoint.NewEndpointNameCommon("example.example.com"), Targets: endpoint.Targets{"target"}, RecordType: endpoint.RecordTypeCNAME},
+		{Name: endpoint.NewEndpointNameCommon("example.com"), Targets: endpoint.Targets{"127.0.0.1"}, RecordType: endpoint.RecordTypeA},
 	}
 
 	mockProvider.accountID = "1"
@@ -189,7 +189,7 @@ func testDnsimpleProviderApplyChanges(t *testing.T) {
 func testDnsimpleProviderApplyChangesSkipsUnknown(t *testing.T) {
 	changes := &plan.Changes{}
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "example.not-included.com", Targets: endpoint.Targets{"dasd"}, RecordType: endpoint.RecordTypeCNAME},
+		{Name: endpoint.NewEndpointNameCommon("example.not-included.com"), Targets: endpoint.Targets{"dasd"}, RecordType: endpoint.RecordTypeCNAME},
 	}
 
 	mockProvider.accountID = "1"

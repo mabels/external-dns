@@ -119,11 +119,11 @@ func TestCivoProviderRecords(t *testing.T) {
 	records, err := provider.Records(context.Background())
 	assert.NoError(t, err)
 
-	assert.Equal(t, strings.TrimSuffix(records[0].DNSName, ".example.com"), expected[0].Name)
+	assert.Equal(t, strings.TrimSuffix(records[0].Name.Fqdn(), ".example.com"), expected[0].Name)
 	assert.Equal(t, records[0].RecordType, string(expected[0].Type))
 	assert.Equal(t, int(records[0].RecordTTL), expected[0].TTL)
 
-	assert.Equal(t, strings.TrimSuffix(records[1].DNSName, ".example.com"), expected[1].Name)
+	assert.Equal(t, strings.TrimSuffix(records[1].Name.Fqdn(), ".example.com"), expected[1].Name)
 	assert.Equal(t, records[1].RecordType, string(expected[1].Type))
 	assert.Equal(t, int(records[1].RecordTTL), expected[1].TTL)
 }
@@ -173,8 +173,8 @@ func TestCivoProcessCreateActions(t *testing.T) {
 
 	createsByZone := map[string][]*endpoint.Endpoint{
 		"example.com": {
-			endpoint.NewEndpoint("foo.example.com", endpoint.RecordTypeA, "1.2.3.4"),
-			endpoint.NewEndpoint("txt.example.com", endpoint.RecordTypeCNAME, "foo.example.com"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("foo.example.com"), endpoint.RecordTypeA, "1.2.3.4"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("txt.example.com"), endpoint.RecordTypeCNAME, "foo.example.com"),
 		},
 	}
 
@@ -243,8 +243,8 @@ func TestCivoProcessCreateActionsWithError(t *testing.T) {
 
 	createsByZone := map[string][]*endpoint.Endpoint{
 		"example.com": {
-			endpoint.NewEndpoint("foo.example.com", "AAAA", "1.2.3.4"),
-			endpoint.NewEndpoint("txt.example.com", endpoint.RecordTypeCNAME, "foo.example.com"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("foo.example.com"), "AAAA", "1.2.3.4"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("txt.example.com"), endpoint.RecordTypeCNAME, "foo.example.com"),
 		},
 	}
 
@@ -297,8 +297,8 @@ func TestCivoProcessUpdateActions(t *testing.T) {
 
 	updatesByZone := map[string][]*endpoint.Endpoint{
 		"example.com": {
-			endpoint.NewEndpoint("txt.example.com", endpoint.RecordTypeA, "10.20.30.40"),
-			endpoint.NewEndpoint("foo.example.com", endpoint.RecordTypeCNAME, "bar.example.com"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("txt.example.com"), endpoint.RecordTypeA, "10.20.30.40"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("foo.example.com"), endpoint.RecordTypeCNAME, "bar.example.com"),
 		},
 	}
 
@@ -426,8 +426,8 @@ func TestCivoProcessDeleteAction(t *testing.T) {
 
 	deleteByDomain := map[string][]*endpoint.Endpoint{
 		"example.com": {
-			endpoint.NewEndpoint("txt.example.com", endpoint.RecordTypeA, "1.2.3.4"),
-			endpoint.NewEndpoint("foo.example.com", endpoint.RecordTypeA, "5.6.7.8"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("txt.example.com"), endpoint.RecordTypeA, "1.2.3.4"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("foo.example.com"), endpoint.RecordTypeA, "5.6.7.8"),
 		},
 	}
 
@@ -504,12 +504,12 @@ func TestCivoApplyChanges(t *testing.T) {
 		Client: *client,
 	}
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "new.ext-dns-test.example.com", Targets: endpoint.Targets{"target"}, RecordType: endpoint.RecordTypeA},
-		{DNSName: "new.ext-dns-test-with-ttl.example.com", Targets: endpoint.Targets{"target"}, RecordType: endpoint.RecordTypeA, RecordTTL: 100},
+		{Name: endpoint.NewEndpointNameCommon("new.ext-dns-test.example.com"), Targets: endpoint.Targets{"target"}, RecordType: endpoint.RecordTypeA},
+		{Name: endpoint.NewEndpointNameCommon("new.ext-dns-test-with-ttl.example.com"), Targets: endpoint.Targets{"target"}, RecordType: endpoint.RecordTypeA, RecordTTL: 100},
 	}
-	changes.Delete = []*endpoint.Endpoint{{DNSName: "foobar.ext-dns-test.example.com", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"target"}}}
-	changes.UpdateOld = []*endpoint.Endpoint{{DNSName: "foobar.ext-dns-test.example.de", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"target-old"}}}
-	changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "foobar.ext-dns-test.foo.com", Targets: endpoint.Targets{"target-new"}, RecordType: endpoint.RecordTypeCNAME, RecordTTL: 100}}
+	changes.Delete = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("foobar.ext-dns-test.example.com"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"target"}}}
+	changes.UpdateOld = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("foobar.ext-dns-test.example.de"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"target-old"}}}
+	changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("foobar.ext-dns-test.foo.com"), Targets: endpoint.Targets{"target-new"}, RecordType: endpoint.RecordTypeCNAME, RecordTTL: 100}}
 	err := provider.ApplyChanges(context.Background(), changes)
 	assert.NoError(t, err)
 }
@@ -598,16 +598,12 @@ func TestCivoProviderFetchRecordsWithError(t *testing.T) {
 }
 
 func TestCivo_getStrippedRecordName(t *testing.T) {
-	assert.Equal(t, "", getStrippedRecordName(civogo.DNSDomain{
-		Name: "foo.com",
-	}, endpoint.Endpoint{
-		DNSName: "foo.com",
+	assert.Equal(t, "", getStrippedRecordName(endpoint.Endpoint{
+		Name: endpoint.NewEndpointNameCommon("foo.com"),
 	}))
 
-	assert.Equal(t, "api", getStrippedRecordName(civogo.DNSDomain{
-		Name: "foo.com",
-	}, endpoint.Endpoint{
-		DNSName: "api.foo.com",
+	assert.Equal(t, "api", getStrippedRecordName(endpoint.Endpoint{
+		Name: endpoint.NewEndpointNameCommon("api.foo.com"),
 	}))
 }
 
@@ -660,7 +656,7 @@ func TestCivoProviderGetRecordID(t *testing.T) {
 		TTL:         600,
 	}}
 
-	endPoint := endpoint.Endpoint{DNSName: "www.test.com", Targets: endpoint.Targets{"10.0.0.0"}, RecordType: "A"}
+	endPoint := endpoint.Endpoint{Name: endpoint.NewEndpointNameCommon("www.test.com"), Targets: endpoint.Targets{"10.0.0.0"}, RecordType: "A"}
 	id := getRecordID(record, zone, endPoint)
 
 	assert.Equal(t, id[0].ID, record[0].ID)

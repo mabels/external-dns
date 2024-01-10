@@ -312,8 +312,8 @@ func TestGandiProvider_Records(t *testing.T) {
 		t.Errorf("should not fail, %s", err)
 	}
 	assert.Equal(t, 3, len(endpoints))
-	fmt.Printf("%+v\n", endpoints[0].DNSName)
-	assert.Equal(t, "example.com", endpoints[0].DNSName)
+	fmt.Printf("%+v\n", endpoints[0].Name.Fqdn())
+	assert.Equal(t, "example.com", endpoints[0].Name.Fqdn())
 	assert.Equal(t, endpoint.RecordTypeCNAME, endpoints[0].RecordType)
 	td.Cmp(t, expectedActions, mockedClient.Actions)
 }
@@ -387,9 +387,9 @@ func TestGandiProvider_ApplyChanges(t *testing.T) {
 		LiveDNSClient: mockedClient,
 	}
 
-	changes.Create = []*endpoint.Endpoint{{DNSName: "test2.example.com", Targets: endpoint.Targets{"target"}, RecordType: "A", RecordTTL: 666}}
-	changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "test3.example.com", Targets: endpoint.Targets{"target-new"}, RecordType: "A", RecordTTL: 777}}
-	changes.Delete = []*endpoint.Endpoint{{DNSName: "test4.example.com", Targets: endpoint.Targets{"target-other"}, RecordType: "A"}}
+	changes.Create = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test2.example.com"), Targets: endpoint.Targets{"target"}, RecordType: "A", RecordTTL: 666}}
+	changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test3.example.com"), Targets: endpoint.Targets{"target-new"}, RecordType: "A", RecordTTL: 777}}
+	changes.Delete = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test4.example.com"), Targets: endpoint.Targets{"target-other"}, RecordType: "A"}}
 
 	err := mockedProvider.ApplyChanges(context.Background(), changes)
 	if err != nil {
@@ -439,9 +439,9 @@ func TestGandiProvider_ApplyChangesSkipsNonManaged(t *testing.T) {
 		LiveDNSClient: mockedClient,
 	}
 
-	changes.Create = []*endpoint.Endpoint{{DNSName: "example.net", Targets: endpoint.Targets{"target"}}}
-	changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "test.example.net", Targets: endpoint.Targets{"target-new"}, RecordType: "A", RecordTTL: 777}}
-	changes.Delete = []*endpoint.Endpoint{{DNSName: "test2.example.net", Targets: endpoint.Targets{"target"}, RecordType: "A"}}
+	changes.Create = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("example.net"), Targets: endpoint.Targets{"target"}}}
+	changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test.example.net"), Targets: endpoint.Targets{"target-new"}, RecordType: "A", RecordTTL: 777}}
+	changes.Delete = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test2.example.net"), Targets: endpoint.Targets{"target"}, RecordType: "A"}}
 
 	err := mockedProvider.ApplyChanges(context.Background(), changes)
 	if err != nil {
@@ -464,9 +464,9 @@ func TestGandiProvider_ApplyChangesCreateUpdateCname(t *testing.T) {
 	}
 
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "test-cname.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "CNAME"},
+		{Name: endpoint.NewEndpointNameCommon("test-cname.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "CNAME"},
 	}
-	changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "test-cname2.example.com", Targets: endpoint.Targets{"target-new"}, RecordType: "CNAME", RecordTTL: 777}}
+	changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test-cname2.example.com"), Targets: endpoint.Targets{"target-new"}, RecordType: "CNAME", RecordTTL: 777}}
 
 	err := mockedProvider.ApplyChanges(context.Background(), changes)
 	if err != nil {
@@ -509,7 +509,7 @@ func TestGandiProvider_ApplyChangesCreateEmpty(t *testing.T) {
 	}
 
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 	changes.UpdateNew = []*endpoint.Endpoint{}
 
@@ -545,13 +545,13 @@ func TestGandiProvider_ApplyChangesRespectsDryRun(t *testing.T) {
 	}
 
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "foo.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("foo.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 	changes.UpdateNew = []*endpoint.Endpoint{
-		{DNSName: "bar.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("bar.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 	changes.Delete = []*endpoint.Endpoint{
-		{DNSName: "baz.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("baz.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 
 	err := mockedProvider.ApplyChanges(context.Background(), changes)
@@ -575,13 +575,13 @@ func TestGandiProvider_ApplyChangesErrorListDomains(t *testing.T) {
 	}
 
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "foo.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("foo.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 	changes.UpdateNew = []*endpoint.Endpoint{
-		{DNSName: "bar.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("bar.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 	changes.Delete = []*endpoint.Endpoint{
-		{DNSName: "baz.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("baz.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 
 	err := mockedProvider.ApplyChanges(context.Background(), changes)
@@ -605,13 +605,13 @@ func TestGandiProvider_ApplyChangesErrorCreate(t *testing.T) {
 	}
 
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "foo.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("foo.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 	changes.UpdateNew = []*endpoint.Endpoint{
-		{DNSName: "bar.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("bar.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 	changes.Delete = []*endpoint.Endpoint{
-		{DNSName: "baz.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("baz.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 
 	err := mockedProvider.ApplyChanges(context.Background(), changes)
@@ -645,13 +645,13 @@ func TestGandiProvider_ApplyChangesErrorUpdate(t *testing.T) {
 	}
 
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "foo.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("foo.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 	changes.UpdateNew = []*endpoint.Endpoint{
-		{DNSName: "bar.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("bar.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 	changes.Delete = []*endpoint.Endpoint{
-		{DNSName: "baz.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("baz.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 
 	err := mockedProvider.ApplyChanges(context.Background(), changes)
@@ -695,13 +695,13 @@ func TestGandiProvider_ApplyChangesErrorDelete(t *testing.T) {
 	}
 
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "foo.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("foo.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 	changes.UpdateNew = []*endpoint.Endpoint{
-		{DNSName: "bar.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("bar.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 	changes.Delete = []*endpoint.Endpoint{
-		{DNSName: "baz.example.com", Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
+		{Name: endpoint.NewEndpointNameCommon("baz.example.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 666, RecordType: "A"},
 	}
 
 	err := mockedProvider.ApplyChanges(context.Background(), changes)

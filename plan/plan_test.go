@@ -18,12 +18,15 @@ package plan
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"sigs.k8s.io/external-dns/endpoint"
 	"sigs.k8s.io/external-dns/internal/testutils"
+	"sigs.k8s.io/external-dns/provider/inmemory"
 )
 
 type PlanTestSuite struct {
@@ -62,9 +65,14 @@ type PlanTestSuite struct {
 }
 
 func (suite *PlanTestSuite) SetupTest() {
-	suite.managedRecordTypes = []string{endpoint.RecordTypeA, endpoint.RecordTypeCNAME, "MX"}
+	suite.managedRecordTypes = []string{
+		endpoint.RecordTypeA,
+		endpoint.RecordTypeCNAME,
+		endpoint.RecordTypeTXT, // for the heritage TXT record
+		endpoint.RecordTypeMX,
+	}
 	suite.fooV1Cname = &endpoint.Endpoint{
-		DNSName:    "foo",
+		Name:       endpoint.NewEndpointNameCommon("foo"),
 		Targets:    endpoint.Targets{"v1"},
 		RecordType: "CNAME",
 		Labels: map[string]string{
@@ -73,7 +81,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.fooV1MX = &endpoint.Endpoint{
-		DNSName:    "foo",
+		Name:       endpoint.NewEndpointNameCommon("foo"),
 		Targets:    endpoint.Targets{"v1"},
 		RecordType: "MX",
 		Labels: map[string]string{
@@ -82,7 +90,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.fooV2MX = &endpoint.Endpoint{
-		DNSName:    "foo",
+		Name:       endpoint.NewEndpointNameCommon("foo"),
 		Targets:    endpoint.Targets{"v2"},
 		RecordType: "MX",
 		Labels: map[string]string{
@@ -91,7 +99,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.fooV1V2MX = &endpoint.Endpoint{
-		DNSName:    "foo",
+		Name:       endpoint.NewEndpointNameCommon("foo"),
 		Targets:    endpoint.Targets{"v1", "v2"},
 		RecordType: "MX",
 		Labels: map[string]string{
@@ -101,7 +109,7 @@ func (suite *PlanTestSuite) SetupTest() {
 	}
 	// same resource as fooV1Cname, but target is different. It will never be picked because its target lexicographically bigger than "v1"
 	suite.fooV3CnameSameResource = &endpoint.Endpoint{ // TODO: remove this once endpoint can support multiple targets
-		DNSName:    "foo",
+		Name:       endpoint.NewEndpointNameCommon("foo"),
 		Targets:    endpoint.Targets{"v3"},
 		RecordType: "CNAME",
 		Labels: map[string]string{
@@ -110,7 +118,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.fooV2Cname = &endpoint.Endpoint{
-		DNSName:    "foo",
+		Name:       endpoint.NewEndpointNameCommon("foo"),
 		Targets:    endpoint.Targets{"v2"},
 		RecordType: "CNAME",
 		Labels: map[string]string{
@@ -118,7 +126,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.fooV2CnameUppercase = &endpoint.Endpoint{
-		DNSName:    "foo",
+		Name:       endpoint.NewEndpointNameCommon("foo"),
 		Targets:    endpoint.Targets{"V2"},
 		RecordType: "CNAME",
 		Labels: map[string]string{
@@ -126,21 +134,21 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.fooV2TXT = &endpoint.Endpoint{
-		DNSName:    "foo",
+		Name:       endpoint.NewEndpointNameCommon("foo"),
 		RecordType: "TXT",
 	}
 	suite.fooV2MXNoLabel = &endpoint.Endpoint{
-		DNSName:    "foo",
+		Name:       endpoint.NewEndpointNameCommon("foo"),
 		Targets:    endpoint.Targets{"v2"},
 		RecordType: "MX",
 	}
 	suite.fooV2CnameNoLabel = &endpoint.Endpoint{
-		DNSName:    "foo",
+		Name:       endpoint.NewEndpointNameCommon("foo"),
 		Targets:    endpoint.Targets{"v2"},
 		RecordType: "CNAME",
 	}
 	suite.fooA5 = &endpoint.Endpoint{
-		DNSName:    "foo",
+		Name:       endpoint.NewEndpointNameCommon("foo"),
 		Targets:    endpoint.Targets{"5.5.5.5"},
 		RecordType: "A",
 		Labels: map[string]string{
@@ -148,7 +156,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.fooAAAA = &endpoint.Endpoint{
-		DNSName:    "foo",
+		Name:       endpoint.NewEndpointNameCommon("foo"),
 		Targets:    endpoint.Targets{"2001:DB8::1"},
 		RecordType: "AAAA",
 		Labels: map[string]string{
@@ -156,7 +164,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.dsA = &endpoint.Endpoint{
-		DNSName:    "ds",
+		Name:       endpoint.NewEndpointNameCommon("ds"),
 		Targets:    endpoint.Targets{"1.1.1.1"},
 		RecordType: "A",
 		Labels: map[string]string{
@@ -164,7 +172,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.dsAAAA = &endpoint.Endpoint{
-		DNSName:    "ds",
+		Name:       endpoint.NewEndpointNameCommon("ds"),
 		Targets:    endpoint.Targets{"1.1.1.1"},
 		RecordType: "AAAA",
 		Labels: map[string]string{
@@ -172,7 +180,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.bar127A = &endpoint.Endpoint{
-		DNSName:    "bar",
+		Name:       endpoint.NewEndpointNameCommon("bar"),
 		Targets:    endpoint.Targets{"127.0.0.1"},
 		RecordType: "A",
 		Labels: map[string]string{
@@ -180,7 +188,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.bar127AWithTTL = &endpoint.Endpoint{
-		DNSName:    "bar",
+		Name:       endpoint.NewEndpointNameCommon("bar"),
 		Targets:    endpoint.Targets{"127.0.0.1"},
 		RecordType: "A",
 		RecordTTL:  300,
@@ -189,7 +197,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.bar127AWithProviderSpecificTrue = &endpoint.Endpoint{
-		DNSName:    "bar",
+		Name:       endpoint.NewEndpointNameCommon("bar"),
 		Targets:    endpoint.Targets{"127.0.0.1"},
 		RecordType: "A",
 		Labels: map[string]string{
@@ -203,7 +211,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.bar127AWithProviderSpecificFalse = &endpoint.Endpoint{
-		DNSName:    "bar",
+		Name:       endpoint.NewEndpointNameCommon("bar"),
 		Targets:    endpoint.Targets{"127.0.0.1"},
 		RecordType: "A",
 		Labels: map[string]string{
@@ -217,7 +225,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.bar127AWithProviderSpecificUnset = &endpoint.Endpoint{
-		DNSName:    "bar",
+		Name:       endpoint.NewEndpointNameCommon("bar"),
 		Targets:    endpoint.Targets{"127.0.0.1"},
 		RecordType: "A",
 		Labels: map[string]string{
@@ -226,7 +234,7 @@ func (suite *PlanTestSuite) SetupTest() {
 		ProviderSpecific: endpoint.ProviderSpecific{},
 	}
 	suite.bar192A = &endpoint.Endpoint{
-		DNSName:    "bar",
+		Name:       endpoint.NewEndpointNameCommon("bar"),
 		Targets:    endpoint.Targets{"192.168.0.1"},
 		RecordType: "A",
 		Labels: map[string]string{
@@ -234,55 +242,55 @@ func (suite *PlanTestSuite) SetupTest() {
 		},
 	}
 	suite.multiple1 = &endpoint.Endpoint{
-		DNSName:       "multiple",
+		Name:          endpoint.NewEndpointNameCommon("multiple"),
 		Targets:       endpoint.Targets{"192.168.0.1"},
 		RecordType:    "A",
 		SetIdentifier: "test-set-1",
 	}
 	suite.multiple2 = &endpoint.Endpoint{
-		DNSName:       "multiple",
+		Name:          endpoint.NewEndpointNameCommon("multiple"),
 		Targets:       endpoint.Targets{"192.168.0.2"},
 		RecordType:    "A",
 		SetIdentifier: "test-set-1",
 	}
 	suite.multiple3 = &endpoint.Endpoint{
-		DNSName:       "multiple",
+		Name:          endpoint.NewEndpointNameCommon("multiple"),
 		Targets:       endpoint.Targets{"192.168.0.2"},
 		RecordType:    "A",
 		SetIdentifier: "test-set-2",
 	}
 	suite.domainFilterFiltered1 = &endpoint.Endpoint{
-		DNSName:    "foo.domain.tld",
+		Name:       endpoint.NewEndpointNameCommon("foo.domain.tld"),
 		Targets:    endpoint.Targets{"1.2.3.4"},
 		RecordType: "A",
 	}
 	suite.domainFilterFiltered2 = &endpoint.Endpoint{
-		DNSName:    "bar.domain.tld",
+		Name:       endpoint.NewEndpointNameCommon("bar.domain.tld"),
 		Targets:    endpoint.Targets{"1.2.3.5"},
 		RecordType: "A",
 	}
 	suite.domainFilterFiltered3 = &endpoint.Endpoint{
-		DNSName:    "baz.domain.tld",
+		Name:       endpoint.NewEndpointNameCommon("baz.domain.tld"),
 		Targets:    endpoint.Targets{"1.2.3.6"},
 		RecordType: "A",
 	}
 	suite.domainFilterExcluded = &endpoint.Endpoint{
-		DNSName:    "foo.ex.domain.tld",
+		Name:       endpoint.NewEndpointNameCommon("foo.ex.domain.tld"),
 		Targets:    endpoint.Targets{"1.1.1.1"},
 		RecordType: "A",
 	}
 	suite.domainFilterFilteredTXT1 = &endpoint.Endpoint{
-		DNSName:    "a-foo.domain.tld",
+		Name:       endpoint.NewEndpointNameCommon("a-foo.domain.tld"),
 		Targets:    endpoint.Targets{"\"heritage=external-dns,external-dns/owner=owner\""},
 		RecordType: "TXT",
 	}
 	suite.domainFilterFilteredTXT2 = &endpoint.Endpoint{
-		DNSName:    "cname-bar.domain.tld",
+		Name:       endpoint.NewEndpointNameCommon("cname-bar.domain.tld"),
 		Targets:    endpoint.Targets{"\"heritage=external-dns,external-dns/owner=owner\""},
 		RecordType: "TXT",
 	}
 	suite.domainFilterExcludedTXT = &endpoint.Endpoint{
-		DNSName:    "cname-bar.otherdomain.tld",
+		Name:       endpoint.NewEndpointNameCommon("cname-bar.otherdomain.tld"),
 		Targets:    endpoint.Targets{"\"heritage=external-dns,external-dns/owner=owner\""},
 		RecordType: "TXT",
 	}
@@ -303,7 +311,7 @@ func (suite *PlanTestSuite) TestSyncFirstRound() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -327,7 +335,7 @@ func (suite *PlanTestSuite) TestSyncSecondRound() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -351,7 +359,7 @@ func (suite *PlanTestSuite) TestSyncSecondRoundMigration() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -375,7 +383,7 @@ func (suite *PlanTestSuite) TestSyncSecondRoundWithTTLChange() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -399,7 +407,7 @@ func (suite *PlanTestSuite) TestSyncSecondRoundWithProviderSpecificChange() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -426,7 +434,7 @@ func (suite *PlanTestSuite) TestSyncSecondRoundWithProviderSpecificDefaultFalse(
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -452,7 +460,7 @@ func (suite *PlanTestSuite) TestSyncSecondRoundWithProviderSpecificDefualtTrue()
 		},
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -468,7 +476,7 @@ func (suite *PlanTestSuite) TestSyncSecondRoundWithOwnerInherited() {
 	expectedCreate := []*endpoint.Endpoint{}
 	expectedUpdateOld := []*endpoint.Endpoint{suite.fooV1Cname}
 	expectedUpdateNew := []*endpoint.Endpoint{{
-		DNSName:    suite.fooV2Cname.DNSName,
+		Name:       suite.fooV2Cname.Name,
 		Targets:    suite.fooV2Cname.Targets,
 		RecordType: suite.fooV2Cname.RecordType,
 		RecordTTL:  suite.fooV2Cname.RecordTTL,
@@ -486,7 +494,7 @@ func (suite *PlanTestSuite) TestSyncSecondRoundWithOwnerInherited() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -509,7 +517,7 @@ func (suite *PlanTestSuite) TestIdempotency() {
 		Desired:  desired,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -535,7 +543,7 @@ func (suite *PlanTestSuite) TestDifferentTypes() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -559,7 +567,7 @@ func (suite *PlanTestSuite) TestIgnoreTXT() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -582,7 +590,7 @@ func (suite *PlanTestSuite) TestIgnoreTargetCase() {
 		Desired:  desired,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -606,7 +614,7 @@ func (suite *PlanTestSuite) TestRemoveEndpoint() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -630,7 +638,7 @@ func (suite *PlanTestSuite) TestRemoveEndpointWithUpsert() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -651,7 +659,7 @@ func (suite *PlanTestSuite) TestDuplicatedEndpointsInconsitantCNAMES() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	_, err := p.CalculateWithError()
+	_, err := p.Calculate()
 	suite.ErrorContains(err, "inconsistent targets")
 }
 
@@ -670,7 +678,7 @@ func (suite *PlanTestSuite) TestDuplicatedEndpointsForSameResourceReplace() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -695,7 +703,7 @@ func (suite *PlanTestSuite) TestDuplicatedEndpointsForSameResourceRetain() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -719,7 +727,7 @@ func (suite *PlanTestSuite) TestMultipleRecordsSameNameDifferentSetIdentifier() 
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -743,7 +751,7 @@ func (suite *PlanTestSuite) TestSetIdentifierUpdateCreatesAndDeletes() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -768,7 +776,7 @@ func (suite *PlanTestSuite) TestDomainFiltersInitial() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -793,7 +801,7 @@ func (suite *PlanTestSuite) TestDomainFiltersUpdate() {
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -802,18 +810,27 @@ func (suite *PlanTestSuite) TestDomainFiltersUpdate() {
 	validateEntries(suite.T(), changes.Delete, expectedDelete)
 }
 
-func (suite *PlanTestSuite) TestMissing() {
-	missing := []*endpoint.Endpoint{suite.domainFilterFilteredTXT1, suite.domainFilterFilteredTXT2, suite.domainFilterExcludedTXT}
-	expectedCreate := []*endpoint.Endpoint{suite.domainFilterFilteredTXT1, suite.domainFilterFilteredTXT2}
+func (suite *PlanTestSuite) TestOwnerShipRecords() {
+	planeRecords := []*endpoint.Endpoint{
+		suite.domainFilterFilteredTXT1,
+		suite.domainFilterFilteredTXT2,
+	}
+
+	expectedCreate := []*endpoint.Endpoint{
+		suite.domainFilterFilteredTXT1,
+		suite.domainFilterFilteredTXT2,
+	}
 
 	p := &Plan{
-		Policies:       []Policy{&SyncPolicy{}},
-		Missing:        missing,
+		Policies: []Policy{&SyncPolicy{}},
+		Current:  []*endpoint.Endpoint{},
+		Desired:  planeRecords,
+		// Missing:        missing,
 		DomainFilter:   endpoint.NewDomainFilter([]string{"domain.tld"}),
 		ManagedRecords: suite.managedRecordTypes,
 	}
 
-	result, err := p.CalculateWithError()
+	result, err := p.Calculate()
 	suite.Nil(err)
 	changes := result.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -832,7 +849,7 @@ func (suite *PlanTestSuite) TestAAAARecords() {
 		ManagedRecords: []string{endpoint.RecordTypeAAAA, endpoint.RecordTypeCNAME},
 	}
 
-	plan, err := p.CalculateWithError()
+	plan, err := p.Calculate()
 	suite.Nil(err)
 	changes := plan.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -850,7 +867,7 @@ func (suite *PlanTestSuite) TestDualStackRecords() {
 		ManagedRecords: []string{endpoint.RecordTypeA, endpoint.RecordTypeAAAA, endpoint.RecordTypeCNAME},
 	}
 
-	plan, err := p.CalculateWithError()
+	plan, err := p.Calculate()
 	suite.Nil(err)
 	changes := plan.Changes
 	validateEntries(suite.T(), changes.Create, expectedCreate)
@@ -862,9 +879,15 @@ func TestPlan(t *testing.T) {
 
 // validateEntries validates that the list of entries matches expected.
 func validateEntries(t *testing.T, entries, expected []*endpoint.Endpoint) {
-	if !testutils.SameEndpoints(entries, expected) {
-		t.Fatalf("expected %q to match %q", entries, expected)
+	require.Len(t, entries, len(expected))
+	testutils.SortEndpoints(entries)
+	testutils.SortEndpoints(expected)
+	for i, e := range entries {
+		assert.Equal(t, e, expected[i])
 	}
+	//if !testutils.SameEndpoints(entries, expected) {
+	//	t.Fatalf("expected %q to match %q", entries, expected)
+	//}
 }
 
 func TestNormalizeDNSName(t *testing.T) {
@@ -874,52 +897,54 @@ func TestNormalizeDNSName(t *testing.T) {
 	}{
 		{
 			"3AAAA.FOO.BAR.COM    ",
-			"3aaaa.foo.bar.com.",
+			"3aaaa.foo.bar.com",
 		},
 		{
 			"   example.foo.com.",
-			"example.foo.com.",
+			"example.foo.com",
 		},
 		{
 			"example123.foo.com ",
-			"example123.foo.com.",
+			"example123.foo.com",
 		},
 		{
 			"foo",
-			"foo.",
+			"foo",
 		},
 		{
 			"123foo.bar",
-			"123foo.bar.",
+			"123foo.bar",
 		},
 		{
 			"foo.com",
-			"foo.com.",
+			"foo.com",
 		},
 		{
 			"foo.com.",
-			"foo.com.",
+			"foo.com",
 		},
 		{
 			"foo123.COM",
-			"foo123.com.",
+			"foo123.com",
 		},
 		{
 			"my-exaMple3.FOO.BAR.COM",
-			"my-example3.foo.bar.com.",
+			"my-example3.foo.bar.com",
 		},
 		{
 			"   my-example1214.FOO-1235.BAR-foo.COM   ",
-			"my-example1214.foo-1235.bar-foo.com.",
+			"my-example1214.foo-1235.bar-foo.com",
 		},
 		{
 			"my-example-my-example-1214.FOO-1235.BAR-foo.COM",
-			"my-example-my-example-1214.foo-1235.bar-foo.com.",
+			"my-example-my-example-1214.foo-1235.bar-foo.com",
 		},
 	}
 	for _, r := range records {
-		gotName := normalizeDNSName(r.dnsName)
-		assert.Equal(t, r.expect, gotName)
+		t.Run(r.dnsName, func(t *testing.T) {
+			gotName := normalizeDNSName(r.dnsName)
+			assert.Equal(t, r.expect, gotName)
+		})
 	}
 }
 
@@ -937,13 +962,13 @@ func TestShouldUpdateProviderSpecific(tt *testing.T) {
 		{
 			name: "skip AWS target health",
 			current: &endpoint.Endpoint{
-				DNSName: "foo.com",
+				Name: endpoint.NewEndpointNameCommon("foo.com"),
 				ProviderSpecific: []endpoint.ProviderSpecificProperty{
 					{Name: "aws/evaluate-target-health", Value: "true"},
 				},
 			},
 			desired: &endpoint.Endpoint{
-				DNSName: "bar.com",
+				Name: endpoint.NewEndpointNameCommon("bar.com"),
 				ProviderSpecific: []endpoint.ProviderSpecificProperty{
 					{Name: "aws/evaluate-target-health", Value: "true"},
 				},
@@ -1055,12 +1080,12 @@ func TestShouldUpdateProviderSpecific(tt *testing.T) {
 func TestPlanSanitize(t *testing.T) {
 	pt := newPlanTable()
 	toFix := &endpoint.Endpoint{
-		DNSName:       " foo.bar.com.  ",
+		Name:          endpoint.NewEndpointNameCommon(" foo.bar.com.  "),
 		RecordType:    "   a   ",
 		SetIdentifier: " Seti ",
 	}
 	ok := &endpoint.Endpoint{
-		DNSName:       "foo.bar.com",
+		Name:          endpoint.NewEndpointNameCommon("foo.bar.com"),
 		RecordType:    "A",
 		SetIdentifier: "Seti",
 	}
@@ -1073,4 +1098,40 @@ func TestPlanSanitize(t *testing.T) {
 		assert.Equal(t, ptr.currents, []*endpoint.Endpoint{ok, ok})
 		assert.Equal(t, ptr.candidates, []*endpoint.Endpoint{ok, ok})
 	}
+}
+
+func TestRemoveUnownedRecords(t *testing.T) {
+	registry := []*endpoint.Endpoint{
+		newEndpointWithOwner("old-not-owned.foo.co", "new-foo.loadbalancer.com", endpoint.RecordTypeA, "not-owner"),
+		newEndpointWithOwnerAndLabels("pre-old-not-owned.foo.co", "xxx", endpoint.RecordTypeTXT, "not-owner",
+			endpoint.Labels{endpoint.OwnedRecordLabelKey: "old-not-owned.foo.co"}),
+
+		newEndpointWithOwner("not-owned.foo.co", "new-foo.loadbalancer.com", endpoint.RecordTypeCNAME, "not-owner"),
+		newEndpointWithOwnerAndLabels("pre-cname-not-owned.foo.co", "xxx", endpoint.RecordTypeTXT, "not-owner",
+			endpoint.Labels{endpoint.OwnedRecordLabelKey: "not-owned.foo.co"}),
+
+		newEndpointWithOwner("old-owned.foo.co", "new-foo.loadbalancer.com", endpoint.RecordTypeA, "owner"),
+		newEndpointWithOwnerAndLabels("pre-old-owned.foo.co", "xxx", endpoint.RecordTypeTXT, "owner",
+			endpoint.Labels{endpoint.OwnedRecordLabelKey: "old-owned.foo.co"}),
+
+		newEndpointWithOwner("owned.foo.co", "new-foo.loadbalancer.com", endpoint.RecordTypeA, "owner"),
+		newEndpointWithOwnerAndLabels("pre-a-owned.foo.co", "xxx", endpoint.RecordTypeTXT, "owner",
+			endpoint.Labels{endpoint.OwnedRecordLabelKey: "owned.foo.co"}),
+		newEndpointWithOwnerAndLabels("pre-owned.foo.co", "xxx", endpoint.RecordTypeTXT, "owner",
+			endpoint.Labels{endpoint.OwnedRecordLabelKey: "owned.foo.co"}),
+	}
+	source := []*endpoint.Endpoint{
+		newEndpointWithOwner("old-not-owned.foo.co", "new-foo.loadbalancer.com", endpoint.RecordTypeA, "owner"),
+		newEndpointWithOwner("not-owned.foo.co", "new-foo.loadbalancer.com", endpoint.RecordTypeCNAME, "owner"),
+		newEndpointWithOwner("old-owned.foo.co", "new-foo.loadbalancer.com", endpoint.RecordTypeA, "owner"),
+		newEndpointWithOwner("owned.foo.co", "new-foo.loadbalancer.com", endpoint.RecordTypeA, "owner"),
+	}
+
+	p := inmemory.NewInMemoryProvider()
+	p.CreateZone(testZone)
+	r, _ := NewTXTRegistry(p, "pre-", "", "owner", time.Hour, "wc", nil, false, nil)
+	source = r.EnsureOwnerShipRecords(source)
+	fixedReg, fixedSource := r.RemoveUnownedRecords(registry, source)
+	require.Len(t, fixedReg, 4)
+	require.Len(t, fixedSource, 4)
 }

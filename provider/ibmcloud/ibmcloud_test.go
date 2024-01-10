@@ -157,7 +157,7 @@ func newTestIBMCloudProvider(private bool) *IBMCloudProvider {
 	mockSource := &mockSource{}
 	endpoints := []*endpoint.Endpoint{
 		{
-			DNSName: "new.example.com",
+			Name:    endpoint.NewEndpointNameCommon("new.example.com"),
 			Targets: endpoint.Targets{"4.3.2.1"},
 			ProviderSpecific: endpoint.ProviderSpecific{
 				{
@@ -217,7 +217,7 @@ func TestPublic_ApplyChanges(t *testing.T) {
 	changes := plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "newA.example.com",
+				Name:       endpoint.NewEndpointNameCommon("newA.example.com"),
 				RecordType: "A",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("4.3.2.1"),
@@ -231,7 +231,7 @@ func TestPublic_ApplyChanges(t *testing.T) {
 		},
 		UpdateOld: []*endpoint.Endpoint{
 			{
-				DNSName:    "test.example.com",
+				Name:       endpoint.NewEndpointNameCommon("test.example.com"),
 				RecordType: "A",
 				RecordTTL:  180,
 				Targets:    endpoint.NewTargets("1.2.3.4"),
@@ -245,7 +245,7 @@ func TestPublic_ApplyChanges(t *testing.T) {
 		},
 		UpdateNew: []*endpoint.Endpoint{
 			{
-				DNSName:    "test.example.com",
+				Name:       endpoint.NewEndpointNameCommon("test.example.com"),
 				RecordType: "A",
 				RecordTTL:  180,
 				Targets:    endpoint.NewTargets("1.2.3.4", "5.6.7.8"),
@@ -259,7 +259,7 @@ func TestPublic_ApplyChanges(t *testing.T) {
 		},
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "test.example.com",
+				Name:       endpoint.NewEndpointNameCommon("test.example.com"),
 				RecordType: "TXT",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("\"heritage=external-dns,external-dns/owner=tower-pdns\""),
@@ -279,7 +279,7 @@ func TestPrivate_ApplyChanges(t *testing.T) {
 	changes := plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "newA.example.com",
+				Name:       endpoint.NewEndpointNameCommon("newA.example.com"),
 				RecordType: "A",
 				RecordTTL:  120,
 				Targets:    endpoint.NewTargets("4.3.2.1"),
@@ -291,13 +291,13 @@ func TestPrivate_ApplyChanges(t *testing.T) {
 				},
 			},
 			{
-				DNSName:    "newCNAME.example.com",
+				Name:       endpoint.NewEndpointNameCommon("newCNAME.example.com"),
 				RecordType: "CNAME",
 				RecordTTL:  180,
 				Targets:    endpoint.NewTargets("newA.example.com"),
 			},
 			{
-				DNSName:    "newTXT.example.com",
+				Name:       endpoint.NewEndpointNameCommon("newTXT.example.com"),
 				RecordType: "TXT",
 				RecordTTL:  240,
 				Targets:    endpoint.NewTargets("\"heritage=external-dns,external-dns/owner=tower-pdns\""),
@@ -305,7 +305,7 @@ func TestPrivate_ApplyChanges(t *testing.T) {
 		},
 		UpdateOld: []*endpoint.Endpoint{
 			{
-				DNSName:    "test.example.com",
+				Name:       endpoint.NewEndpointNameCommon("test.example.com"),
 				RecordType: "A",
 				RecordTTL:  180,
 				Targets:    endpoint.NewTargets("1.2.3.4"),
@@ -313,7 +313,7 @@ func TestPrivate_ApplyChanges(t *testing.T) {
 		},
 		UpdateNew: []*endpoint.Endpoint{
 			{
-				DNSName:    "test.example.com",
+				Name:       endpoint.NewEndpointNameCommon("test.example.com"),
 				RecordType: "A",
 				RecordTTL:  180,
 				Targets:    endpoint.NewTargets("1.2.3.4", "5.6.7.8"),
@@ -321,7 +321,7 @@ func TestPrivate_ApplyChanges(t *testing.T) {
 		},
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "test.example.com",
+				Name:       endpoint.NewEndpointNameCommon("test.example.com"),
 				RecordType: "TXT",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("\"heritage=external-dns,external-dns/owner=tower-pdns\""),
@@ -339,7 +339,7 @@ func TestAdjustEndpoints(t *testing.T) {
 	p := newTestIBMCloudProvider(false)
 	endpoints := []*endpoint.Endpoint{
 		{
-			DNSName:    "test.example.com",
+			Name:       endpoint.NewEndpointNameCommon("test.example.com"),
 			Targets:    endpoint.Targets{"1.2.3.4"},
 			RecordType: endpoint.RecordTypeA,
 			RecordTTL:  300,
@@ -356,7 +356,7 @@ func TestAdjustEndpoints(t *testing.T) {
 	ep := p.AdjustEndpoints(endpoints)
 
 	assert.Equal(t, endpoint.TTL(0), ep[0].RecordTTL)
-	assert.Equal(t, "test.example.com", ep[0].DNSName)
+	assert.Equal(t, "test.example.com", ep[0].Name.Fqdn())
 }
 
 func TestPrivateZone_withFilterID(t *testing.T) {

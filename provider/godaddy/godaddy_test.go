@@ -276,7 +276,7 @@ func TestGoDaddyRecords(t *testing.T) {
 
 	assert.ElementsMatch(endpoints, []*endpoint.Endpoint{
 		{
-			DNSName:    "godaddy.example.net",
+			Name:       endpoint.NewEndpointNameCommon("godaddy.example.net"),
 			RecordType: "A",
 			RecordTTL:  gdMinimalTTL,
 			Labels:     endpoint.NewLabels(),
@@ -286,7 +286,7 @@ func TestGoDaddyRecords(t *testing.T) {
 			},
 		},
 		{
-			DNSName:    "example.org",
+			Name:       endpoint.NewEndpointNameCommon("example.org"),
 			RecordType: "A",
 			RecordTTL:  gdMinimalTTL,
 			Labels:     endpoint.NewLabels(),
@@ -295,7 +295,7 @@ func TestGoDaddyRecords(t *testing.T) {
 			},
 		},
 		{
-			DNSName:    "www.example.org",
+			Name:       endpoint.NewEndpointNameCommon("www.example.org"),
 			RecordType: "CNAME",
 			RecordTTL:  gdMinimalTTL,
 			Labels:     endpoint.NewLabels(),
@@ -325,7 +325,7 @@ func TestGoDaddyChange(t *testing.T) {
 	changes := plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    ".example.net",
+				Name:       endpoint.NewEndpointNameCommon(".example.net"),
 				RecordType: "A",
 				RecordTTL:  gdMinimalTTL,
 				Targets: []string{
@@ -335,7 +335,7 @@ func TestGoDaddyChange(t *testing.T) {
 		},
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "godaddy.example.net",
+				Name:       endpoint.NewEndpointNameCommon("godaddy.example.net"),
 				RecordType: "A",
 				Targets: []string{
 					"203.0.113.43",
@@ -396,7 +396,7 @@ func TestGoDaddyErrorResponse(t *testing.T) {
 	changes := plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    ".example.net",
+				Name:       endpoint.NewEndpointNameCommon(".example.net"),
 				RecordType: "A",
 				RecordTTL:  gdMinimalTTL,
 				Targets: []string{
@@ -406,7 +406,7 @@ func TestGoDaddyErrorResponse(t *testing.T) {
 		},
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "godaddy.example.net",
+				Name:       endpoint.NewEndpointNameCommon("godaddy.example.net"),
 				RecordType: "A",
 				Targets: []string{
 					"203.0.113.43",

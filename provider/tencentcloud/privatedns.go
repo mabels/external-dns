@@ -165,7 +165,7 @@ func (p *TencentCloudProvider) applyChangesForPrivateZone(changes *plan.Changes)
 	for _, zoneGroup := range zoneGroups {
 		if !containsBaseRecord(zoneGroup.RecordList) {
 			err := p.createPrivateZoneRecord(zoneGroup.Zone, &endpoint.Endpoint{
-				DNSName:    *zoneGroup.Zone.Domain,
+				Name:       endpoint.NewEndpointName("", *zoneGroup.Zone.Domain),
 				RecordType: "TXT",
 			}, "tencent_provider_record")
 			if err != nil {
@@ -185,7 +185,7 @@ func (p *TencentCloudProvider) applyChangesForPrivateZone(changes *plan.Changes)
 	deleteEndpoints := make(map[string][]string)
 	for _, change := range [][]*endpoint.Endpoint{changes.Delete, changes.UpdateOld} {
 		for _, deleteChange := range change {
-			if zoneId, _ := zoneNameIDMapper.FindZone(deleteChange.DNSName); zoneId != "" {
+			if zoneId, _ := zoneNameIDMapper.FindZone(deleteChange.Name.Fqdn()); zoneId != "" {
 				zoneGroup := zoneGroups[zoneId]
 				for _, zoneRecord := range zoneGroup.RecordList {
 					subDomain := getSubDomain(*zoneGroup.Zone.Domain, deleteChange)
@@ -212,7 +212,7 @@ func (p *TencentCloudProvider) applyChangesForPrivateZone(changes *plan.Changes)
 	createEndpoints := make(map[string][]*endpoint.Endpoint)
 	for _, change := range [][]*endpoint.Endpoint{changes.Create, changes.UpdateNew} {
 		for _, createChange := range change {
-			if zoneId, _ := zoneNameIDMapper.FindZone(createChange.DNSName); zoneId != "" {
+			if zoneId, _ := zoneNameIDMapper.FindZone(createChange.Name.Fqdn()); zoneId != "" {
 				if _, exist := createEndpoints[zoneId]; !exist {
 					createEndpoints[zoneId] = make([]*endpoint.Endpoint, 0)
 				}

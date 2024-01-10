@@ -208,17 +208,17 @@ func testInMemoryRecords(t *testing.T) {
 			expectError: false,
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.org",
+					Name:       endpoint.NewEndpointNameCommon("example.org"),
 					Targets:    endpoint.Targets{"8.8.8.8"},
 					RecordType: endpoint.RecordTypeA,
 				},
 				{
-					DNSName:    "example.org",
+					Name:       endpoint.NewEndpointNameCommon("example.org"),
 					RecordType: endpoint.RecordTypeTXT,
 					Targets:    endpoint.Targets{""},
 				},
 				{
-					DNSName:    "foo.org",
+					Name:       endpoint.NewEndpointNameCommon("foo.org"),
 					Targets:    endpoint.Targets{"4.4.4.4"},
 					RecordType: endpoint.RecordTypeCNAME,
 				},
@@ -337,7 +337,7 @@ func testInMemoryValidateChangeBatch(t *testing.T) {
 			changes: &plan.Changes{
 				Create: []*endpoint.Endpoint{
 					{
-						DNSName:    "example.org",
+						Name:       endpoint.NewEndpointNameCommon("example.org"),
 						Targets:    endpoint.Targets{"8.8.8.8"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -356,14 +356,14 @@ func testInMemoryValidateChangeBatch(t *testing.T) {
 			changes: &plan.Changes{
 				Create: []*endpoint.Endpoint{
 					{
-						DNSName:    "foo.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.org"),
 						Targets:    endpoint.Targets{"4.4.4.4"},
 						RecordType: endpoint.RecordTypeA,
 					},
 				},
 				UpdateNew: []*endpoint.Endpoint{
 					{
-						DNSName:    "foo.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.org"),
 						Targets:    endpoint.Targets{"4.4.4.4"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -381,14 +381,14 @@ func testInMemoryValidateChangeBatch(t *testing.T) {
 			changes: &plan.Changes{
 				Create: []*endpoint.Endpoint{
 					{
-						DNSName:    "foo.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.org"),
 						Targets:    endpoint.Targets{"4.4.4.4"},
 						RecordType: endpoint.RecordTypeA,
 					},
 				},
 				UpdateNew: []*endpoint.Endpoint{
 					{
-						DNSName:    "foo.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.org"),
 						Targets:    endpoint.Targets{"4.4.4.4"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -406,12 +406,12 @@ func testInMemoryValidateChangeBatch(t *testing.T) {
 			changes: &plan.Changes{
 				Create: []*endpoint.Endpoint{
 					{
-						DNSName:    "foo.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.org"),
 						Targets:    endpoint.Targets{"4.4.4.4"},
 						RecordType: endpoint.RecordTypeA,
 					},
 					{
-						DNSName:    "foo.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.org"),
 						Targets:    endpoint.Targets{"4.4.4.4"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -431,7 +431,7 @@ func testInMemoryValidateChangeBatch(t *testing.T) {
 				Create: []*endpoint.Endpoint{},
 				UpdateNew: []*endpoint.Endpoint{
 					{
-						DNSName:    "example.org",
+						Name:       endpoint.NewEndpointNameCommon("example.org"),
 						Targets:    endpoint.Targets{"8.8.8.8"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -439,7 +439,7 @@ func testInMemoryValidateChangeBatch(t *testing.T) {
 				UpdateOld: []*endpoint.Endpoint{},
 				Delete: []*endpoint.Endpoint{
 					{
-						DNSName:    "example.org",
+						Name:       endpoint.NewEndpointNameCommon("example.org"),
 						Targets:    endpoint.Targets{"8.8.8.8"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -456,12 +456,12 @@ func testInMemoryValidateChangeBatch(t *testing.T) {
 				Create: []*endpoint.Endpoint{},
 				UpdateNew: []*endpoint.Endpoint{
 					{
-						DNSName:    "example.org",
+						Name:       endpoint.NewEndpointNameCommon("example.org"),
 						Targets:    endpoint.Targets{"8.8.8.8"},
 						RecordType: endpoint.RecordTypeA,
 					},
 					{
-						DNSName:    "example.org",
+						Name:       endpoint.NewEndpointNameCommon("example.org"),
 						Targets:    endpoint.Targets{"8.8.8.8"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -481,7 +481,7 @@ func testInMemoryValidateChangeBatch(t *testing.T) {
 				UpdateNew: []*endpoint.Endpoint{},
 				UpdateOld: []*endpoint.Endpoint{
 					{
-						DNSName:    "new.org",
+						Name:       endpoint.NewEndpointNameCommon("new.org"),
 						Targets:    endpoint.Targets{"8.8.8.8"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -501,7 +501,7 @@ func testInMemoryValidateChangeBatch(t *testing.T) {
 				UpdateOld: []*endpoint.Endpoint{},
 				Delete: []*endpoint.Endpoint{
 					{
-						DNSName:    "new.org",
+						Name:       endpoint.NewEndpointNameCommon("new.org"),
 						Targets:    endpoint.Targets{"8.8.8.8"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -520,7 +520,7 @@ func testInMemoryValidateChangeBatch(t *testing.T) {
 				UpdateOld: []*endpoint.Endpoint{},
 				Delete: []*endpoint.Endpoint{
 					{
-						DNSName:    "foo.bar.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.bar.org"),
 						Targets:    endpoint.Targets{"5.5.5.5"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -535,21 +535,21 @@ func testInMemoryValidateChangeBatch(t *testing.T) {
 			changes: &plan.Changes{
 				Create: []*endpoint.Endpoint{
 					{
-						DNSName:    "foo.bar.new.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.bar.new.org"),
 						Targets:    endpoint.Targets{"4.8.8.9"},
 						RecordType: endpoint.RecordTypeA,
 					},
 				},
 				UpdateNew: []*endpoint.Endpoint{
 					{
-						DNSName:    "foo.bar.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.bar.org"),
 						Targets:    endpoint.Targets{"4.8.8.4"},
 						RecordType: endpoint.RecordTypeA,
 					},
 				},
 				UpdateOld: []*endpoint.Endpoint{
 					{
-						DNSName:    "foo.bar.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.bar.org"),
 						Targets:    endpoint.Targets{"5.5.5.5"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -631,7 +631,7 @@ func testInMemoryApplyChanges(t *testing.T) {
 			expectError: false,
 			changes: &plan.Changes{
 				Create: []*endpoint.Endpoint{{
-					DNSName:    "example.de",
+					Name:       endpoint.NewEndpointNameCommon("example.de"),
 					Targets:    endpoint.Targets{"8.8.8.8"},
 					RecordType: endpoint.RecordTypeA,
 				}},
@@ -648,7 +648,7 @@ func testInMemoryApplyChanges(t *testing.T) {
 				Create: []*endpoint.Endpoint{},
 				UpdateNew: []*endpoint.Endpoint{
 					{
-						DNSName:    "example.org",
+						Name:       endpoint.NewEndpointNameCommon("example.org"),
 						Targets:    endpoint.Targets{"8.8.8.8"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -656,7 +656,7 @@ func testInMemoryApplyChanges(t *testing.T) {
 				UpdateOld: []*endpoint.Endpoint{},
 				Delete: []*endpoint.Endpoint{
 					{
-						DNSName:    "example.org",
+						Name:       endpoint.NewEndpointNameCommon("example.org"),
 						Targets:    endpoint.Targets{"8.8.8.8"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -672,7 +672,7 @@ func testInMemoryApplyChanges(t *testing.T) {
 				UpdateOld: []*endpoint.Endpoint{},
 				Delete: []*endpoint.Endpoint{
 					{
-						DNSName:    "foo.bar.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.bar.org"),
 						Targets:    endpoint.Targets{"5.5.5.5"},
 						RecordType: endpoint.RecordTypeA,
 					},
@@ -717,28 +717,28 @@ func testInMemoryApplyChanges(t *testing.T) {
 			changes: &plan.Changes{
 				Create: []*endpoint.Endpoint{
 					{
-						DNSName:    "foo.bar.new.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.bar.new.org"),
 						Targets:    endpoint.Targets{"4.8.8.9"},
 						RecordType: endpoint.RecordTypeA,
 					},
 				},
 				UpdateNew: []*endpoint.Endpoint{
 					{
-						DNSName:    "foo.bar.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.bar.org"),
 						Targets:    endpoint.Targets{"4.8.8.4"},
 						RecordType: endpoint.RecordTypeA,
 					},
 				},
 				UpdateOld: []*endpoint.Endpoint{
 					{
-						DNSName:    "foo.bar.org",
+						Name:       endpoint.NewEndpointNameCommon("foo.bar.org"),
 						Targets:    endpoint.Targets{"5.5.5.5"},
 						RecordType: endpoint.RecordTypeA,
 					},
 				},
 				Delete: []*endpoint.Endpoint{
 					{
-						DNSName:    "example.org",
+						Name:       endpoint.NewEndpointNameCommon("example.org"),
 						Targets:    endpoint.Targets{"8.8.8.8"},
 						RecordType: endpoint.RecordTypeA,
 					},

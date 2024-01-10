@@ -49,10 +49,10 @@ func TestFakeEndpointsBelongToDomain(t *testing.T) {
 	endpoints := generateTestEndpoints()
 
 	for _, e := range endpoints {
-		valid := validRecord.MatchString(e.DNSName)
+		valid := validRecord.MatchString(e.Name.Fqdn())
 
 		if !valid {
-			t.Error(e.DNSName)
+			t.Error(e.Name.Fqdn())
 		}
 	}
 }

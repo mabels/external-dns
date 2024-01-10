@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/external-dns/endpoint"
+	"sigs.k8s.io/external-dns/internal/testutils"
 	"sigs.k8s.io/external-dns/plan"
 )
 
@@ -149,7 +150,7 @@ func TestScalewayProvider_AdjustEndpoints(t *testing.T) {
 
 	before := []*endpoint.Endpoint{
 		{
-			DNSName:    "one.example.com",
+			Name:       endpoint.NewEndpointNameCommon("one.example.com"),
 			RecordTTL:  300,
 			RecordType: "A",
 			Targets:    []string{"1.1.1.1"},
@@ -161,7 +162,7 @@ func TestScalewayProvider_AdjustEndpoints(t *testing.T) {
 			},
 		},
 		{
-			DNSName:    "two.example.com",
+			Name:       endpoint.NewEndpointNameCommon("two.example.com"),
 			RecordTTL:  0,
 			RecordType: "A",
 			Targets:    []string{"1.1.1.1"},
@@ -173,7 +174,7 @@ func TestScalewayProvider_AdjustEndpoints(t *testing.T) {
 			},
 		},
 		{
-			DNSName:          "three.example.com",
+			Name:             endpoint.NewEndpointNameCommon("three.example.com"),
 			RecordTTL:        600,
 			RecordType:       "A",
 			Targets:          []string{"1.1.1.1"},
@@ -183,7 +184,7 @@ func TestScalewayProvider_AdjustEndpoints(t *testing.T) {
 
 	expected := []*endpoint.Endpoint{
 		{
-			DNSName:    "one.example.com",
+			Name:       endpoint.NewEndpointNameCommon("one.example.com"),
 			RecordTTL:  300,
 			RecordType: "A",
 			Targets:    []string{"1.1.1.1"},
@@ -195,7 +196,7 @@ func TestScalewayProvider_AdjustEndpoints(t *testing.T) {
 			},
 		},
 		{
-			DNSName:    "two.example.com",
+			Name:       endpoint.NewEndpointNameCommon("two.example.com"),
 			RecordTTL:  300,
 			RecordType: "A",
 			Targets:    []string{"1.1.1.1"},
@@ -207,7 +208,7 @@ func TestScalewayProvider_AdjustEndpoints(t *testing.T) {
 			},
 		},
 		{
-			DNSName:    "three.example.com",
+			Name:       endpoint.NewEndpointNameCommon("three.example.com"),
 			RecordTTL:  600,
 			RecordType: "A",
 			Targets:    []string{"1.1.1.1"},
@@ -264,7 +265,7 @@ func TestScalewayProvider_Records(t *testing.T) {
 
 	expected := []*endpoint.Endpoint{
 		{
-			DNSName:    "one.example.com",
+			Name:       endpoint.NewEndpointNameCommon("one.example.com"),
 			RecordTTL:  300,
 			RecordType: "A",
 			Targets:    []string{"1.1.1.1"},
@@ -276,7 +277,7 @@ func TestScalewayProvider_Records(t *testing.T) {
 			},
 		},
 		{
-			DNSName:    "two.example.com",
+			Name:       endpoint.NewEndpointNameCommon("two.example.com"),
 			RecordTTL:  300,
 			RecordType: "A",
 			Targets:    []string{"1.1.1.2", "1.1.1.3"},
@@ -288,7 +289,7 @@ func TestScalewayProvider_Records(t *testing.T) {
 			},
 		},
 		{
-			DNSName:    "test.example.com",
+			Name:       endpoint.NewEndpointNameCommon("test.example.com"),
 			RecordTTL:  300,
 			RecordType: "A",
 			Targets:    []string{"1.1.1.1"},
@@ -300,10 +301,10 @@ func TestScalewayProvider_Records(t *testing.T) {
 			},
 		},
 		{
-			DNSName:    "two.test.example.com",
+			Name:       endpoint.NewEndpointNameCommon("two.test.example.com"),
 			RecordTTL:  600,
 			RecordType: "CNAME",
-			Targets:    []string{"test.example.com"},
+			Targets:    []string{"test.example.com."},
 			ProviderSpecific: endpoint.ProviderSpecific{
 				{
 					Name:  scalewayPriorityKey,
@@ -319,14 +320,12 @@ func TestScalewayProvider_Records(t *testing.T) {
 	}
 
 	require.Len(t, records, len(expected))
-	for _, record := range records {
-		found := false
-		for _, expectedRecord := range expected {
-			if checkRecordEquality(record, expectedRecord) {
-				found = true
-			}
-		}
-		assert.Equal(t, true, found)
+	testutils.SortEndpoints(records)
+	testutils.SortEndpoints(expected)
+	for i, record := range records {
+		t.Run(record.Name.Fqdn(), func(t *testing.T) {
+			assert.Equal(t, expected[i], record)
+		})
 	}
 }
 
@@ -463,12 +462,12 @@ func TestScalewayProvider_generateApplyRequests(t *testing.T) {
 	changes := &plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "example.com",
+				Name:       endpoint.NewEndpointNameCommon("example.com"),
 				RecordType: "A",
 				Targets:    []string{"1.1.1.1", "1.1.1.2"},
 			},
 			{
-				DNSName:    "test.example.com",
+				Name:       endpoint.NewEndpointNameCommon("test.example.com"),
 				RecordType: "CNAME",
 				ProviderSpecific: endpoint.ProviderSpecific{
 					{
@@ -482,19 +481,19 @@ func TestScalewayProvider_generateApplyRequests(t *testing.T) {
 		},
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "here.example.com",
+				Name:       endpoint.NewEndpointNameCommon("here.example.com"),
 				RecordType: "A",
 				Targets:    []string{"1.1.1.1", "1.1.1.2"},
 			},
 			{
-				DNSName:    "here.is.my.test.example.com",
+				Name:       endpoint.NewEndpointNameCommon("here.is.my.test.example.com"),
 				RecordType: "A",
 				Targets:    []string{"1.1.1.1"},
 			},
 		},
 		UpdateNew: []*endpoint.Endpoint{
 			{
-				DNSName: "me.example.com",
+				Name: endpoint.NewEndpointNameCommon("me.example.com"),
 				ProviderSpecific: endpoint.ProviderSpecific{
 					{
 						Name:  scalewayPriorityKey,
@@ -506,14 +505,14 @@ func TestScalewayProvider_generateApplyRequests(t *testing.T) {
 				Targets:    []string{"2.2.2.2"},
 			},
 			{
-				DNSName:    "my.test.example.com",
+				Name:       endpoint.NewEndpointNameCommon("my.test.example.com"),
 				RecordType: "A",
 				Targets:    []string{"1.2.3.4", "5.6.7.8"},
 			},
 		},
 		UpdateOld: []*endpoint.Endpoint{
 			{
-				DNSName: "me.example.com",
+				Name: endpoint.NewEndpointNameCommon("me.example.com"),
 				ProviderSpecific: endpoint.ProviderSpecific{
 					{
 						Name:  scalewayPriorityKey,
@@ -524,7 +523,7 @@ func TestScalewayProvider_generateApplyRequests(t *testing.T) {
 				Targets:    []string{"3.3.3.3"},
 			},
 			{
-				DNSName:    "my.test.example.com",
+				Name:       endpoint.NewEndpointNameCommon("my.test.example.com"),
 				RecordType: "A",
 				Targets:    []string{"4.4.4.4", "5.5.5.5"},
 			},
@@ -550,7 +549,7 @@ func TestScalewayProvider_generateApplyRequests(t *testing.T) {
 
 func checkRecordEquality(record1, record2 *endpoint.Endpoint) bool {
 	return record1.Targets.Same(record2.Targets) &&
-		record1.DNSName == record2.DNSName &&
+		record1.Name.Fqdn() == record2.Name.Fqdn() &&
 		record1.RecordTTL == record2.RecordTTL &&
 		record1.RecordType == record2.RecordType &&
 		reflect.DeepEqual(record1.ProviderSpecific, record2.ProviderSpecific)

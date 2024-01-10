@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 
 	domain "github.com/scaleway/scaleway-sdk-go/api/domain/v2beta1"
 	"github.com/scaleway/scaleway-sdk-go/scw"
@@ -133,7 +132,8 @@ func (p *ScalewayProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, e
 			name := record.Name + "."
 
 			// trim any leading or ending dot
-			fullRecordName := strings.Trim(name+getCompleteZoneName(zone), ".")
+			fullRecordName := endpoint.NewEndpointName(name, getCompleteZoneName(zone))
+			// strings.Trim(name+getCompleteZoneName(zone), ".")
 
 			if !provider.SupportedRecordType(record.Type.String()) {
 				log.Infof("Skipping record %s because type %s is not supported", fullRecordName, record.Type.String())
@@ -145,13 +145,13 @@ func (p *ScalewayProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, e
 			// the record is modified without going through ExternalDNS, we could have
 			// different priorities of ttls for a same name.
 			// In this case, we juste take the first one.
-			if existingEndpoint, ok := endpoints[record.Type.String()+"/"+fullRecordName]; ok {
+			if existingEndpoint, ok := endpoints[record.Type.String()+"/"+fullRecordName.Fqdn()]; ok {
 				existingEndpoint.Targets = append(existingEndpoint.Targets, record.Data)
 				log.Infof("Appending target %s to record %s, using TTL and priority of target %s", record.Data, fullRecordName, existingEndpoint.Targets[0])
 			} else {
 				ep := endpoint.NewEndpointWithTTL(fullRecordName, record.Type.String(), endpoint.TTL(record.TTL), record.Data)
 				ep = ep.WithProviderSpecific(scalewayPriorityKey, fmt.Sprintf("%d", record.Priority))
-				endpoints[record.Type.String()+"/"+fullRecordName] = ep
+				endpoints[record.Type.String()+"/"+fullRecordName.Fqdn()] = ep
 			}
 		}
 	}
@@ -205,9 +205,9 @@ func (p *ScalewayProvider) generateApplyRequests(ctx context.Context, changes *p
 
 	log.Debugf("Following records present in updateOld")
 	for _, c := range changes.UpdateOld {
-		zone, _ := zoneNameMapper.FindZone(c.DNSName)
+		zone, _ := zoneNameMapper.FindZone(c.Name.Fqdn())
 		if zone == "" {
-			log.Infof("Ignore record %s since it's not handled by ExternalDNS", c.DNSName)
+			log.Infof("Ignore record %s since it's not handled by ExternalDNS", c.Name.Fqdn())
 			continue
 		}
 		recordsToDelete[zone] = append(recordsToDelete[zone], endpointToScalewayRecordsChangeDelete(zone, c)...)
@@ -216,9 +216,9 @@ func (p *ScalewayProvider) generateApplyRequests(ctx context.Context, changes *p
 
 	log.Debugf("Following records present in delete")
 	for _, c := range changes.Delete {
-		zone, _ := zoneNameMapper.FindZone(c.DNSName)
+		zone, _ := zoneNameMapper.FindZone(c.Name.Fqdn())
 		if zone == "" {
-			log.Infof("Ignore record %s since it's not handled by ExternalDNS", c.DNSName)
+			log.Infof("Ignore record %s since it's not handled by ExternalDNS", c.Name.Fqdn())
 			continue
 		}
 		recordsToDelete[zone] = append(recordsToDelete[zone], endpointToScalewayRecordsChangeDelete(zone, c)...)
@@ -227,9 +227,9 @@ func (p *ScalewayProvider) generateApplyRequests(ctx context.Context, changes *p
 
 	log.Debugf("Following records present in create")
 	for _, c := range changes.Create {
-		zone, _ := zoneNameMapper.FindZone(c.DNSName)
+		zone, _ := zoneNameMapper.FindZone(c.Name.Fqdn())
 		if zone == "" {
-			log.Infof("Ignore record %s since it's not handled by ExternalDNS", c.DNSName)
+			log.Infof("Ignore record %s since it's not handled by ExternalDNS", c.Name.Fqdn())
 			continue
 		}
 		recordsToAdd[zone].Records = append(recordsToAdd[zone].Records, endpointToScalewayRecords(zone, c)...)
@@ -238,9 +238,9 @@ func (p *ScalewayProvider) generateApplyRequests(ctx context.Context, changes *p
 
 	log.Debugf("Following records present in updateNew")
 	for _, c := range changes.UpdateNew {
-		zone, _ := zoneNameMapper.FindZone(c.DNSName)
+		zone, _ := zoneNameMapper.FindZone(c.Name.Fqdn())
 		if zone == "" {
-			log.Infof("Ignore record %s since it's not handled by ExternalDNS", c.DNSName)
+			log.Infof("Ignore record %s since it's not handled by ExternalDNS", c.Name.Fqdn())
 			continue
 		}
 		recordsToAdd[zone].Records = append(recordsToAdd[zone].Records, endpointToScalewayRecords(zone, c)...)
@@ -296,7 +296,7 @@ func endpointToScalewayRecords(zoneName string, ep *endpoint.Endpoint) []*domain
 
 		records = append(records, &domain.Record{
 			Data:     finalTargetName,
-			Name:     strings.Trim(strings.TrimSuffix(ep.DNSName, zoneName), ". "),
+			Name:     ep.Name.Host(),
 			Priority: priority,
 			TTL:      ttl,
 			Type:     domain.RecordType(ep.RecordType),
@@ -319,7 +319,7 @@ func endpointToScalewayRecordsChangeDelete(zoneName string, ep *endpoint.Endpoin
 			Delete: &domain.RecordChangeDelete{
 				IDFields: &domain.RecordIdentifier{
 					Data: &finalTargetName,
-					Name: strings.Trim(strings.TrimSuffix(ep.DNSName, zoneName), ". "),
+					Name: ep.Name.Host(),
 					Type: domain.RecordType(ep.RecordType),
 				},
 			},

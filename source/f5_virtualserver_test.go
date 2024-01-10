@@ -63,7 +63,7 @@ func TestF5VirtualServerEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "www.example.com",
+					Name:       endpoint.NewEndpointNameCommon("www.example.com"),
 					Targets:    []string{"192.168.1.100"},
 					RecordType: endpoint.RecordTypeA,
 					RecordTTL:  0,
@@ -94,7 +94,7 @@ func TestF5VirtualServerEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "www.example.com",
+					Name:       endpoint.NewEndpointNameCommon("www.example.com"),
 					Targets:    []string{"192.168.1.100"},
 					RecordType: endpoint.RecordTypeA,
 					RecordTTL:  0,
@@ -147,7 +147,7 @@ func TestF5VirtualServerEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "www.example.com",
+					Name:       endpoint.NewEndpointNameCommon("www.example.com"),
 					Targets:    []string{"192.168.1.100"},
 					RecordType: endpoint.RecordTypeA,
 					RecordTTL:  0,
@@ -200,7 +200,7 @@ func TestF5VirtualServerEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "www.example.com",
+					Name:       endpoint.NewEndpointNameCommon("www.example.com"),
 					Targets:    []string{"192.168.1.100"},
 					RecordType: endpoint.RecordTypeA,
 					RecordTTL:  600,

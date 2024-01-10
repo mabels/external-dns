@@ -184,7 +184,8 @@ func (cs *crdSource) Endpoints(ctx context.Context) ([]*endpoint.Endpoint, error
 		crdEndpoints := []*endpoint.Endpoint{}
 		for _, ep := range dnsEndpoint.Spec.Endpoints {
 			if len(ep.Targets) < 1 {
-				log.Warnf("Endpoint %s with DNSName %s has an empty list of targets", dnsEndpoint.ObjectMeta.Name, ep.DNSName)
+				log.Warnf("Endpoint %s with DNSName %s has an empty list of targets",
+					dnsEndpoint.ObjectMeta.Name, ep.Name.Fqdn())
 				continue
 			}
 

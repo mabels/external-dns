@@ -40,7 +40,7 @@ func (p *TencentCloudProvider) dnsRecords() ([]*endpoint.Endpoint, error) {
 	endpoints := make([]*endpoint.Endpoint, 0)
 	recordMap := groupDomainRecordList(recordsList)
 	for _, recordList := range recordMap {
-		name := getDnsDomain(*recordList.RecordList[0].Name, *recordList.Domain.Name)
+		name := endpoint.NewEndpointName(*recordList.RecordList[0].Name, *recordList.Domain.Name)
 		recordType := *recordList.RecordList[0].Type
 		ttl := *recordList.RecordList[0].TTL
 		var targets []string
@@ -155,7 +155,7 @@ func (p *TencentCloudProvider) applyChangesForDNS(changes *plan.Changes) error {
 	deleteEndpoints := make(map[string][]uint64)
 	for _, change := range [][]*endpoint.Endpoint{changes.Delete, changes.UpdateOld} {
 		for _, deleteChange := range change {
-			if zoneId, _ := zoneNameIDMapper.FindZone(deleteChange.DNSName); zoneId != "" {
+			if zoneId, _ := zoneNameIDMapper.FindZone(deleteChange.Name.Fqdn()); zoneId != "" {
 				zoneIdString, _ := strconv.ParseUint(zoneId, 10, 64)
 				recordListGroup := recordsGroupMap[zoneIdString]
 				for _, domainRecord := range recordListGroup.RecordList {
@@ -186,7 +186,7 @@ func (p *TencentCloudProvider) applyChangesForDNS(changes *plan.Changes) error {
 	}
 	for _, change := range [][]*endpoint.Endpoint{changes.Create, changes.UpdateNew} {
 		for _, createChange := range change {
-			if zoneId, _ := zoneNameIDMapper.FindZone(createChange.DNSName); zoneId != "" {
+			if zoneId, _ := zoneNameIDMapper.FindZone(createChange.Name.Fqdn()); zoneId != "" {
 				createEndpoints[zoneId] = append(createEndpoints[zoneId], createChange)
 			}
 		}

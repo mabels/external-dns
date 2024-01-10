@@ -201,7 +201,7 @@ func fixMissingTTL(ttl endpoint.TTL, minTTLSeconds int) string {
 func merge(updateOld, updateNew []*endpoint.Endpoint) []*endpoint.Endpoint {
 	findMatch := func(template *endpoint.Endpoint) *endpoint.Endpoint {
 		for _, new := range updateNew {
-			if template.DNSName == new.DNSName &&
+			if template.Name.Fqdn() == new.Name.Fqdn() &&
 				template.RecordType == new.RecordType {
 				return new
 			}
@@ -250,14 +250,26 @@ func apiRetryLoop(f func() error) error {
 	return err
 }
 
-func (d *dynProviderState) allRecordsToEndpoints(records *dynsoap.GetAllRecordsResponseType) []*endpoint.Endpoint {
+func (d *dynProviderState) allRecordsToEndpoints(records *dynsoap.GetAllRecordsResponseType, zone string) []*endpoint.Endpoint {
 	result := []*endpoint.Endpoint{}
 	// Convert each record to an endpoint
 
 	// Process A Records
 	for _, rec := range records.Data.A_records {
 		ep := &endpoint.Endpoint{
-			DNSName:    rec.Fqdn,
+			Name:       endpoint.NewEndpointName(rec.Fqdn, zone),
+			RecordTTL:  endpoint.TTL(rec.Ttl),
+			RecordType: rec.Record_type,
+			Targets:    endpoint.Targets{rec.Rdata.Address},
+		}
+		log.Debugf("A record: %v", *ep)
+		result = append(result, ep)
+	}
+
+	// Process A Records
+	for _, rec := range records.Data.Aaaa_records {
+		ep := &endpoint.Endpoint{
+			Name:       endpoint.NewEndpointName(rec.Fqdn, zone),
 			RecordTTL:  endpoint.TTL(rec.Ttl),
 			RecordType: rec.Record_type,
 			Targets:    endpoint.Targets{rec.Rdata.Address},
@@ -269,7 +281,7 @@ func (d *dynProviderState) allRecordsToEndpoints(records *dynsoap.GetAllRecordsR
 	// Process CNAME Records
 	for _, rec := range records.Data.Cname_records {
 		ep := &endpoint.Endpoint{
-			DNSName:    rec.Fqdn,
+			Name:       endpoint.NewEndpointName(rec.Fqdn, zone),
 			RecordTTL:  endpoint.TTL(rec.Ttl),
 			RecordType: rec.Record_type,
 			Targets:    endpoint.Targets{strings.TrimSuffix(rec.Rdata.Cname, ".")},
@@ -281,7 +293,7 @@ func (d *dynProviderState) allRecordsToEndpoints(records *dynsoap.GetAllRecordsR
 	// Process TXT Records
 	for _, rec := range records.Data.Txt_records {
 		ep := &endpoint.Endpoint{
-			DNSName:    rec.Fqdn,
+			Name:       endpoint.NewEndpointName(rec.Fqdn, zone),
 			RecordTTL:  endpoint.TTL(rec.Ttl),
 			RecordType: rec.Record_type,
 			Targets:    endpoint.Targets{rec.Rdata.Txtdata},
@@ -416,7 +428,7 @@ func (d *dynProviderState) buildLinkToRecord(ep *endpoint.Endpoint) string {
 	}
 	matchingZone := ""
 	for _, zone := range d.ZoneIDFilter.ZoneIDs {
-		if strings.HasSuffix(ep.DNSName, zone) {
+		if strings.HasSuffix(ep.Name.Fqdn(), zone) {
 			matchingZone = zone
 			break
 		}
@@ -427,12 +439,12 @@ func (d *dynProviderState) buildLinkToRecord(ep *endpoint.Endpoint) string {
 		return ""
 	}
 
-	if !d.DomainFilter.Match(ep.DNSName) {
+	if !d.DomainFilter.Match(ep.Name.Fqdn()) {
 		// no matching domain, ignore
 		return ""
 	}
 
-	return fmt.Sprintf("%sRecord/%s/%s/", ep.RecordType, matchingZone, ep.DNSName)
+	return fmt.Sprintf("%sRecord/%s/%s/", ep.RecordType, matchingZone, ep.Name.Fqdn())
 }
 
 // create a dynect client and performs login. You need to clean it up.
@@ -623,7 +635,7 @@ func (d *dynProviderState) Records(ctx context.Context) ([]*endpoint.Endpoint, e
 		if err != nil {
 			return nil, err
 		}
-		relevantRecords = d.allRecordsToEndpoints(records)
+		relevantRecords = d.allRecordsToEndpoints(records, zone)
 
 		log.Debugf("Relevant records %+v", relevantRecords)
 

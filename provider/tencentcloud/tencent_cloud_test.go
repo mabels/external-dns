@@ -136,7 +136,7 @@ func TestTencentPrivateProvider_Records(t *testing.T) {
 	changes := &plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "redis.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("redis.external-dns-test.com"),
 				RecordType: "A",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("4.3.2.1"),
@@ -144,7 +144,7 @@ func TestTencentPrivateProvider_Records(t *testing.T) {
 		},
 		UpdateOld: []*endpoint.Endpoint{
 			{
-				DNSName:    "nginx.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("nginx.external-dns-test.com"),
 				RecordType: "A",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("10.10.10.10"),
@@ -152,7 +152,7 @@ func TestTencentPrivateProvider_Records(t *testing.T) {
 		},
 		UpdateNew: []*endpoint.Endpoint{
 			{
-				DNSName:    "tencent.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("tencent.external-dns-test.com"),
 				RecordType: "A",
 				RecordTTL:  600,
 				Targets:    endpoint.NewTargets("1.2.3.4", "5.6.7.8"),
@@ -160,7 +160,7 @@ func TestTencentPrivateProvider_Records(t *testing.T) {
 		},
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "nginx.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("nginx.external-dns-test.com"),
 				RecordType: "TXT",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("\"heritage=external-dns,external-dns/owner=default\""),
@@ -186,7 +186,7 @@ func TestTencentPrivateProvider_Records(t *testing.T) {
 	changes = &plan.Changes{
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "tencent.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("tencent.external-dns-test.com"),
 				RecordType: "A",
 				RecordTTL:  600,
 				Targets:    endpoint.NewTargets("5.6.7.8"),
@@ -212,7 +212,7 @@ func TestTencentPrivateProvider_Records(t *testing.T) {
 	changes = &plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "redis.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("redis.external-dns-test.com"),
 				RecordType: "A",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("5.6.7.8"),
@@ -238,7 +238,7 @@ func TestTencentPrivateProvider_Records(t *testing.T) {
 	changes = &plan.Changes{
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "tencent.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("tencent.external-dns-test.com"),
 				RecordType: "A",
 				RecordTTL:  600,
 				Targets:    endpoint.NewTargets("1.2.3.4"),
@@ -279,7 +279,7 @@ func TestTencentPublicProvider_Records(t *testing.T) {
 	changes := &plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "redis.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("redis.external-dns-test.com"),
 				RecordType: "A",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("4.3.2.1"),
@@ -287,7 +287,7 @@ func TestTencentPublicProvider_Records(t *testing.T) {
 		},
 		UpdateOld: []*endpoint.Endpoint{
 			{
-				DNSName:    "nginx.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("nginx.external-dns-test.com"),
 				RecordType: "A",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("10.10.10.10"),
@@ -295,7 +295,7 @@ func TestTencentPublicProvider_Records(t *testing.T) {
 		},
 		UpdateNew: []*endpoint.Endpoint{
 			{
-				DNSName:    "tencent.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("tencent.external-dns-test.com"),
 				RecordType: "A",
 				RecordTTL:  600,
 				Targets:    endpoint.NewTargets("1.2.3.4", "5.6.7.8"),
@@ -303,7 +303,7 @@ func TestTencentPublicProvider_Records(t *testing.T) {
 		},
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "nginx.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("nginx.external-dns-test.com"),
 				RecordType: "TXT",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("\"heritage=external-dns,external-dns/owner=default\""),
@@ -329,7 +329,7 @@ func TestTencentPublicProvider_Records(t *testing.T) {
 	changes = &plan.Changes{
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "tencent.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("tencent.external-dns-test.com"),
 				RecordType: "A",
 				RecordTTL:  600,
 				Targets:    endpoint.NewTargets("5.6.7.8"),
@@ -355,7 +355,7 @@ func TestTencentPublicProvider_Records(t *testing.T) {
 	changes = &plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "redis.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("redis.external-dns-test.com"),
 				RecordType: "A",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("5.6.7.8"),
@@ -381,7 +381,7 @@ func TestTencentPublicProvider_Records(t *testing.T) {
 	changes = &plan.Changes{
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "tencent.external-dns-test.com",
+				Name:       endpoint.NewEndpointNameCommon("tencent.external-dns-test.com"),
 				RecordType: "A",
 				RecordTTL:  600,
 				Targets:    endpoint.NewTargets("1.2.3.4"),

@@ -149,8 +149,8 @@ func TestListRecords(t *testing.T) {
 		{"test3.match.com", "192.168.1.3"},
 	}
 	for idx, rec := range arecs {
-		if rec.DNSName != expected[idx][0] {
-			t.Error("Got invalid DNS Name:", rec.DNSName, "expected:", expected[idx][0])
+		if rec.Name.Fqdn() != expected[idx][0] {
+			t.Error("Got invalid DNS Name:", rec.Name.Fqdn(), "expected:", expected[idx][0])
 		}
 		if rec.Targets[0] != expected[idx][1] {
 			t.Error("Got invalid target:", rec.Targets[0], "expected:", expected[idx][1])
@@ -172,8 +172,8 @@ func TestListRecords(t *testing.T) {
 		{"test6.match.com", "cname.example.com"},
 	}
 	for idx, rec := range cnamerecs {
-		if rec.DNSName != expected[idx][0] {
-			t.Error("Got invalid DNS Name:", rec.DNSName, "expected:", expected[idx][0])
+		if rec.Name.Fqdn() != expected[idx][0] {
+			t.Error("Got invalid DNS Name:", rec.Name.Fqdn(), "expected:", expected[idx][0])
 		}
 		if rec.Targets[0] != expected[idx][1] {
 			t.Error("Got invalid target:", rec.Targets[0], "expected:", expected[idx][1])
@@ -201,8 +201,8 @@ func TestListRecords(t *testing.T) {
 		{"test3.match.com", "192.168.1.3"},
 	}
 	for idx, rec := range arecs {
-		if rec.DNSName != expected[idx][0] {
-			t.Error("Got invalid DNS Name:", rec.DNSName, "expected:", expected[idx][0])
+		if rec.Name.Fqdn() != expected[idx][0] {
+			t.Error("Got invalid DNS Name:", rec.Name.Fqdn(), "expected:", expected[idx][0])
 		}
 		if rec.Targets[0] != expected[idx][1] {
 			t.Error("Got invalid target:", rec.Targets[0], "expected:", expected[idx][1])
@@ -222,8 +222,8 @@ func TestListRecords(t *testing.T) {
 		{"test6.match.com", "cname.example.com"},
 	}
 	for idx, rec := range cnamerecs {
-		if rec.DNSName != expected[idx][0] {
-			t.Error("Got invalid DNS Name:", rec.DNSName, "expected:", expected[idx][0])
+		if rec.Name.Fqdn() != expected[idx][0] {
+			t.Error("Got invalid DNS Name:", rec.Name.Fqdn(), "expected:", expected[idx][0])
 		}
 		if rec.Targets[0] != expected[idx][1] {
 			t.Error("Got invalid target:", rec.Targets[0], "expected:", expected[idx][1])
@@ -238,8 +238,8 @@ func TestCreateRecord(t *testing.T) {
 		if r.Form.Get("action") != "add" {
 			t.Error("Expected 'add' action in form from client")
 		}
-		if r.Form.Get("domain") != ep.DNSName {
-			t.Error("Invalid domain in form:", r.Form.Get("domain"), "Expected:", ep.DNSName)
+		if r.Form.Get("domain") != ep.Name.Fqdn() {
+			t.Error("Invalid domain in form:", r.Form.Get("domain"), "Expected:", ep.Name.Fqdn())
 		}
 		switch ep.RecordType {
 		case endpoint.RecordTypeA:
@@ -273,7 +273,7 @@ func TestCreateRecord(t *testing.T) {
 
 	// Test create A record
 	ep = &endpoint.Endpoint{
-		DNSName:    "test.example.com",
+		Name:       endpoint.NewEndpointNameCommon("test.example.com"),
 		Targets:    []string{"192.168.1.1"},
 		RecordType: endpoint.RecordTypeA,
 	}
@@ -283,7 +283,7 @@ func TestCreateRecord(t *testing.T) {
 
 	// Test create CNAME record
 	ep = &endpoint.Endpoint{
-		DNSName:    "test.example.com",
+		Name:       endpoint.NewEndpointNameCommon("test.example.com"),
 		Targets:    []string{"test.cname.com"},
 		RecordType: endpoint.RecordTypeCNAME,
 	}
@@ -299,8 +299,8 @@ func TestDeleteRecord(t *testing.T) {
 		if r.Form.Get("action") != "delete" {
 			t.Error("Expected 'delete' action in form from client")
 		}
-		if r.Form.Get("domain") != ep.DNSName {
-			t.Error("Invalid domain in form:", r.Form.Get("domain"), "Expected:", ep.DNSName)
+		if r.Form.Get("domain") != ep.Name.Fqdn() {
+			t.Error("Invalid domain in form:", r.Form.Get("domain"), "Expected:", ep.Name.Fqdn())
 		}
 		switch ep.RecordType {
 		case endpoint.RecordTypeA:
@@ -334,7 +334,7 @@ func TestDeleteRecord(t *testing.T) {
 
 	// Test delete A record
 	ep = &endpoint.Endpoint{
-		DNSName:    "test.example.com",
+		Name:       endpoint.NewEndpointNameCommon("test.example.com"),
 		Targets:    []string{"192.168.1.1"},
 		RecordType: endpoint.RecordTypeA,
 	}
@@ -344,7 +344,7 @@ func TestDeleteRecord(t *testing.T) {
 
 	// Test delete CNAME record
 	ep = &endpoint.Endpoint{
-		DNSName:    "test.example.com",
+		Name:       endpoint.NewEndpointNameCommon("test.example.com"),
 		Targets:    []string{"test.cname.com"},
 		RecordType: endpoint.RecordTypeCNAME,
 	}

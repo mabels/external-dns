@@ -178,7 +178,7 @@ OuterLoop:
 		}
 
 		for idx, existingEndpoint := range eps {
-			if existingEndpoint.DNSName == strings.TrimSuffix(rrFqdn, ".") && existingEndpoint.RecordType == rrType {
+			if existingEndpoint.Name.Fqdn() == rrFqdn && existingEndpoint.RecordType == rrType {
 				eps[idx].Targets = append(eps[idx].Targets, rrValues...)
 				continue OuterLoop
 			}
@@ -254,8 +254,8 @@ func (r rfc2136Provider) ApplyChanges(ctx context.Context, changes *plan.Changes
 		m.SetUpdate(r.zoneName)
 
 		for _, ep := range chunk {
-			if !r.domainFilter.Match(ep.DNSName) {
-				log.Debugf("Skipping record %s because it was filtered out by the specified --domain-filter", ep.DNSName)
+			if !r.domainFilter.Match(ep.Name.Fqdn()) {
+				log.Debugf("Skipping record %s because it was filtered out by the specified --domain-filter", ep.Name.Fqdn())
 				continue
 			}
 
@@ -280,8 +280,8 @@ func (r rfc2136Provider) ApplyChanges(ctx context.Context, changes *plan.Changes
 		m.SetUpdate(r.zoneName)
 
 		for i, ep := range chunk {
-			if !r.domainFilter.Match(ep.DNSName) {
-				log.Debugf("Skipping record %s because it was filtered out by the specified --domain-filter", ep.DNSName)
+			if !r.domainFilter.Match(ep.Name.Fqdn()) {
+				log.Debugf("Skipping record %s because it was filtered out by the specified --domain-filter", ep.Name.Fqdn())
 				continue
 			}
 
@@ -306,8 +306,8 @@ func (r rfc2136Provider) ApplyChanges(ctx context.Context, changes *plan.Changes
 		m.SetUpdate(r.zoneName)
 
 		for _, ep := range chunk {
-			if !r.domainFilter.Match(ep.DNSName) {
-				log.Debugf("Skipping record %s because it was filtered out by the specified --domain-filter", ep.DNSName)
+			if !r.domainFilter.Match(ep.Name.Fqdn()) {
+				log.Debugf("Skipping record %s because it was filtered out by the specified --domain-filter", ep.Name.Fqdn())
 				continue
 			}
 
@@ -350,7 +350,7 @@ func (r rfc2136Provider) AddRecord(m *dns.Msg, ep *endpoint.Endpoint) error {
 	}
 
 	for _, target := range ep.Targets {
-		newRR := fmt.Sprintf("%s %d %s %s", ep.DNSName, ttl, ep.RecordType, target)
+		newRR := fmt.Sprintf("%s %d %s %s", ep.Name.Fqdn(), ttl, ep.RecordType, target)
 		log.Infof("Adding RR: %s", newRR)
 
 		rr, err := dns.NewRR(newRR)
@@ -367,7 +367,7 @@ func (r rfc2136Provider) AddRecord(m *dns.Msg, ep *endpoint.Endpoint) error {
 func (r rfc2136Provider) RemoveRecord(m *dns.Msg, ep *endpoint.Endpoint) error {
 	log.Debugf("RemoveRecord.ep=%s", ep)
 	for _, target := range ep.Targets {
-		newRR := fmt.Sprintf("%s %d %s %s", ep.DNSName, ep.RecordTTL, ep.RecordType, target)
+		newRR := fmt.Sprintf("%s %d %s %s", ep.Name.Fqdn(), ep.RecordTTL, ep.RecordType, target)
 		log.Infof("Removing RR: %s", newRR)
 
 		rr, err := dns.NewRR(newRR)

@@ -211,18 +211,19 @@ func (p *GoogleProvider) Records(ctx context.Context) (endpoints []*endpoint.End
 		return nil, err
 	}
 
-	f := func(resp *dns.ResourceRecordSetsListResponse) error {
-		for _, r := range resp.Rrsets {
-			if !p.SupportedRecordType(r.Type) {
-				continue
-			}
-			endpoints = append(endpoints, endpoint.NewEndpointWithTTL(r.Name, r.Type, endpoint.TTL(r.Ttl), r.Rrdatas...))
-		}
-
-		return nil
-	}
-
 	for _, z := range zones {
+		f := func(resp *dns.ResourceRecordSetsListResponse) error {
+			for _, r := range resp.Rrsets {
+				if !p.SupportedRecordType(r.Type) {
+					continue
+				}
+				endpoints = append(endpoints, endpoint.NewEndpointWithTTL(
+					endpoint.NewEndpointName(r.Name, z.DnsName),
+					r.Type, endpoint.TTL(r.Ttl), r.Rrdatas...))
+			}
+
+			return nil
+		}
 		if err := p.resourceRecordSetsClient.List(p.project, z.Name).Pages(ctx, f); err != nil {
 			return nil, err
 		}
@@ -275,12 +276,7 @@ func (p *GoogleProvider) ApplyChanges(ctx context.Context, changes *plan.Changes
 
 // SupportedRecordType returns true if the record type is supported by the provider
 func (p *GoogleProvider) SupportedRecordType(recordType string) bool {
-	switch recordType {
-	case "MX":
-		return true
-	default:
-		return provider.SupportedRecordType(recordType)
-	}
+	return endpoint.IsValidRecordType(recordType)
 }
 
 // newFilteredRecords returns a collection of RecordSets based on the given endpoints and domainFilter.
@@ -288,7 +284,7 @@ func (p *GoogleProvider) newFilteredRecords(endpoints []*endpoint.Endpoint) []*d
 	records := []*dns.ResourceRecordSet{}
 
 	for _, endpoint := range endpoints {
-		if p.domainFilter.Match(endpoint.DNSName) {
+		if p.domainFilter.Match(endpoint.Name.Fqdn()) {
 			records = append(records, newRecord(endpoint))
 		}
 	}
@@ -470,7 +466,7 @@ func newRecord(ep *endpoint.Endpoint) *dns.ResourceRecordSet {
 	}
 
 	return &dns.ResourceRecordSet{
-		Name:    provider.EnsureTrailingDot(ep.DNSName),
+		Name:    provider.EnsureTrailingDot(ep.Name.FqdnDot()),
 		Rrdatas: targets,
 		Ttl:     ttl,
 		Type:    ep.RecordType,

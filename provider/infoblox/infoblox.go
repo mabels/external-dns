@@ -217,7 +217,7 @@ func (p *ProviderConfig) Records(ctx context.Context) (endpoints []*endpoint.End
 			// Check if endpoint already exists and add to existing endpoint if it does
 			foundExisting := false
 			for _, ep := range endpoints {
-				if ep.DNSName == res.Name && ep.RecordType == endpoint.RecordTypeA {
+				if ep.Name.Fqdn() == res.Name && ep.RecordType == endpoint.RecordTypeA {
 					foundExisting = true
 					duplicateTarget := false
 
@@ -229,7 +229,7 @@ func (p *ProviderConfig) Records(ctx context.Context) (endpoints []*endpoint.End
 					}
 
 					if duplicateTarget {
-						logrus.Debugf("A duplicate target '%s' found for existing A record '%s'", res.Ipv4Addr, ep.DNSName)
+						logrus.Debugf("A duplicate target '%s' found for existing A record '%s'", res.Ipv4Addr, ep.Name.Fqdn())
 					} else {
 						logrus.Debugf("Adding target '%s' to existing A record '%s'", res.Ipv4Addr, res.Name)
 						ep.Targets = append(ep.Targets, res.Ipv4Addr)
@@ -238,7 +238,9 @@ func (p *ProviderConfig) Records(ctx context.Context) (endpoints []*endpoint.End
 				}
 			}
 			if !foundExisting {
-				newEndpoint := endpoint.NewEndpoint(res.Name, endpoint.RecordTypeA, res.Ipv4Addr)
+				newEndpoint := endpoint.NewEndpoint(
+					endpoint.NewEndpointName(res.Name, zone.Fqdn),
+					endpoint.RecordTypeA, res.Ipv4Addr)
 				if p.createPTR {
 					newEndpoint.WithProviderSpecific(providerSpecificInfobloxPtrRecord, "true")
 				}
@@ -265,7 +267,9 @@ func (p *ProviderConfig) Records(ctx context.Context) (endpoints []*endpoint.End
 
 				// host record is an abstraction in infoblox that combines A and PTR records
 				// for any host record we already should have a PTR record in infoblox, so mark it as created
-				newEndpoint := endpoint.NewEndpoint(res.Name, endpoint.RecordTypeA, ip.Ipv4Addr)
+				newEndpoint := endpoint.NewEndpoint(
+					endpoint.NewEndpointName(res.Name, zone.Fqdn),
+					endpoint.RecordTypeA, ip.Ipv4Addr)
 				if p.createPTR {
 					newEndpoint.WithProviderSpecific(providerSpecificInfobloxPtrRecord, "true")
 				}
@@ -283,7 +287,9 @@ func (p *ProviderConfig) Records(ctx context.Context) (endpoints []*endpoint.End
 		}
 		for _, res := range resC {
 			logrus.Debugf("Record='%s' CNAME:'%s'", res.Name, res.Canonical)
-			endpoints = append(endpoints, endpoint.NewEndpoint(res.Name, endpoint.RecordTypeCNAME, res.Canonical))
+			endpoints = append(endpoints, endpoint.NewEndpoint(
+				endpoint.NewEndpointName(res.Name, zone.Fqdn),
+				endpoint.RecordTypeCNAME, res.Canonical))
 		}
 
 		if p.createPTR {
@@ -301,7 +307,9 @@ func (p *ProviderConfig) Records(ctx context.Context) (endpoints []*endpoint.End
 					return nil, fmt.Errorf("could not fetch PTR records from zone '%s': %s", zone.Fqdn, err)
 				}
 				for _, res := range resP {
-					endpoints = append(endpoints, endpoint.NewEndpoint(res.PtrdName, endpoint.RecordTypePTR, res.Ipv4Addr))
+					endpoints = append(endpoints, endpoint.NewEndpoint(
+						endpoint.NewEndpointName(res.PtrdName, arpaZone),
+						res.PtrdName, endpoint.RecordTypePTR, res.Ipv4Addr))
 				}
 			}
 		}
@@ -327,7 +335,7 @@ func (p *ProviderConfig) Records(ctx context.Context) (endpoints []*endpoint.End
 			foundExisting := false
 
 			for _, ep := range endpoints {
-				if ep.DNSName == res.Name && ep.RecordType == endpoint.RecordTypeTXT {
+				if ep.Name.Fqdn() == res.Name && ep.RecordType == endpoint.RecordTypeTXT {
 					foundExisting = true
 					duplicateTarget := false
 
@@ -339,7 +347,7 @@ func (p *ProviderConfig) Records(ctx context.Context) (endpoints []*endpoint.End
 					}
 
 					if duplicateTarget {
-						logrus.Debugf("A duplicate target '%s' found for existing TXT record '%s'", res.Text, ep.DNSName)
+						logrus.Debugf("A duplicate target '%s' found for existing TXT record '%s'", res.Text, ep.Name.Fqdn())
 					} else {
 						logrus.Debugf("Adding target '%s' to existing TXT record '%s'", res.Text, res.Name)
 						ep.Targets = append(ep.Targets, res.Text)
@@ -349,7 +357,9 @@ func (p *ProviderConfig) Records(ctx context.Context) (endpoints []*endpoint.End
 			}
 			if !foundExisting {
 				logrus.Debugf("Record='%s' TXT:'%s'", res.Name, res.Text)
-				newEndpoint := endpoint.NewEndpoint(res.Name, endpoint.RecordTypeTXT, res.Text)
+				newEndpoint := endpoint.NewEndpoint(
+					endpoint.NewEndpointName(res.Name, zone.Fqdn),
+					endpoint.RecordTypeTXT, res.Text)
 				endpoints = append(endpoints, newEndpoint)
 			}
 		}
@@ -363,7 +373,7 @@ func (p *ProviderConfig) Records(ctx context.Context) (endpoints []*endpoint.End
 			if ptrRecord.RecordType != endpoint.RecordTypePTR {
 				continue
 			}
-			ptrRecordsMap[ptrRecord.DNSName] = true
+			ptrRecordsMap[ptrRecord.Name.Fqdn()] = true
 		}
 
 		for i := range endpoints {
@@ -371,7 +381,7 @@ func (p *ProviderConfig) Records(ctx context.Context) (endpoints []*endpoint.End
 				continue
 			}
 			// if PTR record already exists for A record, then mark it as such
-			if ptrRecordsMap[endpoints[i].DNSName] {
+			if ptrRecordsMap[endpoints[i].Name.Fqdn()] {
 				found := false
 				for j := range endpoints[i].ProviderSpecific {
 					if endpoints[i].ProviderSpecific[j].Name == providerSpecificInfobloxPtrRecord {
@@ -466,9 +476,9 @@ func (p *ProviderConfig) mapChanges(zones []ibclient.ZoneAuth, changes *plan.Cha
 	deleted := infobloxChangeMap{}
 
 	mapChange := func(changeMap infobloxChangeMap, change *endpoint.Endpoint) {
-		zone := p.findZone(zones, change.DNSName)
+		zone := p.findZone(zones, change.Name.Fqdn())
 		if zone == nil {
-			logrus.Debugf("Ignoring changes to '%s' because a suitable Infoblox DNS zone was not found.", change.DNSName)
+			logrus.Debugf("Ignoring changes to '%s' because a suitable Infoblox DNS zone was not found.", change.Name.Fqdn())
 			return
 		}
 		// Ensure the record type is suitable
@@ -548,7 +558,7 @@ func (p *ProviderConfig) recordSet(ep *endpoint.Endpoint, getObject bool, target
 	case endpoint.RecordTypeA:
 		var res []ibclient.RecordA
 		obj := ibclient.NewEmptyRecordA()
-		obj.Name = ep.DNSName
+		obj.Name = ep.Name.Fqdn()
 		obj.Ipv4Addr = ep.Targets[targetIndex]
 		obj.View = p.view
 		if getObject {
@@ -565,7 +575,7 @@ func (p *ProviderConfig) recordSet(ep *endpoint.Endpoint, getObject bool, target
 	case endpoint.RecordTypePTR:
 		var res []ibclient.RecordPTR
 		obj := ibclient.NewEmptyRecordPTR()
-		obj.PtrdName = ep.DNSName
+		obj.PtrdName = ep.Name.Fqdn()
 		obj.Ipv4Addr = ep.Targets[targetIndex]
 		obj.View = p.view
 		if getObject {
@@ -582,7 +592,7 @@ func (p *ProviderConfig) recordSet(ep *endpoint.Endpoint, getObject bool, target
 	case endpoint.RecordTypeCNAME:
 		var res []ibclient.RecordCNAME
 		obj := ibclient.NewEmptyRecordCNAME()
-		obj.Name = ep.DNSName
+		obj.Name = ep.Name.Fqdn()
 		obj.Canonical = ep.Targets[0]
 		obj.View = p.view
 		if getObject {
@@ -605,7 +615,7 @@ func (p *ProviderConfig) recordSet(ep *endpoint.Endpoint, getObject bool, target
 		}
 		obj := ibclient.NewRecordTXT(
 			ibclient.RecordTXT{
-				Name: ep.DNSName,
+				Name: ep.Name.Fqdn(),
 				Text: ep.Targets[0],
 				View: p.view,
 			},
@@ -634,7 +644,7 @@ func (p *ProviderConfig) createRecords(created infobloxChangeMap) {
 
 						"Would create %s record named '%s' to '%s' for Infoblox DNS zone '%s'.",
 						ep.RecordType,
-						ep.DNSName,
+						ep.Name.Fqdn(),
 						ep.Targets[targetIndex],
 						zone,
 					)
@@ -644,7 +654,7 @@ func (p *ProviderConfig) createRecords(created infobloxChangeMap) {
 				logrus.Infof(
 					"Creating %s record named '%s' to '%s' for Infoblox DNS zone '%s'.",
 					ep.RecordType,
-					ep.DNSName,
+					ep.Name.Fqdn(),
 					ep.Targets[targetIndex],
 					zone,
 				)
@@ -654,7 +664,7 @@ func (p *ProviderConfig) createRecords(created infobloxChangeMap) {
 					logrus.Errorf(
 						"Failed to retrieve %s record named '%s' to '%s' for DNS zone '%s': %v",
 						ep.RecordType,
-						ep.DNSName,
+						ep.Name.Fqdn(),
 						ep.Targets[targetIndex],
 						zone,
 						err,
@@ -666,7 +676,7 @@ func (p *ProviderConfig) createRecords(created infobloxChangeMap) {
 					logrus.Errorf(
 						"Failed to create %s record named '%s' to '%s' for DNS zone '%s': %v",
 						ep.RecordType,
-						ep.DNSName,
+						ep.Name.Fqdn(),
 						ep.Targets[targetIndex],
 						zone,
 						err,
@@ -687,7 +697,7 @@ func (p *ProviderConfig) deleteRecords(deleted infobloxChangeMap) {
 					logrus.Errorf(
 						"Failed to retrieve %s record named '%s' to '%s' for DNS zone '%s': %v",
 						ep.RecordType,
-						ep.DNSName,
+						ep.Name.Fqdn(),
 						ep.Targets[targetIndex],
 						zone,
 						err,
@@ -736,7 +746,7 @@ func (p *ProviderConfig) deleteRecords(deleted infobloxChangeMap) {
 					logrus.Errorf(
 						"Failed to delete %s record named '%s' to '%s' for Infoblox DNS zone '%s': %v",
 						ep.RecordType,
-						ep.DNSName,
+						ep.Name.Fqdn(),
 						ep.Targets[targetIndex],
 						zone,
 						err,

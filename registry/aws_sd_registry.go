@@ -68,9 +68,13 @@ func (sdr *AWSSDRegistry) Records(ctx context.Context) ([]*endpoint.Endpoint, er
 }
 
 // MissingRecords returns nil because there is no missing records for AWSSD registry
-func (sdr *AWSSDRegistry) MissingRecords() []*endpoint.Endpoint {
-	return nil
+func (sdr *AWSSDRegistry) EnsureOwnerShipRecords(eps []*endpoint.Endpoint) []*endpoint.Endpoint {
+	return eps
 }
+
+// func (sdr *AWSSDRegistry) RemoveUnownedRecords(registry, source []*endpoint.Endpoint) ([]*endpoint.Endpoint, []*endpoint.Endpoint) {
+// 	return registry, source
+// }
 
 // ApplyChanges filters out records not owned the External-DNS, additionally it adds the required label
 // inserted in the AWS SD instance as a CreateID field

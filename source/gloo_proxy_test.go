@@ -271,7 +271,7 @@ func TestGlooSource(t *testing.T) {
 	assert.Len(t, endpoints, 5)
 	assert.ElementsMatch(t, endpoints, []*endpoint.Endpoint{
 		{
-			DNSName:          "a.test",
+			Name:             endpoint.NewEndpointNameCommon("a.test"),
 			Targets:          []string{internalProxySvc.Status.LoadBalancer.Ingress[0].IP, internalProxySvc.Status.LoadBalancer.Ingress[1].IP, internalProxySvc.Status.LoadBalancer.Ingress[2].IP},
 			RecordType:       endpoint.RecordTypeA,
 			RecordTTL:        0,
@@ -279,7 +279,7 @@ func TestGlooSource(t *testing.T) {
 			ProviderSpecific: endpoint.ProviderSpecific{},
 		},
 		{
-			DNSName:          "b.test",
+			Name:             endpoint.NewEndpointNameCommon("b.test"),
 			Targets:          []string{internalProxySvc.Status.LoadBalancer.Ingress[0].IP, internalProxySvc.Status.LoadBalancer.Ingress[1].IP, internalProxySvc.Status.LoadBalancer.Ingress[2].IP},
 			RecordType:       endpoint.RecordTypeA,
 			RecordTTL:        0,
@@ -287,7 +287,7 @@ func TestGlooSource(t *testing.T) {
 			ProviderSpecific: endpoint.ProviderSpecific{},
 		},
 		{
-			DNSName:       "c.test",
+			Name:          endpoint.NewEndpointNameCommon("c.test"),
 			Targets:       []string{internalProxySvc.Status.LoadBalancer.Ingress[0].IP, internalProxySvc.Status.LoadBalancer.Ingress[1].IP, internalProxySvc.Status.LoadBalancer.Ingress[2].IP},
 			RecordType:    endpoint.RecordTypeA,
 			SetIdentifier: "identifier",
@@ -301,7 +301,7 @@ func TestGlooSource(t *testing.T) {
 			},
 		},
 		{
-			DNSName:          "d.test",
+			Name:             endpoint.NewEndpointNameCommon("d.test"),
 			Targets:          []string{externalProxySvc.Status.LoadBalancer.Ingress[0].Hostname, externalProxySvc.Status.LoadBalancer.Ingress[1].Hostname, externalProxySvc.Status.LoadBalancer.Ingress[2].Hostname},
 			RecordType:       endpoint.RecordTypeCNAME,
 			RecordTTL:        0,
@@ -309,7 +309,7 @@ func TestGlooSource(t *testing.T) {
 			ProviderSpecific: endpoint.ProviderSpecific{},
 		},
 		{
-			DNSName:       "e.test",
+			Name:          endpoint.NewEndpointNameCommon("e.test"),
 			Targets:       []string{externalProxySvc.Status.LoadBalancer.Ingress[0].Hostname, externalProxySvc.Status.LoadBalancer.Ingress[1].Hostname, externalProxySvc.Status.LoadBalancer.Ingress[2].Hostname},
 			RecordType:    endpoint.RecordTypeCNAME,
 			SetIdentifier: "identifier-external",

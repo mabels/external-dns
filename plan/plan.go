@@ -30,6 +30,8 @@ import (
 // PropertyComparator is used in Plan for comparing the previous and current custom annotations.
 type PropertyComparator func(name string, previous string, current string) bool
 
+// type ParseHeritageRecord func(ep endpoint.Endpoint) (endpoint.Labels, error)
+
 // Plan can convert a list of desired and current records to a series of create,
 // update and delete actions.
 type Plan struct {
@@ -38,7 +40,7 @@ type Plan struct {
 	// List of desired records
 	Desired []*endpoint.Endpoint
 	// List of missing records to be created, use for the migrations (e.g. old-new TXT format)
-	Missing []*endpoint.Endpoint
+	// Missing []*endpoint.Endpoint
 	// Policies under which the desired changes are calculated
 	Policies []Policy
 	// List of changes necessary to move towards desired state
@@ -126,13 +128,13 @@ func (t planTable) addCandidate(se *endpoint.Endpoint) {
 }
 
 func sanitizeKey(e *endpoint.Endpoint) *endpoint.Endpoint {
-	dnsName := normalizeDNSName(e.DNSName)
+	dnsName := normalizeDNSName(e.Name.Fqdn())
 	recordType := strings.ToUpper(strings.TrimSpace(e.RecordType))
 	setIdentifier := strings.TrimSpace(e.SetIdentifier)
 	ret := e
-	if e.DNSName != dnsName || e.RecordType != recordType || e.SetIdentifier != setIdentifier {
+	if e.Name.Fqdn() != dnsName || e.RecordType != recordType || e.SetIdentifier != setIdentifier {
 		ret = e.DeepCopy()
-		ret.DNSName = normalizeDNSName(e.DNSName)
+		ret.Name = e.Name
 		ret.RecordType = strings.ToUpper(strings.TrimSpace(e.RecordType))
 		ret.SetIdentifier = strings.TrimSpace(e.SetIdentifier)
 	}
@@ -141,7 +143,7 @@ func sanitizeKey(e *endpoint.Endpoint) *endpoint.Endpoint {
 
 func (t *planTable) newPlanKey(e *endpoint.Endpoint) planKey {
 	key := planKey{
-		dnsName:       e.DNSName,
+		dnsName:       e.Name.Fqdn(),
 		setIdentifier: e.SetIdentifier,
 		recordType:    e.RecordType,
 	}
@@ -162,14 +164,34 @@ func (c *Changes) HasChanges() bool {
 // state. It then passes those changes to the current policy for further
 // processing. It returns a copy of Plan with the changes populated.
 // func (p *Plan) Calculate() *Plan {
-// 	p, err := p.CalculateWithError()
+// 	p, err := p.Calculate()
 // 	if err != nil {
-// 		panic(fmt.Sprintf("CalculateWithError should not return an error:%v", err))
+// 		panic(fmt.Sprintf("Calculate should not return an error:%v", err))
 // 	}
 // 	return p
 // }
 
-func (p *Plan) CalculateWithError() (*Plan, error) {
+func (t *planTable) removeUnmangedRecords(p *Plan) {
+	byOwner := map[string]*planTableRow{}
+	for _, tableRow := range t.rows {
+		for _, current := range tableRow.currents {
+			owner := current.Labels[endpoint.OwnerLabelKey]
+			if _, ok := byOwner[owner]; !ok {
+				byOwner[owner] = &planTableRow{}
+			}
+			byOwner[owner].currents = append(byOwner[owner].currents, current)
+		}
+		for _, candidate := range tableRow.candidates {
+			owner := candidate.Labels[endpoint.OwnerLabelKey]
+			if _, ok := byOwner[owner]; !ok {
+				byOwner[owner] = &planTableRow{}
+			}
+			byOwner[owner].candidates = append(byOwner[owner].candidates, candidate)
+		}
+	}
+}
+
+func (p *Plan) Calculate() (*Plan, error) {
 	t := newPlanTable()
 
 	if p.DomainFilter == nil {
@@ -184,8 +206,10 @@ func (p *Plan) CalculateWithError() (*Plan, error) {
 		t.addCandidate(desired)
 	}
 
-	changes := &Changes{}
+	// here we filter out records that are not managed by this plan
+	t.removeUnmangedRecords(p)
 
+	changes := &Changes{}
 	for _, row := range t.rows {
 		rowChanges, err := t.resolver.Resolve(row.currents, row.candidates)
 		if err != nil {
@@ -228,15 +252,15 @@ func (p *Plan) CalculateWithError() (*Plan, error) {
 	}
 
 	// Handle the migration of the TXT records created before the new format (introduced in v0.12.0)
-	if len(p.Missing) > 0 {
-		changes.Create = append(changes.Create, filterRecordsForPlan(p.Missing, p.DomainFilter, append(p.ManagedRecords, endpoint.RecordTypeTXT))...)
-	}
+	// if len(p.Missing) > 0 {
+	// 	changes.Create = append(changes.Create, filterRecordsForPlan(p.Missing, p.DomainFilter, append(p.ManagedRecords, endpoint.RecordTypeTXT))...)
+	// }
 
 	plan := &Plan{
 		Current:        p.Current,
 		Desired:        p.Desired,
 		Changes:        changes,
-		ManagedRecords: []string{endpoint.RecordTypeA, endpoint.RecordTypeCNAME},
+		ManagedRecords: p.ManagedRecords,
 	}
 
 	return plan, nil
@@ -308,8 +332,8 @@ func filterRecordsForPlan(records []*endpoint.Endpoint, domainFilter endpoint.Do
 
 	for _, record := range records {
 		// Ignore records that do not match the domain filter provided
-		if !domainFilter.Match(record.DNSName) {
-			log.Debugf("ignoring record %s that does not match domain filter", record.DNSName)
+		if !domainFilter.Match(record.Name.Fqdn()) {
+			log.Debugf("ignoring record %s that does not match domain filter", record.Name.Fqdn())
 			continue
 		}
 		if IsManagedRecord(record.RecordType, managedRecords) {
@@ -321,7 +345,7 @@ func filterRecordsForPlan(records []*endpoint.Endpoint, domainFilter endpoint.Do
 }
 
 // normalizeDNSName converts a DNS name to a canonical form, so that we can use string equality
-// it: removes space, converts to lower case, ensures there is a trailing dot
+// it: removes space, converts to lower case, remove the trailing dot
 func normalizeDNSName(dnsName string) string {
 	s := strings.TrimRight(strings.TrimSpace(strings.ToLower(dnsName)), ".")
 	return s

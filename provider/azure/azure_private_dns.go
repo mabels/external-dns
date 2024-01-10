@@ -106,12 +106,12 @@ func (p *AzurePrivateDNSProvider) Records(ctx context.Context) (endpoints []*end
 			}
 			recordType = strings.TrimPrefix(*recordSet.Type, "Microsoft.Network/privateDnsZones/")
 
-			var name string
+			// var name string
 			if recordSet.Name == nil {
 				log.Debugf("Skipping invalid record set with missing name.")
 				return
 			}
-			name = formatAzureDNSName(*recordSet.Name, *zone.Name)
+			name := endpoint.NewEndpointName(*recordSet.Name, *zone.Name)
 
 			targets := extractAzurePrivateDNSTargets(&recordSet)
 			if len(targets) == 0 {
@@ -128,7 +128,7 @@ func (p *AzurePrivateDNSProvider) Records(ctx context.Context) (endpoints []*end
 			log.Debugf(
 				"Found %s record for '%s' with target '%s'.",
 				ep.RecordType,
-				ep.DNSName,
+				ep.Name.Fqdn(),
 				ep.Targets,
 			)
 			endpoints = append(endpoints, ep)
@@ -221,11 +221,11 @@ func (p *AzurePrivateDNSProvider) mapChanges(zones []privatedns.PrivateZone, cha
 		}
 	}
 	mapChange := func(changeMap azurePrivateDNSChangeMap, change *endpoint.Endpoint) {
-		zone, _ := zoneNameIDMapper.FindZone(change.DNSName)
+		zone, _ := zoneNameIDMapper.FindZone(change.Name.Fqdn())
 		if zone == "" {
-			if _, ok := ignored[change.DNSName]; !ok {
-				ignored[change.DNSName] = true
-				log.Infof("Ignoring changes to '%s' because a suitable Azure Private DNS zone was not found.", change.DNSName)
+			if _, ok := ignored[change.Name.Fqdn()]; !ok {
+				ignored[change.Name.Fqdn()] = true
+				log.Infof("Ignoring changes to '%s' because a suitable Azure Private DNS zone was not found.", change.Name.Fqdn())
 			}
 			return
 		}
@@ -324,7 +324,7 @@ func (p *AzurePrivateDNSProvider) updateRecords(ctx context.Context, updated azu
 
 func (p *AzurePrivateDNSProvider) recordSetNameForZone(zone string, endpoint *endpoint.Endpoint) string {
 	// Remove the zone from the record set
-	name := endpoint.DNSName
+	name := endpoint.Name.Fqdn()
 	name = name[:len(name)-len(zone)]
 	name = strings.TrimSuffix(name, ".")
 

@@ -183,19 +183,21 @@ func (p *dnsimpleProvider) Records(ctx context.Context) (endpoints []*endpoint.E
 				return nil, err
 			}
 			for _, record := range records.Data {
-				switch record.Type {
-				case "A", "CNAME", "TXT":
-					break
-				default:
-					continue
-				}
+				// switch record.Type {
+				// case "A", "CNAME", "TXT":
+				// 	break
+				// default:
+				// 	continue
+				// }
 				// Apex records have an empty string for their name.
 				// Consider this when creating the endpoint dnsName
-				dnsName := fmt.Sprintf("%s.%s", record.Name, record.ZoneID)
-				if record.Name == "" {
-					dnsName = record.ZoneID
-				}
-				endpoints = append(endpoints, endpoint.NewEndpointWithTTL(dnsName, record.Type, endpoint.TTL(record.TTL), record.Content))
+				// dnsName := fmt.Sprintf("%s.%s", record.Name, record.ZoneID)
+				// if record.Name == "" {
+				// 	dnsName = record.ZoneID
+				// }
+				endpoints = append(endpoints, endpoint.NewEndpointWithTTL(
+					endpoint.NewEndpointName(record.Name, record.ZoneID),
+					record.Type, endpoint.TTL(record.TTL), record.Content))
 			}
 			page++
 			if page > records.Pagination.TotalPages {
@@ -216,7 +218,7 @@ func newDnsimpleChange(action string, e *endpoint.Endpoint) *dnsimpleChange {
 	change := &dnsimpleChange{
 		Action: action,
 		ResourceRecordSet: dnsimple.ZoneRecord{
-			Name:    e.DNSName,
+			Name:    e.Name.Fqdn(),
 			Type:    e.RecordType,
 			Content: e.Targets[0],
 			TTL:     ttl,

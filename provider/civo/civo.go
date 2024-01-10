@@ -123,15 +123,16 @@ func (p *CivoProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, error
 		for _, r := range records {
 			toUpper := strings.ToUpper(string(r.Type))
 			if provider.SupportedRecordType(toUpper) {
-				name := fmt.Sprintf("%s.%s", r.Name, zone.Name)
+				// name := fmt.Sprintf("%s.%s", r.Name, zone.Name)
 
-				// root name is identified by the empty string and should be
-				// translated to zone name for the endpoint entry.
-				if r.Name == "" {
-					name = zone.Name
-				}
+				// // root name is identified by the empty string and should be
+				// // translated to zone name for the endpoint entry.
+				// if r.Name == "" {
+				// 	name = zone.Name
+				// }
 
-				endpoints = append(endpoints, endpoint.NewEndpointWithTTL(name, toUpper, endpoint.TTL(r.TTL), r.Value))
+				endpoints = append(endpoints, endpoint.NewEndpointWithTTL(
+					endpoint.NewEndpointName(r.Name, zone.Name), toUpper, endpoint.TTL(r.TTL), r.Value))
 			}
 		}
 	}
@@ -261,7 +262,7 @@ func processCreateActions(zonesByID map[string]civogo.DNSDomain, recordsByZoneID
 				log.WithFields(log.Fields{
 					"zoneID":     zoneID,
 					"zoneName":   zone.Name,
-					"dnsName":    ep.DNSName,
+					"dnsName":    ep.Name.Fqdn(),
 					"recordType": ep.RecordType,
 				}).Warn("Records found which should not exist")
 			}
@@ -276,7 +277,7 @@ func processCreateActions(zonesByID map[string]civogo.DNSDomain, recordsByZoneID
 					Domain: zone,
 					Options: &civogo.DNSRecordConfig{
 						Value:    target,
-						Name:     getStrippedRecordName(zone, *ep),
+						Name:     getStrippedRecordName(*ep),
 						Type:     recordType,
 						Priority: 0,
 						TTL:      int(ep.RecordTTL),
@@ -309,7 +310,7 @@ func processUpdateActions(zonesByID map[string]civogo.DNSDomain, recordsByZoneID
 			if len(matchedRecords) == 0 {
 				log.WithFields(log.Fields{
 					"zoneID":     zoneID,
-					"dnsName":    ep.DNSName,
+					"dnsName":    ep.Name.Fqdn(),
 					"zoneName":   zone.Name,
 					"recordType": ep.RecordType,
 				}).Warn("Update Records not found.")
@@ -329,7 +330,7 @@ func processUpdateActions(zonesByID map[string]civogo.DNSDomain, recordsByZoneID
 				if record, ok := matchedRecordsByTarget[target]; ok {
 					log.WithFields(log.Fields{
 						"zoneID":     zoneID,
-						"dnsName":    ep.DNSName,
+						"dnsName":    ep.Name.Fqdn(),
 						"zoneName":   zone.Name,
 						"recordType": ep.RecordType,
 						"target":     target,
@@ -340,7 +341,7 @@ func processUpdateActions(zonesByID map[string]civogo.DNSDomain, recordsByZoneID
 						DomainRecord: record,
 						Options: civogo.DNSRecordConfig{
 							Value:    target,
-							Name:     getStrippedRecordName(zone, *ep),
+							Name:     getStrippedRecordName(*ep),
 							Type:     recordType,
 							Priority: 0,
 							TTL:      int(ep.RecordTTL),
@@ -352,7 +353,7 @@ func processUpdateActions(zonesByID map[string]civogo.DNSDomain, recordsByZoneID
 					// Record did not previously exist, create new 'target'
 					log.WithFields(log.Fields{
 						"zoneID":     zoneID,
-						"dnsName":    ep.DNSName,
+						"dnsName":    ep.Name.Fqdn(),
 						"zoneName":   zone.Name,
 						"recordType": ep.RecordType,
 						"target":     target,
@@ -362,7 +363,7 @@ func processUpdateActions(zonesByID map[string]civogo.DNSDomain, recordsByZoneID
 						Domain: zone,
 						Options: &civogo.DNSRecordConfig{
 							Value:    target,
-							Name:     getStrippedRecordName(zone, *ep),
+							Name:     getStrippedRecordName(*ep),
 							Type:     recordType,
 							Priority: 0,
 							TTL:      int(ep.RecordTTL),
@@ -375,7 +376,7 @@ func processUpdateActions(zonesByID map[string]civogo.DNSDomain, recordsByZoneID
 			for _, record := range matchedRecordsByTarget {
 				log.WithFields(log.Fields{
 					"zoneID":     zoneID,
-					"dnsName":    ep.DNSName,
+					"dnsName":    ep.Name.Fqdn(),
 					"recordType": ep.RecordType,
 					"target":     record.Value,
 				}).Warn("Deleting target")
@@ -412,7 +413,7 @@ func processDeleteActions(zonesByID map[string]civogo.DNSDomain, recordsByZoneID
 			if len(matchedRecords) == 0 {
 				log.WithFields(log.Fields{
 					"zoneID":     zoneID,
-					"dnsName":    ep.DNSName,
+					"dnsName":    ep.Name.Fqdn(),
 					"zoneName":   zone.Name,
 					"recordType": ep.RecordType,
 				}).Warn("Records to Delete not found.")
@@ -489,9 +490,9 @@ func endpointsByZone(zoneNameIDMapper provider.ZoneIDName, endpoints []*endpoint
 	endpointsByZone := make(map[string][]*endpoint.Endpoint)
 
 	for _, ep := range endpoints {
-		zoneID, _ := zoneNameIDMapper.FindZone(ep.DNSName)
+		zoneID, _ := zoneNameIDMapper.FindZone(ep.Name.Fqdn())
 		if zoneID == "" {
-			log.Debugf("Skipping record %s because no hosted zone matching record DNS Name was detected", ep.DNSName)
+			log.Debugf("Skipping record %s because no hosted zone matching record DNS Name was detected", ep.Name.Fqdn())
 			continue
 		}
 		endpointsByZone[zoneID] = append(endpointsByZone[zoneID], ep)
@@ -515,19 +516,19 @@ func convertRecordType(recordType string) (civogo.DNSRecordType, error) {
 	}
 }
 
-func getStrippedRecordName(zone civogo.DNSDomain, ep endpoint.Endpoint) string {
-	if ep.DNSName == zone.Name {
+func getStrippedRecordName(ep endpoint.Endpoint) string {
+	if ep.Name.Fqdn() == ep.Name.Zone() {
 		return ""
 	}
 
-	return strings.TrimSuffix(ep.DNSName, "."+zone.Name)
+	return ep.Name.Host()
 }
 
 func getRecordID(records []civogo.DNSRecord, zone civogo.DNSDomain, ep endpoint.Endpoint) []civogo.DNSRecord {
 	var matchedRecords []civogo.DNSRecord
 
 	for _, record := range records {
-		stripedName := getStrippedRecordName(zone, ep)
+		stripedName := getStrippedRecordName(ep)
 		toUpper := strings.ToUpper(string(record.Type))
 		if record.Name == stripedName && toUpper == ep.RecordType {
 			matchedRecords = append(matchedRecords, record)

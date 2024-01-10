@@ -359,11 +359,11 @@ type recordSet struct {
 
 // adds endpoint into recordset aggregation, loading original values from endpoint labels first
 func addEndpoint(ep *endpoint.Endpoint, recordSets map[string]*recordSet, oldEndpoints []*endpoint.Endpoint, delete bool) {
-	key := fmt.Sprintf("%s/%s", ep.DNSName, ep.RecordType)
+	key := fmt.Sprintf("%s/%s", ep.Name.Fqdn(), ep.RecordType)
 	rs := recordSets[key]
 	if rs == nil {
 		rs = &recordSet{
-			dnsName:    canonicalizeDomainName(ep.DNSName),
+			dnsName:    canonicalizeDomainName(ep.Name.Fqdn()),
 			recordType: ep.RecordType,
 			names:      make(map[string]bool),
 		}
@@ -403,7 +403,7 @@ func addDesignateIDLabelsFromExistingEndpoints(existingEndpoints []*endpoint.End
 		return
 	}
 	for _, oep := range existingEndpoints {
-		if ep.RecordType == oep.RecordType && ep.DNSName == oep.DNSName {
+		if ep.RecordType == oep.RecordType && ep.Name.Fqdn() == oep.Name.Fqdn() {
 			if !hasZoneIDLabel {
 				ep.Labels[designateZoneID] = oep.Labels[designateZoneID]
 			}

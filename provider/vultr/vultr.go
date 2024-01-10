@@ -103,15 +103,16 @@ func (p *VultrProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, erro
 
 		for _, r := range records {
 			if provider.SupportedRecordType(r.Type) {
-				name := fmt.Sprintf("%s.%s", r.Name, zone.Domain)
+				// name := fmt.Sprintf("%s.%s", r.Name, zone.Domain)
 
 				// root name is identified by the empty string and should be
 				// translated to zone name for the endpoint entry.
-				if r.Name == "" {
-					name = zone.Domain
-				}
+				// if r.Name == "" {
+				// name = zone.Domain
+				// }
 
-				endpoints = append(endpoints, endpoint.NewEndpointWithTTL(name, r.Type, endpoint.TTL(r.TTL), r.Data))
+				endpoints = append(endpoints, endpoint.NewEndpointWithTTL(
+					endpoint.NewEndpointName(r.Name, zone.Domain), r.Type, endpoint.TTL(r.TTL), r.Data))
 			}
 		}
 	}
@@ -243,7 +244,7 @@ func newVultrChanges(action string, endpoints []*endpoint.Endpoint) []*VultrChan
 			Action: action,
 			ResourceRecordSet: &govultr.DomainRecordReq{
 				Type: e.RecordType,
-				Name: e.DNSName,
+				Name: e.Name.Fqdn(),
 				Data: e.Targets[0],
 				TTL:  ttl,
 			},

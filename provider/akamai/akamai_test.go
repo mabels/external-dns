@@ -205,9 +205,9 @@ func TestAkamaiRecords(t *testing.T) {
 	})
 	stub.setOutput("recordset", recordsets)
 	endpoints := make([]*endpoint.Endpoint, 0)
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.exclude.me", endpoint.RecordTypeA, "192.168.0.1", "192.168.0.2"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.exclude.me"), endpoint.RecordTypeA, "192.168.0.1", "192.168.0.2"))
 
 	x, _ := c.Records(context.Background())
 	if assert.NotNil(t, x) {
@@ -249,7 +249,7 @@ func TestAkamaiRecordsFilters(t *testing.T) {
 	})
 	stub.setOutput("recordset", recordsets)
 	endpoints := make([]*endpoint.Endpoint, 0)
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.exclude.me", endpoint.RecordTypeA, "192.168.0.1", "192.168.0.2"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.exclude.me"), endpoint.RecordTypeA, "192.168.0.1", "192.168.0.2"))
 
 	x, _ := c.Records(context.Background())
 	if assert.NotNil(t, x) {
@@ -268,8 +268,8 @@ func TestCreateRecords(t *testing.T) {
 
 	zoneNameIDMapper := provider.ZoneIDName{"example.com": "example.com"}
 	endpoints := make([]*endpoint.Endpoint, 0)
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
 
 	err = c.createRecordsets(zoneNameIDMapper, endpoints)
 	assert.Nil(t, err)
@@ -284,9 +284,9 @@ func TestCreateRecordsDomainFilter(t *testing.T) {
 
 	zoneNameIDMapper := provider.ZoneIDName{"example.com": "example.com"}
 	endpoints := make([]*endpoint.Endpoint, 0)
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
-	exclude := append(endpoints, endpoint.NewEndpoint("www.exclude.me", endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
+	exclude := append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.exclude.me"), endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
 
 	err = c.createRecordsets(zoneNameIDMapper, exclude)
 	assert.Nil(t, err)
@@ -302,8 +302,8 @@ func TestDeleteRecords(t *testing.T) {
 
 	zoneNameIDMapper := provider.ZoneIDName{"example.com": "example.com"}
 	endpoints := make([]*endpoint.Endpoint, 0)
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
 
 	err = c.deleteRecordsets(zoneNameIDMapper, endpoints)
 	assert.Nil(t, err)
@@ -318,9 +318,9 @@ func TestDeleteRecordsDomainFilter(t *testing.T) {
 
 	zoneNameIDMapper := provider.ZoneIDName{"example.com": "example.com"}
 	endpoints := make([]*endpoint.Endpoint, 0)
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
-	exclude := append(endpoints, endpoint.NewEndpoint("www.exclude.me", endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
+	exclude := append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.exclude.me"), endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
 
 	err = c.deleteRecordsets(zoneNameIDMapper, exclude)
 	assert.Nil(t, err)
@@ -336,8 +336,8 @@ func TestUpdateRecords(t *testing.T) {
 
 	zoneNameIDMapper := provider.ZoneIDName{"example.com": "example.com"}
 	endpoints := make([]*endpoint.Endpoint, 0)
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
 
 	err = c.updateNewRecordsets(zoneNameIDMapper, endpoints)
 	assert.Nil(t, err)
@@ -352,9 +352,9 @@ func TestUpdateRecordsDomainFilter(t *testing.T) {
 
 	zoneNameIDMapper := provider.ZoneIDName{"example.com": "example.com"}
 	endpoints := make([]*endpoint.Endpoint, 0)
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
-	endpoints = append(endpoints, endpoint.NewEndpoint("www.example.com", endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
-	exclude := append(endpoints, endpoint.NewEndpoint("www.exclude.me", endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
+	endpoints = append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.example.com"), endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default"))
+	exclude := append(endpoints, endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("www.exclude.me"), endpoint.RecordTypeA, "10.0.0.2", "10.0.0.3"))
 
 	err = c.updateNewRecordsets(zoneNameIDMapper, exclude)
 	assert.Nil(t, err)
@@ -370,17 +370,17 @@ func TestAkamaiApplyChanges(t *testing.T) {
 	stub.setOutput("zone", []interface{}{"example.com"})
 	changes := &plan.Changes{}
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "www.example.com", RecordType: "A", Targets: endpoint.Targets{"target"}, RecordTTL: 300},
-		{DNSName: "test.example.com", RecordType: "A", Targets: endpoint.Targets{"target"}, RecordTTL: 300},
-		{DNSName: "test.this.example.com", RecordType: "A", Targets: endpoint.Targets{"127.0.0.1"}, RecordTTL: 300},
-		{DNSName: "www.example.com", RecordType: "TXT", Targets: endpoint.Targets{"heritage=external-dns,external-dns/owner=default"}, RecordTTL: 300},
-		{DNSName: "test.example.com", RecordType: "TXT", Targets: endpoint.Targets{"heritage=external-dns,external-dns/owner=default"}, RecordTTL: 300},
-		{DNSName: "test.this.example.com", RecordType: "TXT", Targets: endpoint.Targets{"heritage=external-dns,external-dns/owner=default"}, RecordTTL: 300},
-		{DNSName: "another.example.com", RecordType: "A", Targets: endpoint.Targets{"target"}},
+		{Name: endpoint.NewEndpointNameCommon("www.example.com"), RecordType: "A", Targets: endpoint.Targets{"target"}, RecordTTL: 300},
+		{Name: endpoint.NewEndpointNameCommon("test.example.com"), RecordType: "A", Targets: endpoint.Targets{"target"}, RecordTTL: 300},
+		{Name: endpoint.NewEndpointNameCommon("test.this.example.com"), RecordType: "A", Targets: endpoint.Targets{"127.0.0.1"}, RecordTTL: 300},
+		{Name: endpoint.NewEndpointNameCommon("www.example.com"), RecordType: "TXT", Targets: endpoint.Targets{"heritage=external-dns,external-dns/owner=default"}, RecordTTL: 300},
+		{Name: endpoint.NewEndpointNameCommon("test.example.com"), RecordType: "TXT", Targets: endpoint.Targets{"heritage=external-dns,external-dns/owner=default"}, RecordTTL: 300},
+		{Name: endpoint.NewEndpointNameCommon("test.this.example.com"), RecordType: "TXT", Targets: endpoint.Targets{"heritage=external-dns,external-dns/owner=default"}, RecordTTL: 300},
+		{Name: endpoint.NewEndpointNameCommon("another.example.com"), RecordType: "A", Targets: endpoint.Targets{"target"}},
 	}
-	changes.Delete = []*endpoint.Endpoint{{DNSName: "delete.example.com", RecordType: "A", Targets: endpoint.Targets{"target"}, RecordTTL: 300}}
-	changes.UpdateOld = []*endpoint.Endpoint{{DNSName: "old.example.com", RecordType: "A", Targets: endpoint.Targets{"target-old"}, RecordTTL: 300}}
-	changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "update.example.com", Targets: endpoint.Targets{"target-new"}, RecordType: "CNAME", RecordTTL: 300}}
+	changes.Delete = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("delete.example.com"), RecordType: "A", Targets: endpoint.Targets{"target"}, RecordTTL: 300}}
+	changes.UpdateOld = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("old.example.com"), RecordType: "A", Targets: endpoint.Targets{"target-old"}, RecordTTL: 300}}
+	changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("update.example.com"), Targets: endpoint.Targets{"target-new"}, RecordType: "CNAME", RecordTTL: 300}}
 	apply := c.ApplyChanges(context.Background(), changes)
 	assert.Nil(t, apply)
 }

@@ -133,7 +133,10 @@ func (im *InMemoryProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, 
 		}
 
 		for _, record := range records {
-			ep := endpoint.NewEndpoint(record.Name, record.Type, record.Target).WithSetIdentifier(record.SetIdentifier)
+			ep := endpoint.NewEndpoint(
+				endpoint.NewEndpointName(record.Name, zoneID)
+
+				record.Name, record.Type, record.Target).WithSetIdentifier(record.SetIdentifier)
 			ep.Labels = record.Labels
 			endpoints = append(endpoints, ep)
 		}

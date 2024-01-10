@@ -294,7 +294,7 @@ func (p *GDProvider) groupByNameAndType(zoneRecords []gdRecords) []*endpoint.End
 			}
 
 			endpoint := endpoint.NewEndpointWithTTL(
-				recordName,
+				endpoint.NewEndpointName(recordName, zoneName),
 				records[0].Type,
 				endpoint.TTL(records[0].TTL),
 				targets...,
@@ -340,7 +340,7 @@ func (p *GDProvider) changeAllRecords(endpoints []gdEndpoint, zoneRecords []*gdR
 	}
 
 	for _, e := range endpoints {
-		dnsName := e.endpoint.DNSName
+		dnsName := e.endpoint.Name.Fqdn()
 		zone, zoneRecord := zoneNameIDMapper.findZoneRecord(dnsName)
 
 		if zone == "" {

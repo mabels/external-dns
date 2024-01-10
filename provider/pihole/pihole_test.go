@@ -49,7 +49,7 @@ func (t *testPiholeClient) createRecord(ctx context.Context, ep *endpoint.Endpoi
 func (t *testPiholeClient) deleteRecord(ctx context.Context, ep *endpoint.Endpoint) error {
 	newEPs := make([]*endpoint.Endpoint, 0)
 	for _, existing := range t.endpoints {
-		if existing.DNSName != ep.DNSName && existing.Targets[0] != ep.Targets[0] {
+		if existing.Name.Fqdn() != ep.Name.Fqdn() && existing.Targets[0] != ep.Targets[0] {
 			newEPs = append(newEPs, existing)
 		}
 	}
@@ -98,17 +98,17 @@ func TestProvider(t *testing.T) {
 	// Populate the provider with records
 	records = []*endpoint.Endpoint{
 		{
-			DNSName:    "test1.example.com",
+			Name:       endpoint.NewEndpointNameCommon("test1.example.com"),
 			Targets:    []string{"192.168.1.1"},
 			RecordType: endpoint.RecordTypeA,
 		},
 		{
-			DNSName:    "test2.example.com",
+			Name:       endpoint.NewEndpointNameCommon("test2.example.com"),
 			Targets:    []string{"192.168.1.2"},
 			RecordType: endpoint.RecordTypeA,
 		},
 		{
-			DNSName:    "test3.example.com",
+			Name:       endpoint.NewEndpointNameCommon("test3.example.com"),
 			Targets:    []string{"192.168.1.3"},
 			RecordType: endpoint.RecordTypeA,
 		},
@@ -136,15 +136,15 @@ func TestProvider(t *testing.T) {
 	}
 
 	for idx, record := range records {
-		if newRecords[idx].DNSName != record.DNSName {
-			t.Error("DNS Name malformed on retrieval, got:", newRecords[idx].DNSName, "expected:", record.DNSName)
+		if newRecords[idx].Name.Fqdn() != record.Name.Fqdn() {
+			t.Error("DNS Name malformed on retrieval, got:", newRecords[idx].Name.Fqdn(), "expected:", record.Name.Fqdn())
 		}
 		if newRecords[idx].Targets[0] != record.Targets[0] {
 			t.Error("Targets malformed on retrieval, got:", newRecords[idx].Targets, "expected:", record.Targets)
 		}
 
 		if !reflect.DeepEqual(requests.createRequests[idx], record) {
-			t.Error("Unexpected create request, got:", newRecords[idx].DNSName, "expected:", record.DNSName)
+			t.Error("Unexpected create request, got:", newRecords[idx].Name.Fqdn(), "expected:", record.Name.Fqdn())
 		}
 	}
 
@@ -154,18 +154,18 @@ func TestProvider(t *testing.T) {
 
 	records = []*endpoint.Endpoint{
 		{
-			DNSName:    "test1.example.com",
+			Name:       endpoint.NewEndpointNameCommon("test1.example.com"),
 			Targets:    []string{"192.168.1.1"},
 			RecordType: endpoint.RecordTypeA,
 		},
 		{
-			DNSName:    "test2.example.com",
+			Name:       endpoint.NewEndpointNameCommon("test2.example.com"),
 			Targets:    []string{"192.168.1.2"},
 			RecordType: endpoint.RecordTypeA,
 		},
 	}
 	recordToDelete := endpoint.Endpoint{
-		DNSName:    "test3.example.com",
+		Name:       endpoint.NewEndpointNameCommon("test3.example.com"),
 		Targets:    []string{"192.168.1.3"},
 		RecordType: endpoint.RecordTypeA,
 	}
@@ -193,8 +193,8 @@ func TestProvider(t *testing.T) {
 	}
 
 	for idx, record := range records {
-		if newRecords[idx].DNSName != record.DNSName {
-			t.Error("DNS Name malformed on retrieval, got:", newRecords[idx].DNSName, "expected:", record.DNSName)
+		if newRecords[idx].Name.Fqdn() != record.Name.Fqdn() {
+			t.Error("DNS Name malformed on retrieval, got:", newRecords[idx].Name.Fqdn(), "expected:", record.Name.Fqdn())
 		}
 		if newRecords[idx].Targets[0] != record.Targets[0] {
 			t.Error("Targets malformed on retrieval, got:", newRecords[idx].Targets, "expected:", record.Targets)
@@ -211,12 +211,12 @@ func TestProvider(t *testing.T) {
 
 	records = []*endpoint.Endpoint{
 		{
-			DNSName:    "test1.example.com",
+			Name:       endpoint.NewEndpointNameCommon("test1.example.com"),
 			Targets:    []string{"192.168.1.1"},
 			RecordType: endpoint.RecordTypeA,
 		},
 		{
-			DNSName:    "test2.example.com",
+			Name:       endpoint.NewEndpointNameCommon("test2.example.com"),
 			Targets:    []string{"10.0.0.1"},
 			RecordType: endpoint.RecordTypeA,
 		},
@@ -224,24 +224,24 @@ func TestProvider(t *testing.T) {
 	if err := p.ApplyChanges(context.Background(), &plan.Changes{
 		UpdateOld: []*endpoint.Endpoint{
 			{
-				DNSName:    "test1.example.com",
+				Name:       endpoint.NewEndpointNameCommon("test1.example.com"),
 				Targets:    []string{"192.168.1.1"},
 				RecordType: endpoint.RecordTypeA,
 			},
 			{
-				DNSName:    "test2.example.com",
+				Name:       endpoint.NewEndpointNameCommon("test2.example.com"),
 				Targets:    []string{"192.168.1.2"},
 				RecordType: endpoint.RecordTypeA,
 			},
 		},
 		UpdateNew: []*endpoint.Endpoint{
 			{
-				DNSName:    "test1.example.com",
+				Name:       endpoint.NewEndpointNameCommon("test1.example.com"),
 				Targets:    []string{"192.168.1.1"},
 				RecordType: endpoint.RecordTypeA,
 			},
 			{
-				DNSName:    "test2.example.com",
+				Name:       endpoint.NewEndpointNameCommon("test2.example.com"),
 				Targets:    []string{"10.0.0.1"},
 				RecordType: endpoint.RecordTypeA,
 			},
@@ -266,8 +266,8 @@ func TestProvider(t *testing.T) {
 	}
 
 	for idx, record := range records {
-		if newRecords[idx].DNSName != record.DNSName {
-			t.Error("DNS Name malformed on retrieval, got:", newRecords[idx].DNSName, "expected:", record.DNSName)
+		if newRecords[idx].Name.Fqdn() != record.Name.Fqdn() {
+			t.Error("DNS Name malformed on retrieval, got:", newRecords[idx].Name.Fqdn(), "expected:", record.Name.Fqdn())
 		}
 		if newRecords[idx].Targets[0] != record.Targets[0] {
 			t.Error("Targets malformed on retrieval, got:", newRecords[idx].Targets, "expected:", record.Targets)
@@ -275,12 +275,12 @@ func TestProvider(t *testing.T) {
 	}
 
 	expectedCreate := endpoint.Endpoint{
-		DNSName:    "test2.example.com",
+		Name:       endpoint.NewEndpointNameCommon("test2.example.com"),
 		Targets:    []string{"10.0.0.1"},
 		RecordType: endpoint.RecordTypeA,
 	}
 	expectedDelete := endpoint.Endpoint{
-		DNSName:    "test2.example.com",
+		Name:       endpoint.NewEndpointNameCommon("test2.example.com"),
 		Targets:    []string{"192.168.1.2"},
 		RecordType: endpoint.RecordTypeA,
 	}

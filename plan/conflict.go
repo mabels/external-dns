@@ -61,7 +61,7 @@ func (w wrapEndpoint) recordType() string {
 }
 
 func (w wrapEndpoint) dnsName() string {
-	return w.endpoint.DNSName
+	return w.endpoint.Name.Fqdn()
 }
 
 type wrapEndpoints []wrapEndpoint
@@ -298,7 +298,7 @@ func findCurrentEndpoints(ws wrapEndpoints) []*endpoint.Endpoint {
 // }
 
 func equalEndpointKey(a, b *endpoint.Endpoint) bool {
-	return a.DNSName == b.DNSName && a.RecordType == b.RecordType && a.SetIdentifier == b.SetIdentifier
+	return a.Name.Fqdn() == b.Name.Fqdn() && a.RecordType == b.RecordType && a.SetIdentifier == b.SetIdentifier
 }
 
 func (wes wrapEndpoints) append(ep *endpoint.Endpoint, isCurrent bool) (wrapEndpoints, error) {
@@ -363,7 +363,7 @@ func mergeProviderSpecific(dest, src *endpoint.Endpoint) {
 }
 
 func equalEndpointWithoutLabels(e1, e2 *endpoint.Endpoint) bool {
-	if e1.DNSName != e2.DNSName {
+	if e1.Name.Fqdn() != e2.Name.Fqdn() {
 		return false
 	}
 	if !e1.Targets.Same(e2.Targets) {
@@ -431,7 +431,7 @@ func toEndpoint(ws wrapEndpoints) (*endpoint.Endpoint, error) {
 	ret.Targets = []string{ws[0].target()}
 	for i := 1; i < len(ws); i++ {
 		wep := ws[i]
-		if ret.DNSName != wep.dnsName() {
+		if ret.Name.Fqdn() != wep.dnsName() {
 			return nil, fmt.Errorf("inconsistent DNSName")
 		}
 		if ret.RecordType != wep.recordType() {

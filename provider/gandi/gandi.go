@@ -114,12 +114,6 @@ func (p *GandiProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, erro
 
 		for _, r := range records {
 			if provider.SupportedRecordType(r.RrsetType) {
-				name := r.RrsetName + "." + zone
-
-				if r.RrsetName == "@" {
-					name = zone
-				}
-
 				for _, v := range r.RrsetValues {
 					log.WithFields(log.Fields{
 						"record": r.RrsetName,
@@ -129,7 +123,8 @@ func (p *GandiProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, erro
 						"zone":   zone,
 					}).Debug("Returning endpoint record")
 
-					endpoints = append(endpoints, endpoint.NewEndpoint(name, r.RrsetType, v))
+					endpoints = append(endpoints, endpoint.NewEndpoint(
+						endpoint.NewEndpointName(r.RrsetName, zone), r.RrsetType, v))
 				}
 			}
 		}
@@ -243,7 +238,7 @@ func (p *GandiProvider) newGandiChanges(action string, endpoints []*endpoint.End
 			Action: action,
 			Record: livedns.DomainRecord{
 				RrsetType:   e.RecordType,
-				RrsetName:   e.DNSName,
+				RrsetName:   e.Name.Fqdn(),
 				RrsetValues: e.Targets,
 				RrsetTTL:    ttl,
 			},

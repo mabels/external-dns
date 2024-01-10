@@ -40,7 +40,7 @@ func TestRecordTypeFilter(t *testing.T) {
 			true,
 		},
 		{
-			"MX",
+			"UNKNOWN",
 			false,
 		},
 	}

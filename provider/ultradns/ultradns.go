@@ -193,15 +193,17 @@ func (p *UltraDNSProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, e
 				recordTypeArray := strings.Fields(r.RRType)
 				if provider.SupportedRecordType(recordTypeArray[0]) {
 					log.Infof("owner name %s", r.OwnerName)
-					name := r.OwnerName
+					// name := r.OwnerName
 
-					// root name is identified by the empty string and should be
-					// translated to zone name for the endpoint entry.
-					if r.OwnerName == "" {
-						name = zone.Properties.Name
-					}
+					// // root name is identified by the empty string and should be
+					// // translated to zone name for the endpoint entry.
+					// if r.OwnerName == "" {
+					// 	name = zone.Properties.Name
+					// }
 
-					endPointTTL := endpoint.NewEndpointWithTTL(name, recordTypeArray[0], endpoint.TTL(r.TTL), r.RData...)
+					endPointTTL := endpoint.NewEndpointWithTTL(
+						endpoint.NewEndpointName(r.OwnerName, zone.Properties.Name),
+						recordTypeArray[0], endpoint.TTL(r.TTL), r.RData...)
 					endpoints = append(endpoints, endPointTTL)
 				}
 			}
@@ -422,12 +424,11 @@ func newUltraDNSChanges(action string, endpoints []*endpoint.Endpoint) []*UltraD
 		}
 
 		// Adding suffix dot to the record name
-		recordName := fmt.Sprintf("%s.", e.DNSName)
 		change := &UltraDNSChanges{
 			Action: action,
 			ResourceRecordSetUltraDNS: udnssdk.RRSet{
 				RRType:    e.RecordType,
-				OwnerName: recordName,
+				OwnerName: e.Name.FqdnDot(),
 				RData:     e.Targets,
 				TTL:       ttl,
 			},

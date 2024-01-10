@@ -630,7 +630,7 @@ GETRECORDS:
 	return dnsRecords, nil
 }
 
-func (p *IBMCloudProvider) groupPublicRecords(records []dnsrecordsv1.DnsrecordDetails) []*endpoint.Endpoint {
+func (p *IBMCloudProvider) groupPublicRecords(records []dnsrecordsv1.DnsrecordDetails, zone string) []*endpoint.Endpoint {
 	endpoints := []*endpoint.Endpoint{}
 
 	// group supported records by name and type
@@ -657,7 +657,7 @@ func (p *IBMCloudProvider) groupPublicRecords(records []dnsrecordsv1.DnsrecordDe
 		}
 
 		ep := endpoint.NewEndpointWithTTL(
-			*records[0].Name,
+			endpoint.NewEndpointName(*records[0].Name, zone),
 			*records[0].Type,
 			endpoint.TTL(*records[0].TTL),
 			targets...).WithProviderSpecific(proxyFilter, strconv.FormatBool(*records[0].Proxied))
@@ -665,7 +665,7 @@ func (p *IBMCloudProvider) groupPublicRecords(records []dnsrecordsv1.DnsrecordDe
 		log.Debugf(
 			"Found %s record for '%s' with target '%s'.",
 			ep.RecordType,
-			ep.DNSName,
+			ep.Name.Fqdn(),
 			ep.Targets,
 		)
 
@@ -705,7 +705,7 @@ func (p *IBMCloudProvider) privateRecords(ctx context.Context) ([]*endpoint.Endp
 		if err != nil {
 			return nil, err
 		}
-		endpoints = append(endpoints, p.groupPrivateRecords(dnsRecords)...)
+		endpoints = append(endpoints, p.groupPrivateRecords(dnsRecords, *zone.Name)...)
 	}
 
 	return endpoints, nil
@@ -735,7 +735,7 @@ GETRECORDS:
 	return dnsRecords, nil
 }
 
-func (p *IBMCloudProvider) groupPrivateRecords(records []dnssvcsv1.ResourceRecord) []*endpoint.Endpoint {
+func (p *IBMCloudProvider) groupPrivateRecords(records []dnssvcsv1.ResourceRecord, zone string) []*endpoint.Endpoint {
 	endpoints := []*endpoint.Endpoint{}
 	// group supported records by name and type
 	groups := map[string][]dnssvcsv1.ResourceRecord{}
@@ -777,14 +777,14 @@ func (p *IBMCloudProvider) groupPrivateRecords(records []dnssvcsv1.ResourceRecor
 		}
 
 		ep := endpoint.NewEndpointWithTTL(
-			*records[0].Name,
+			endpoint.NewEndpointName(*records[0].Name, zone),
 			*records[0].Type,
 			endpoint.TTL(*records[0].TTL), targets...)
 
 		log.Debugf(
 			"Found %s record for '%s' with target '%s'.",
 			ep.RecordType,
-			ep.DNSName,
+			ep.Name.Fqdn(),
 			ep.Targets,
 		)
 

@@ -242,7 +242,8 @@ func (p AkamaiProvider) Records(context.Context) (endpoints []*endpoint.Endpoint
 			}
 			var temp interface{} = int64(recordset.TTL)
 			ttl := endpoint.TTL(temp.(int64))
-			endpoints = append(endpoints, endpoint.NewEndpointWithTTL(recordset.Name,
+			endpoints = append(endpoints, endpoint.NewEndpointWithTTL(
+				endpoint.NewEndpointName(recordset.Name, zone.Zone),
 				recordset.Type,
 				ttl,
 				trimTxtRdata(recordset.Rdata, recordset.Type)...))
@@ -295,13 +296,13 @@ func (p AkamaiProvider) ApplyChanges(ctx context.Context, changes *plan.Changes)
 	for _, rec := range changes.UpdateOld {
 		found := false
 		for _, r := range revRecs {
-			if rec.DNSName == r.DNSName {
+			if rec.Name.Fqdn() == r.Name.Fqdn() {
 				found = true
 				break
 			}
 		}
 		if !found {
-			log.Warnf("UpdateOld endpoint '%s' is not accounted for in UpdateNew|Delete endpoint list", rec.DNSName)
+			log.Warnf("UpdateOld endpoint '%s' is not accounted for in UpdateNew|Delete endpoint list", rec.Name.Fqdn())
 		}
 	}
 
@@ -380,7 +381,7 @@ func (p AkamaiProvider) createRecordsets(zoneNameIDMapper provider.ZoneIDName, e
 	for zone, endpoints := range endpointsByZone {
 		recordsets := &dns.Recordsets{Recordsets: make([]dns.Recordset, 0)}
 		for _, endpoint := range endpoints {
-			newrec := newAkamaiRecordset(endpoint.DNSName,
+			newrec := newAkamaiRecordset(endpoint.Name.Fqdn(),
 				endpoint.RecordType,
 				ttlAsInt(endpoint.RecordTTL),
 				cleanTargets(endpoint.RecordType, endpoint.Targets...))
@@ -411,18 +412,18 @@ func (p AkamaiProvider) createRecordsets(zoneNameIDMapper provider.ZoneIDName, e
 
 func (p AkamaiProvider) deleteRecordsets(zoneNameIDMapper provider.ZoneIDName, endpoints []*endpoint.Endpoint) error {
 	for _, endpoint := range endpoints {
-		zoneName, _ := zoneNameIDMapper.FindZone(endpoint.DNSName)
+		zoneName, _ := zoneNameIDMapper.FindZone(endpoint.Name.Fqdn())
 		if zoneName == "" {
-			log.Debugf("Skipping Akamai Edge DNS endpoint deletion: '%s' type: '%s', it does not match against Domain filters", endpoint.DNSName, endpoint.RecordType)
+			log.Debugf("Skipping Akamai Edge DNS endpoint deletion: '%s' type: '%s', it does not match against Domain filters", endpoint.Name.Fqdn(), endpoint.RecordType)
 			continue
 		}
-		log.Infof("Akamai Edge DNS recordset deletion- Zone: '%s', DNSName: '%s', RecordType: '%s', Targets: '%+v'", zoneName, endpoint.DNSName, endpoint.RecordType, endpoint.Targets)
+		log.Infof("Akamai Edge DNS recordset deletion- Zone: '%s', DNSName: '%s', RecordType: '%s', Targets: '%+v'", zoneName, endpoint.Name.Fqdn(), endpoint.RecordType, endpoint.Targets)
 
 		if p.dryRun {
 			continue
 		}
 
-		recName := strings.TrimSuffix(endpoint.DNSName, ".")
+		recName := strings.TrimSuffix(endpoint.Name.Fqdn(), ".")
 		rec, err := p.client.GetRecord(zoneName, recName, endpoint.RecordType)
 		if err != nil {
 			if _, ok := err.(*dns.RecordError); !ok {
@@ -443,18 +444,18 @@ func (p AkamaiProvider) deleteRecordsets(zoneNameIDMapper provider.ZoneIDName, e
 // Update endpoint recordsets
 func (p AkamaiProvider) updateNewRecordsets(zoneNameIDMapper provider.ZoneIDName, endpoints []*endpoint.Endpoint) error {
 	for _, endpoint := range endpoints {
-		zoneName, _ := zoneNameIDMapper.FindZone(endpoint.DNSName)
+		zoneName, _ := zoneNameIDMapper.FindZone(endpoint.Name.Fqdn())
 		if zoneName == "" {
-			log.Debugf("Skipping Akamai Edge DNS endpoint update: '%s' type: '%s', it does not match against Domain filters", endpoint.DNSName, endpoint.RecordType)
+			log.Debugf("Skipping Akamai Edge DNS endpoint update: '%s' type: '%s', it does not match against Domain filters", endpoint.Name.Fqdn(), endpoint.RecordType)
 			continue
 		}
-		log.Infof("Akamai Edge DNS recordset update - Zone: '%s', DNSName: '%s', RecordType: '%s', Targets: '%+v'", zoneName, endpoint.DNSName, endpoint.RecordType, endpoint.Targets)
+		log.Infof("Akamai Edge DNS recordset update - Zone: '%s', DNSName: '%s', RecordType: '%s', Targets: '%+v'", zoneName, endpoint.Name.Fqdn(), endpoint.RecordType, endpoint.Targets)
 
 		if p.dryRun {
 			continue
 		}
 
-		recName := strings.TrimSuffix(endpoint.DNSName, ".")
+		recName := strings.TrimSuffix(endpoint.Name.Fqdn(), ".")
 		rec, err := p.client.GetRecord(zoneName, recName, endpoint.RecordType)
 		if err != nil {
 			log.Errorf("Endpoint update. Record validation failed. Error: %s", err.Error())
@@ -478,12 +479,12 @@ func edgeChangesByZone(zoneMap provider.ZoneIDName, endpoints []*endpoint.Endpoi
 		createsByZone[z] = make([]*endpoint.Endpoint, 0)
 	}
 	for _, ep := range endpoints {
-		zone, _ := zoneMap.FindZone(ep.DNSName)
+		zone, _ := zoneMap.FindZone(ep.Name.Fqdn())
 		if zone != "" {
 			createsByZone[zone] = append(createsByZone[zone], ep)
 			continue
 		}
-		log.Debugf("Skipping Akamai Edge DNS creation of endpoint: '%s' type: '%s', it does not match against Domain filters", ep.DNSName, ep.RecordType)
+		log.Debugf("Skipping Akamai Edge DNS creation of endpoint: '%s' type: '%s', it does not match against Domain filters", ep.Name.Fqdn(), ep.RecordType)
 	}
 
 	return createsByZone

@@ -81,7 +81,7 @@ func TestKongTCPIngressEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "a.example.com",
+					Name:       endpoint.NewEndpointNameCommon("a.example.com"),
 					Targets:    []string{"a691234567a314e71861a4303f06a3bd-1291189659.us-east-1.elb.amazonaws.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 					RecordTTL:  0,
@@ -130,7 +130,7 @@ func TestKongTCPIngressEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "b.example.com",
+					Name:       endpoint.NewEndpointNameCommon("b.example.com"),
 					Targets:    []string{"a123456769a314e71861a4303f06a3bd-1291189659.us-east-1.elb.amazonaws.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 					RecordTTL:  0,
@@ -140,7 +140,7 @@ func TestKongTCPIngressEndpoints(t *testing.T) {
 					ProviderSpecific: endpoint.ProviderSpecific{},
 				},
 				{
-					DNSName:    "c.example.com",
+					Name:       endpoint.NewEndpointNameCommon("c.example.com"),
 					Targets:    []string{"a123456769a314e71861a4303f06a3bd-1291189659.us-east-1.elb.amazonaws.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 					Labels: endpoint.Labels{
@@ -189,7 +189,7 @@ func TestKongTCPIngressEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "d.example.com",
+					Name:       endpoint.NewEndpointNameCommon("d.example.com"),
 					Targets:    []string{"a12e71861a4303f063456769a314a3bd-1291189659.us-east-1.elb.amazonaws.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 					RecordTTL:  0,
@@ -199,7 +199,7 @@ func TestKongTCPIngressEndpoints(t *testing.T) {
 					ProviderSpecific: endpoint.ProviderSpecific{},
 				},
 				{
-					DNSName:    "e.example.com",
+					Name:       endpoint.NewEndpointNameCommon("e.example.com"),
 					Targets:    []string{"a12e71861a4303f063456769a314a3bd-1291189659.us-east-1.elb.amazonaws.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 					RecordTTL:  0,
@@ -209,7 +209,7 @@ func TestKongTCPIngressEndpoints(t *testing.T) {
 					ProviderSpecific: endpoint.ProviderSpecific{},
 				},
 				{
-					DNSName:    "f.example.com",
+					Name:       endpoint.NewEndpointNameCommon("f.example.com"),
 					Targets:    []string{"a12e71861a4303f063456769a314a3bd-1291189659.us-east-1.elb.amazonaws.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 					RecordTTL:  0,

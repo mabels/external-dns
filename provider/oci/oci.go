@@ -160,7 +160,7 @@ func (p *OCIProvider) zones(ctx context.Context) (map[string]dns.ZoneSummary, er
 func (p *OCIProvider) newFilteredRecordOperations(endpoints []*endpoint.Endpoint, opType dns.RecordOperationOperationEnum) []dns.RecordOperation {
 	ops := []dns.RecordOperation{}
 	for _, endpoint := range endpoints {
-		if p.domainFilter.Match(endpoint.DNSName) {
+		if p.domainFilter.Match(endpoint.Name.Fqdn()) {
 			ops = append(ops, newRecordOperation(endpoint, opType))
 		}
 	}
@@ -193,7 +193,7 @@ func (p *OCIProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, error)
 				}
 				endpoints = append(endpoints,
 					endpoint.NewEndpointWithTTL(
-						*record.Domain,
+						endpoint.NewEndpointName(*record.Domain, *zone.Name),
 						*record.Rtype,
 						endpoint.TTL(*record.Ttl),
 						*record.Rdata,
@@ -273,7 +273,7 @@ func newRecordOperation(ep *endpoint.Endpoint, opType dns.RecordOperationOperati
 	}
 
 	return dns.RecordOperation{
-		Domain:    &ep.DNSName,
+		Domain:    ep.Name.FqdnPtr(),
 		Rdata:     &rdata,
 		Ttl:       &ttl,
 		Rtype:     &ep.RecordType,

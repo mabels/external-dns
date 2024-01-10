@@ -371,83 +371,90 @@ func (p *AWSProvider) Records(ctx context.Context) (endpoints []*endpoint.Endpoi
 
 func (p *AWSProvider) records(ctx context.Context, zones map[string]*route53.HostedZone) ([]*endpoint.Endpoint, error) {
 	endpoints := make([]*endpoint.Endpoint, 0)
-	f := func(resp *route53.ListResourceRecordSetsOutput, lastPage bool) (shouldContinue bool) {
-		for _, r := range resp.ResourceRecordSets {
-			newEndpoints := make([]*endpoint.Endpoint, 0)
-
-			if !p.SupportedRecordType(aws.StringValue(r.Type)) {
-				continue
-			}
-
-			var ttl endpoint.TTL
-			if r.TTL != nil {
-				ttl = endpoint.TTL(*r.TTL)
-			}
-
-			if len(r.ResourceRecords) > 0 {
-				targets := make([]string, len(r.ResourceRecords))
-				for idx, rr := range r.ResourceRecords {
-					targets[idx] = aws.StringValue(rr.Value)
-				}
-
-				newEndpoints = append(newEndpoints, endpoint.NewEndpointWithTTL(wildcardUnescape(aws.StringValue(r.Name)), aws.StringValue(r.Type), ttl, targets...))
-			}
-
-			if r.AliasTarget != nil {
-				// Alias records don't have TTLs so provide the default to match the TXT generation
-				if ttl == 0 {
-					ttl = recordTTL
-				}
-				ep := endpoint.
-					NewEndpointWithTTL(wildcardUnescape(aws.StringValue(r.Name)), endpoint.RecordTypeCNAME, ttl, aws.StringValue(r.AliasTarget.DNSName)).
-					WithProviderSpecific(providerSpecificEvaluateTargetHealth, fmt.Sprintf("%t", aws.BoolValue(r.AliasTarget.EvaluateTargetHealth))).
-					WithProviderSpecific(providerSpecificAlias, "true")
-				newEndpoints = append(newEndpoints, ep)
-			}
-
-			for _, ep := range newEndpoints {
-				if r.SetIdentifier != nil {
-					ep.SetIdentifier = aws.StringValue(r.SetIdentifier)
-					switch {
-					case r.Weight != nil:
-						ep.WithProviderSpecific(providerSpecificWeight, fmt.Sprintf("%d", aws.Int64Value(r.Weight)))
-					case r.Region != nil:
-						ep.WithProviderSpecific(providerSpecificRegion, aws.StringValue(r.Region))
-					case r.Failover != nil:
-						ep.WithProviderSpecific(providerSpecificFailover, aws.StringValue(r.Failover))
-					case r.MultiValueAnswer != nil && aws.BoolValue(r.MultiValueAnswer):
-						ep.WithProviderSpecific(providerSpecificMultiValueAnswer, "")
-					case r.GeoLocation != nil:
-						if r.GeoLocation.ContinentCode != nil {
-							ep.WithProviderSpecific(providerSpecificGeolocationContinentCode, aws.StringValue(r.GeoLocation.ContinentCode))
-						} else {
-							if r.GeoLocation.CountryCode != nil {
-								ep.WithProviderSpecific(providerSpecificGeolocationCountryCode, aws.StringValue(r.GeoLocation.CountryCode))
-							}
-							if r.GeoLocation.SubdivisionCode != nil {
-								ep.WithProviderSpecific(providerSpecificGeolocationSubdivisionCode, aws.StringValue(r.GeoLocation.SubdivisionCode))
-							}
-						}
-					default:
-						// one of the above needs to be set, otherwise SetIdentifier doesn't make sense
-					}
-				}
-
-				if r.HealthCheckId != nil {
-					ep.WithProviderSpecific(providerSpecificHealthCheckID, aws.StringValue(r.HealthCheckId))
-				}
-
-				endpoints = append(endpoints, ep)
-			}
-		}
-
-		return true
-	}
 
 	for _, z := range zones {
 		params := &route53.ListResourceRecordSetsInput{
 			HostedZoneId: z.Id,
 			MaxItems:     aws.String(route53PageSize),
+		}
+		f := func(resp *route53.ListResourceRecordSetsOutput, lastPage bool) (shouldContinue bool) {
+			for _, r := range resp.ResourceRecordSets {
+				newEndpoints := make([]*endpoint.Endpoint, 0)
+
+				if !p.SupportedRecordType(aws.StringValue(r.Type)) {
+					continue
+				}
+
+				var ttl endpoint.TTL
+				if r.TTL != nil {
+					ttl = endpoint.TTL(*r.TTL)
+				}
+
+				if len(r.ResourceRecords) > 0 {
+					targets := make([]string, len(r.ResourceRecords))
+					for idx, rr := range r.ResourceRecords {
+						targets[idx] = aws.StringValue(rr.Value)
+					}
+
+					newEndpoints = append(newEndpoints, endpoint.NewEndpointWithTTL(
+						endpoint.NewEndpointName(
+							wildcardUnescape(aws.StringValue(r.Name)),
+							*z.Name), aws.StringValue(r.Type), ttl, targets...))
+				}
+
+				if r.AliasTarget != nil {
+					// Alias records don't have TTLs so provide the default to match the TXT generation
+					if ttl == 0 {
+						ttl = recordTTL
+					}
+					ep := endpoint.
+						NewEndpointWithTTL(
+							endpoint.NewEndpointName(
+								wildcardUnescape(aws.StringValue(r.Name)),
+								*z.Name),
+							endpoint.RecordTypeCNAME, ttl, aws.StringValue(r.AliasTarget.DNSName)).
+						WithProviderSpecific(providerSpecificEvaluateTargetHealth, fmt.Sprintf("%t", aws.BoolValue(r.AliasTarget.EvaluateTargetHealth))).
+						WithProviderSpecific(providerSpecificAlias, "true")
+					newEndpoints = append(newEndpoints, ep)
+				}
+
+				for _, ep := range newEndpoints {
+					if r.SetIdentifier != nil {
+						ep.SetIdentifier = aws.StringValue(r.SetIdentifier)
+						switch {
+						case r.Weight != nil:
+							ep.WithProviderSpecific(providerSpecificWeight, fmt.Sprintf("%d", aws.Int64Value(r.Weight)))
+						case r.Region != nil:
+							ep.WithProviderSpecific(providerSpecificRegion, aws.StringValue(r.Region))
+						case r.Failover != nil:
+							ep.WithProviderSpecific(providerSpecificFailover, aws.StringValue(r.Failover))
+						case r.MultiValueAnswer != nil && aws.BoolValue(r.MultiValueAnswer):
+							ep.WithProviderSpecific(providerSpecificMultiValueAnswer, "")
+						case r.GeoLocation != nil:
+							if r.GeoLocation.ContinentCode != nil {
+								ep.WithProviderSpecific(providerSpecificGeolocationContinentCode, aws.StringValue(r.GeoLocation.ContinentCode))
+							} else {
+								if r.GeoLocation.CountryCode != nil {
+									ep.WithProviderSpecific(providerSpecificGeolocationCountryCode, aws.StringValue(r.GeoLocation.CountryCode))
+								}
+								if r.GeoLocation.SubdivisionCode != nil {
+									ep.WithProviderSpecific(providerSpecificGeolocationSubdivisionCode, aws.StringValue(r.GeoLocation.SubdivisionCode))
+								}
+							}
+						default:
+							// one of the above needs to be set, otherwise SetIdentifier doesn't make sense
+						}
+					}
+
+					if r.HealthCheckId != nil {
+						ep.WithProviderSpecific(providerSpecificHealthCheckID, aws.StringValue(r.HealthCheckId))
+					}
+
+					endpoints = append(endpoints, ep)
+				}
+			}
+
+			return true
 		}
 
 		if err := p.client.ListResourceRecordSetsPagesWithContext(ctx, params, f); err != nil {
@@ -729,7 +736,7 @@ func (p *AWSProvider) newChange(action string, ep *endpoint.Endpoint) (*Route53C
 		Change: route53.Change{
 			Action: aws.String(action),
 			ResourceRecordSet: &route53.ResourceRecordSet{
-				Name: aws.String(ep.DNSName),
+				Name: aws.String(ep.Name.Fqdn()),
 			},
 		},
 	}

@@ -284,7 +284,7 @@ func TestDesignateRecords(t *testing.T) {
 		{
 			DNSName:    "db.test.net",
 			RecordType: endpoint.RecordTypeCNAME,
-			Targets:    endpoint.Targets{"sql.test.net"},
+			Targets:    endpoint.Targets{"sql.test.net."},
 			Labels: map[string]string{
 				designateRecordSetID:     rs22ID,
 				designateZoneID:          zone2ID,

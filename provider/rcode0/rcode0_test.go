@@ -69,7 +69,8 @@ func TestRcodeZeroProvider_Records(t *testing.T) {
 	if err != nil {
 		t.Errorf("should not fail, %s", err)
 	}
-	require.Equal(t, 10, len(endpoints))
+	// NS and SOA Records
+	require.Equal(t, 12, len(endpoints))
 
 	mockRRSetService.TestErrorReturned = true
 
@@ -120,7 +121,7 @@ func TestRcodeZeroProvider_NewRcodezeroChanges(t *testing.T) {
 func TestRcodeZeroProvider_NewRcodezeroChange(t *testing.T) {
 	_endpoint := &endpoint.Endpoint{
 		RecordType: "A",
-		DNSName:    "app." + testZoneOne,
+		Name:       endpoint.NewEndpointName("app", testZoneOne),
 		RecordTTL:  300,
 		Targets:    endpoint.Targets{"target"},
 	}
@@ -130,7 +131,7 @@ func TestRcodeZeroProvider_NewRcodezeroChange(t *testing.T) {
 	rrsetChange := provider.NewRcodezeroChange(testZoneOne, _endpoint)
 
 	require.Equal(t, _endpoint.RecordType, rrsetChange.Type)
-	require.Equal(t, _endpoint.DNSName, rrsetChange.Name)
+	require.Equal(t, _endpoint.Name.Fqdn(), rrsetChange.Name)
 	require.Equal(t, _endpoint.Targets[0], rrsetChange.Records[0].Content)
 	// require.Equal(t, endpoint.RecordTTL, rrsetChange.TTL)
 }
@@ -176,14 +177,14 @@ func mockChanges() *plan.Changes {
 	changes := &plan.Changes{}
 
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "new.ext-dns-test." + testZoneOne, Targets: endpoint.Targets{"target"}, RecordType: "A"},
-		{DNSName: "new.ext-dns-test-with-ttl." + testZoneOne, Targets: endpoint.Targets{"target"}, RecordType: "A", RecordTTL: 100},
-		{DNSName: "new.ext-dns-test.unexpected.com", Targets: endpoint.Targets{"target"}, RecordType: "AAAA"},
-		{DNSName: testZoneOne, Targets: endpoint.Targets{"target"}, RecordType: "CNAME"},
+		{Name: endpoint.NewEndpointName("new.ext-dns-test.", testZoneOne), Targets: endpoint.Targets{"target"}, RecordType: "A"},
+		{Name: endpoint.NewEndpointName("new.ext-dns-test-with-ttl", testZoneOne), Targets: endpoint.Targets{"target"}, RecordType: "A", RecordTTL: 100},
+		{Name: endpoint.NewEndpointName("new.ext-dns-test", "unexpected.com"), Targets: endpoint.Targets{"target"}, RecordType: "AAAA"},
+		{Name: endpoint.NewEndpointName("", testZoneOne), Targets: endpoint.Targets{"target"}, RecordType: "CNAME"},
 	}
-	changes.Delete = []*endpoint.Endpoint{{DNSName: "foobar.ext-dns-test." + testZoneOne, Targets: endpoint.Targets{"target"}}}
-	changes.UpdateOld = []*endpoint.Endpoint{{DNSName: "foobar.ext-dns-test." + testZoneOne, Targets: endpoint.Targets{"target-old"}}}
-	changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "foobar.ext-dns-test." + testZoneOne, Targets: endpoint.Targets{"target-new"}, RecordType: "CNAME", RecordTTL: 100}}
+	changes.Delete = []*endpoint.Endpoint{{Name: endpoint.NewEndpointName("foobar.ext-dns-test", testZoneOne), Targets: endpoint.Targets{"target"}}}
+	changes.UpdateOld = []*endpoint.Endpoint{{Name: endpoint.NewEndpointName("foobar.ext-dns-test", testZoneOne), Targets: endpoint.Targets{"target-old"}}}
+	changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointName("foobar.ext-dns-test", testZoneOne), Targets: endpoint.Targets{"target-new"}, RecordType: "CNAME", RecordTTL: 100}}
 
 	return changes
 }

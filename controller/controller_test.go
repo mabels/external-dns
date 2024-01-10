@@ -27,7 +27,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	ep "sigs.k8s.io/external-dns/endpoint"
 	"sigs.k8s.io/external-dns/internal/testutils"
 	"sigs.k8s.io/external-dns/pkg/apis/externaldns"
 	"sigs.k8s.io/external-dns/plan"
@@ -41,14 +41,14 @@ import (
 // mockProvider returns mock endpoints and validates changes.
 type mockProvider struct {
 	provider.BaseProvider
-	RecordsStore  []*endpoint.Endpoint
+	RecordsStore  []*ep.Endpoint
 	ExpectChanges *plan.Changes
 }
 
 type filteredMockProvider struct {
 	provider.BaseProvider
-	domainFilter      endpoint.DomainFilterInterface
-	RecordsStore      []*endpoint.Endpoint
+	domainFilter      ep.DomainFilterInterface
+	RecordsStore      []*ep.Endpoint
 	RecordsCallCount  int
 	ApplyChangesCalls []*plan.Changes
 }
@@ -57,12 +57,12 @@ type errorMockProvider struct {
 	mockProvider
 }
 
-func (p *filteredMockProvider) GetDomainFilter() endpoint.DomainFilterInterface {
+func (p *filteredMockProvider) GetDomainFilter() ep.DomainFilterInterface {
 	return p.domainFilter
 }
 
 // Records returns the desired mock endpoints.
-func (p *filteredMockProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, error) {
+func (p *filteredMockProvider) Records(ctx context.Context) ([]*ep.Endpoint, error) {
 	p.RecordsCallCount++
 	return p.RecordsStore, nil
 }
@@ -74,11 +74,11 @@ func (p *filteredMockProvider) ApplyChanges(ctx context.Context, changes *plan.C
 }
 
 // Records returns the desired mock endpoints.
-func (p *mockProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, error) {
+func (p *mockProvider) Records(ctx context.Context) ([]*ep.Endpoint, error) {
 	return p.RecordsStore, nil
 }
 
-func (p *errorMockProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, error) {
+func (p *errorMockProvider) Records(ctx context.Context) ([]*ep.Endpoint, error) {
 	return nil, errors.New("error for testing")
 }
 
@@ -106,15 +106,15 @@ func (p *mockProvider) ApplyChanges(ctx context.Context, changes *plan.Changes) 
 	return nil
 }
 
-func verifyEndpoints(actual, expected []*endpoint.Endpoint) error {
+func verifyEndpoints(actual, expected []*ep.Endpoint) error {
 	if len(actual) != len(expected) {
 		return errors.New("number of records is wrong")
 	}
 	sort.Slice(actual, func(i, j int) bool {
-		return actual[i].DNSName < actual[j].DNSName
+		return actual[i].Name.Fqdn() < actual[j].Name.Fqdn()
 	})
 	for i := range actual {
-		if actual[i].DNSName != expected[i].DNSName || !actual[i].Targets.Same(expected[i].Targets) {
+		if actual[i].Name.Fqdn() != expected[i].Name.Fqdn() || !actual[i].Targets.Same(expected[i].Targets) {
 			return errors.New("record is wrong")
 		}
 	}
@@ -122,7 +122,7 @@ func verifyEndpoints(actual, expected []*endpoint.Endpoint) error {
 }
 
 // newMockProvider creates a new mockProvider returning the given endpoints and validating the desired changes.
-func newMockProvider(endpoints []*endpoint.Endpoint, changes *plan.Changes) provider.Provider {
+func newMockProvider(endpoints []*ep.Endpoint, changes *plan.Changes) provider.Provider {
 	dnsProvider := &mockProvider{
 		RecordsStore:  endpoints,
 		ExpectChanges: changes,
@@ -136,70 +136,70 @@ func TestRunOnce(t *testing.T) {
 	// Fake some desired endpoints coming from our source.
 	source := new(testutils.MockSource)
 	cfg := externaldns.NewConfig()
-	cfg.ManagedDNSRecordTypes = []string{endpoint.RecordTypeA, endpoint.RecordTypeAAAA, endpoint.RecordTypeCNAME}
-	source.On("Endpoints").Return([]*endpoint.Endpoint{
+	cfg.ManagedDNSRecordTypes = []string{ep.RecordTypeA, ep.RecordTypeAAAA, ep.RecordTypeCNAME}
+	source.On("Endpoints").Return([]*ep.Endpoint{
 		{
-			DNSName:    "create-record",
-			RecordType: endpoint.RecordTypeA,
-			Targets:    endpoint.Targets{"1.2.3.4"},
+			Name:       ep.NewEndpointNameCommon("create-record"),
+			RecordType: ep.RecordTypeA,
+			Targets:    ep.Targets{"1.2.3.4"},
 		},
 		{
-			DNSName:    "update-record",
-			RecordType: endpoint.RecordTypeA,
-			Targets:    endpoint.Targets{"8.8.4.4"},
+			Name:       ep.NewEndpointNameCommon("update-record"),
+			RecordType: ep.RecordTypeA,
+			Targets:    ep.Targets{"8.8.4.4"},
 		},
 		{
-			DNSName:    "create-aaaa-record",
-			RecordType: endpoint.RecordTypeAAAA,
-			Targets:    endpoint.Targets{"2001:DB8::1"},
+			Name:       ep.NewEndpointNameCommon("create-aaaa-record"),
+			RecordType: ep.RecordTypeAAAA,
+			Targets:    ep.Targets{"2001:DB8::1"},
 		},
 		{
-			DNSName:    "update-aaaa-record",
-			RecordType: endpoint.RecordTypeAAAA,
-			Targets:    endpoint.Targets{"2001:DB8::2"},
+			Name:       ep.NewEndpointNameCommon("update-aaaa-record"),
+			RecordType: ep.RecordTypeAAAA,
+			Targets:    ep.Targets{"2001:DB8::2"},
 		},
 	}, nil)
 
 	// Fake some existing records in our DNS provider and validate some desired changes.
 	provider := newMockProvider(
-		[]*endpoint.Endpoint{
+		[]*ep.Endpoint{
 			{
-				DNSName:    "update-record",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"8.8.8.8"},
+				Name:       ep.NewEndpointNameCommon("update-record"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"8.8.8.8"},
 			},
 			{
-				DNSName:    "delete-record",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"4.3.2.1"},
+				Name:       ep.NewEndpointNameCommon("delete-record"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"4.3.2.1"},
 			},
 			{
-				DNSName:    "update-aaaa-record",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::3"},
+				Name:       ep.NewEndpointNameCommon("update-aaaa-record"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::3"},
 			},
 			{
-				DNSName:    "delete-aaaa-record",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::4"},
+				Name:       ep.NewEndpointNameCommon("delete-aaaa-record"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::4"},
 			},
 		},
 		&plan.Changes{
-			Create: []*endpoint.Endpoint{
-				{DNSName: "create-aaaa-record", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1"}},
-				{DNSName: "create-record", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+			Create: []*ep.Endpoint{
+				{Name: ep.NewEndpointNameCommon("create-aaaa-record"), RecordType: ep.RecordTypeAAAA, Targets: ep.Targets{"2001:DB8::1"}},
+				{Name: ep.NewEndpointNameCommon("create-record"), RecordType: ep.RecordTypeA, Targets: ep.Targets{"1.2.3.4"}},
 			},
-			UpdateNew: []*endpoint.Endpoint{
-				{DNSName: "update-aaaa-record", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::2"}},
-				{DNSName: "update-record", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"8.8.4.4"}},
+			UpdateNew: []*ep.Endpoint{
+				{Name: ep.NewEndpointNameCommon("update-aaaa-record"), RecordType: ep.RecordTypeAAAA, Targets: ep.Targets{"2001:DB8::2"}},
+				{Name: ep.NewEndpointNameCommon("update-record"), RecordType: ep.RecordTypeA, Targets: ep.Targets{"8.8.4.4"}},
 			},
-			UpdateOld: []*endpoint.Endpoint{
-				{DNSName: "update-aaaa-record", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::3"}},
-				{DNSName: "update-record", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"8.8.8.8"}},
+			UpdateOld: []*ep.Endpoint{
+				{Name: ep.NewEndpointNameCommon("update-aaaa-record"), RecordType: ep.RecordTypeAAAA, Targets: ep.Targets{"2001:DB8::3"}},
+				{Name: ep.NewEndpointNameCommon("update-record"), RecordType: ep.RecordTypeA, Targets: ep.Targets{"8.8.8.8"}},
 			},
-			Delete: []*endpoint.Endpoint{
-				{DNSName: "delete-aaaa-record", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::4"}},
-				{DNSName: "delete-record", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"4.3.2.1"}},
+			Delete: []*ep.Endpoint{
+				{Name: ep.NewEndpointNameCommon("delete-aaaa-record"), RecordType: ep.RecordTypeAAAA, Targets: ep.Targets{"2001:DB8::4"}},
+				{Name: ep.NewEndpointNameCommon("delete-record"), RecordType: ep.RecordTypeA, Targets: ep.Targets{"4.3.2.1"}},
 			},
 		},
 	)
@@ -213,6 +213,7 @@ func TestRunOnce(t *testing.T) {
 		Registry:           r,
 		Policy:             &plan.SyncPolicy{},
 		ManagedRecordTypes: cfg.ManagedDNSRecordTypes,
+		ps:                 newPrometheusStat(),
 	}
 
 	assert.NoError(t, ctrl.RunOnce(context.Background()))
@@ -220,8 +221,8 @@ func TestRunOnce(t *testing.T) {
 	// Validate that the mock source was called.
 	source.AssertExpectations(t)
 	// check the verified records
-	assert.Equal(t, math.Float64bits(1), valueFromMetric(verifiedARecords))
-	assert.Equal(t, math.Float64bits(1), valueFromMetric(verifiedAAAARecords))
+	assert.Equal(t, math.Float64bits(1), valueFromMetric(ctrl.ps.verifiedByRecordType[ep.RecordTypeA]))
+	assert.Equal(t, math.Float64bits(1), valueFromMetric(ctrl.ps.verifiedByRecordType[ep.RecordTypeAAAA]))
 }
 
 func valueFromMetric(metric prometheus.Gauge) uint64 {
@@ -230,7 +231,8 @@ func valueFromMetric(metric prometheus.Gauge) uint64 {
 }
 
 func TestShouldRunOnce(t *testing.T) {
-	ctrl := &Controller{Interval: 10 * time.Minute, MinEventSyncInterval: 5 * time.Second}
+	ctrl := StartController(&Controller{Interval: 10 * time.Minute, MinEventSyncInterval: 5 * time.Second})
+	defer ctrl.Stop()
 
 	now := time.Now()
 
@@ -279,10 +281,14 @@ func TestShouldRunOnce(t *testing.T) {
 	assert.True(t, ctrl.ShouldRunOnce(now))
 }
 
-func testControllerFiltersDomains(t *testing.T, configuredEndpoints []*endpoint.Endpoint, domainFilter endpoint.DomainFilterInterface, providerEndpoints []*endpoint.Endpoint, expectedChanges []*plan.Changes) {
+func testControllerFiltersDomains(t *testing.T,
+	configuredEndpoints []*ep.Endpoint,
+	domainFilter ep.DomainFilterInterface,
+	providerEndpoints []*ep.Endpoint,
+	expectedChanges []*plan.Changes) *Controller {
 	t.Helper()
 	cfg := externaldns.NewConfig()
-	cfg.ManagedDNSRecordTypes = []string{endpoint.RecordTypeA, endpoint.RecordTypeAAAA, endpoint.RecordTypeCNAME}
+	cfg.ManagedDNSRecordTypes = []string{ep.RecordTypeA, ep.RecordTypeAAAA, ep.RecordTypeCNAME}
 
 	source := new(testutils.MockSource)
 	source.On("Endpoints").Return(configuredEndpoints, nil)
@@ -295,13 +301,14 @@ func testControllerFiltersDomains(t *testing.T, configuredEndpoints []*endpoint.
 
 	require.NoError(t, err)
 
-	ctrl := &Controller{
+	ctrl := StartController(&Controller{
 		Source:             source,
 		Registry:           r,
 		Policy:             &plan.SyncPolicy{},
 		DomainFilter:       domainFilter,
 		ManagedRecordTypes: cfg.ManagedDNSRecordTypes,
-	}
+		ps:                 newPrometheusStat(),
+	})
 
 	assert.NoError(t, ctrl.RunOnce(context.Background()))
 	assert.Equal(t, 1, provider.RecordsCallCount)
@@ -309,21 +316,27 @@ func testControllerFiltersDomains(t *testing.T, configuredEndpoints []*endpoint.
 	for i, change := range expectedChanges {
 		assert.Equal(t, *change, *provider.ApplyChangesCalls[i])
 	}
+	return ctrl
 }
 
 type noopRegistryWithMissing struct {
 	*registry.NoopRegistry
-	missingRecords []*endpoint.Endpoint
+	ownerShipRecords []*ep.Endpoint
 }
 
-func (r *noopRegistryWithMissing) MissingRecords() []*endpoint.Endpoint {
-	return r.missingRecords
+func (r *noopRegistryWithMissing) EnsureOwnerShipRecords(eps []*ep.Endpoint) []*ep.Endpoint {
+	return append(eps, r.ownerShipRecords...)
 }
 
-func testControllerFiltersDomainsWithMissing(t *testing.T, configuredEndpoints []*endpoint.Endpoint, domainFilter endpoint.DomainFilterInterface, providerEndpoints, missingEndpoints []*endpoint.Endpoint, expectedChanges []*plan.Changes) {
+func testControllerFiltersDomainsWithMissing(t *testing.T,
+	configuredEndpoints []*ep.Endpoint,
+	domainFilter ep.DomainFilterInterface,
+	providerEndpoints []*ep.Endpoint,
+	ownerShipRecords []*ep.Endpoint,
+	expectedChanges []*plan.Changes) *Controller {
 	t.Helper()
 	cfg := externaldns.NewConfig()
-	cfg.ManagedDNSRecordTypes = []string{endpoint.RecordTypeA, endpoint.RecordTypeCNAME}
+	cfg.ManagedDNSRecordTypes = []string{ep.RecordTypeA, ep.RecordTypeCNAME}
 
 	source := new(testutils.MockSource)
 	source.On("Endpoints").Return(configuredEndpoints, nil)
@@ -336,453 +349,462 @@ func testControllerFiltersDomainsWithMissing(t *testing.T, configuredEndpoints [
 	require.NoError(t, err)
 
 	r := &noopRegistryWithMissing{
-		NoopRegistry:   noop,
-		missingRecords: missingEndpoints,
+		NoopRegistry:     noop,
+		ownerShipRecords: ownerShipRecords,
 	}
 
-	ctrl := &Controller{
+	ctrl := StartController(&Controller{
 		Source:             source,
 		Registry:           r,
 		Policy:             &plan.SyncPolicy{},
 		DomainFilter:       domainFilter,
 		ManagedRecordTypes: cfg.ManagedDNSRecordTypes,
-	}
+	})
 
 	assert.NoError(t, ctrl.RunOnce(context.Background()))
 	assert.Equal(t, 1, provider.RecordsCallCount)
-	require.Len(t, provider.ApplyChangesCalls, len(expectedChanges))
-	for i, change := range expectedChanges {
-		assert.Equal(t, *change, *provider.ApplyChangesCalls[i])
+	require.Len(t, provider.ApplyChangesCalls, 1)
+	for _, change := range expectedChanges {
+		require.Len(t, change.Create, 2)
+		require.Len(t, change.Delete, 0)
+		require.Len(t, change.UpdateNew, 0)
+		require.Len(t, change.UpdateOld, 0)
+		testutils.SortEndpoints(change.Create)
+		testutils.SortEndpoints(provider.ApplyChangesCalls[0].Create)
+		assert.Equal(t, change.Create, provider.ApplyChangesCalls[0].Create)
 	}
+	return ctrl
 }
 
 func TestControllerSkipsEmptyChanges(t *testing.T) {
 	testControllerFiltersDomains(
 		t,
-		[]*endpoint.Endpoint{
+		[]*ep.Endpoint{
 			{
-				DNSName:    "create-record.other.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"1.2.3.4"},
+				Name:       ep.NewEndpointNameCommon("create-record.other.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"1.2.3.4"},
 			},
 			{
-				DNSName:    "some-record.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"8.8.8.8"},
+				Name:       ep.NewEndpointNameCommon("some-record.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"8.8.8.8"},
 			},
 		},
-		endpoint.NewDomainFilter([]string{"used.tld"}),
-		[]*endpoint.Endpoint{
+		ep.NewDomainFilter([]string{"used.tld"}),
+		[]*ep.Endpoint{
 			{
-				DNSName:    "some-record.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"8.8.8.8"},
+				Name:       ep.NewEndpointNameCommon("some-record.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"8.8.8.8"},
 			},
 		},
 		[]*plan.Changes{},
-	)
+	).Stop()
 }
 
 func TestWhenNoFilterControllerConsidersAllComain(t *testing.T) {
 	testControllerFiltersDomains(
 		t,
-		[]*endpoint.Endpoint{
+		[]*ep.Endpoint{
 			{
-				DNSName:    "create-record.other.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"1.2.3.4"},
+				Name:       ep.NewEndpointNameCommon("create-record.other.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"1.2.3.4"},
 			},
 			{
-				DNSName:    "some-record.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"8.8.8.8"},
+				Name:       ep.NewEndpointNameCommon("some-record.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"8.8.8.8"},
 			},
 		},
 		nil,
-		[]*endpoint.Endpoint{
+		[]*ep.Endpoint{
 			{
-				DNSName:    "some-record.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"8.8.8.8"},
+				Name:       ep.NewEndpointNameCommon("some-record.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"8.8.8.8"},
 			},
 		},
 		[]*plan.Changes{
 			{
-				Create: []*endpoint.Endpoint{
+				Create: []*ep.Endpoint{
 					{
-						DNSName:    "create-record.other.tld",
-						RecordType: endpoint.RecordTypeA,
-						Targets:    endpoint.Targets{"1.2.3.4"},
+						Name:       ep.NewEndpointNameCommon("create-record.other.tld"),
+						RecordType: ep.RecordTypeA,
+						Targets:    ep.Targets{"1.2.3.4"},
 					},
 				},
 			},
 		},
-	)
+	).Stop()
 }
 
 func TestWhenMultipleControllerConsidersAllFilteredComain(t *testing.T) {
 	testControllerFiltersDomains(
 		t,
-		[]*endpoint.Endpoint{
+		[]*ep.Endpoint{
 			{
-				DNSName:    "create-record.other.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"1.2.3.4"},
+				Name:       ep.NewEndpointNameCommon("create-record.other.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"1.2.3.4"},
 			},
 			{
-				DNSName:    "some-record.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"1.1.1.1"},
+				Name:       ep.NewEndpointNameCommon("some-record.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"1.1.1.1"},
 				Labels: map[string]string{
 					"owner": "me",
 				},
 			},
 			{
-				DNSName:    "create-record.unused.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"1.2.3.4"},
+				Name:       ep.NewEndpointNameCommon("create-record.unused.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"1.2.3.4"},
 			},
 		},
-		endpoint.NewDomainFilter([]string{"used.tld", "other.tld"}),
-		[]*endpoint.Endpoint{
+		ep.NewDomainFilter([]string{"used.tld", "other.tld"}),
+		[]*ep.Endpoint{
 			{
-				DNSName:    "some-record.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"8.8.8.8"},
+				Name:       ep.NewEndpointNameCommon("some-record.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"8.8.8.8"},
 			},
 		},
 		[]*plan.Changes{
 			{
-				Create: []*endpoint.Endpoint{
+				Create: []*ep.Endpoint{
 					{
-						DNSName:    "create-record.other.tld",
-						RecordType: endpoint.RecordTypeA,
-						Targets:    endpoint.Targets{"1.2.3.4"},
+						Name:       ep.NewEndpointNameCommon("create-record.other.tld"),
+						RecordType: ep.RecordTypeA,
+						Targets:    ep.Targets{"1.2.3.4"},
 					},
 				},
-				UpdateOld: []*endpoint.Endpoint{
+				UpdateOld: []*ep.Endpoint{
 					{
-						DNSName:    "some-record.used.tld",
-						RecordType: endpoint.RecordTypeA,
-						Targets:    endpoint.Targets{"8.8.8.8"},
+						Name:       ep.NewEndpointNameCommon("some-record.used.tld"),
+						RecordType: ep.RecordTypeA,
+						Targets:    ep.Targets{"8.8.8.8"},
 					},
 				},
-				UpdateNew: []*endpoint.Endpoint{
+				UpdateNew: []*ep.Endpoint{
 					{
-						DNSName:    "some-record.used.tld",
-						RecordType: endpoint.RecordTypeA,
-						Targets:    endpoint.Targets{"1.1.1.1"},
+						Name:       ep.NewEndpointNameCommon("some-record.used.tld"),
+						RecordType: ep.RecordTypeA,
+						Targets:    ep.Targets{"1.1.1.1"},
 						// this ne new resolver will transfer existing labels
-						Labels: endpoint.Labels{
+						Labels: ep.Labels{
 							"owner": "me",
 						},
 					},
 				},
 			},
 		},
-	)
+	).Stop()
 }
 
 func TestVerifyARecords(t *testing.T) {
-	testControllerFiltersDomains(
+	ctrl := testControllerFiltersDomains(
 		t,
-		[]*endpoint.Endpoint{
+		[]*ep.Endpoint{
 			{
-				DNSName:    "create-record.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"1.2.3.4"},
+				Name:       ep.NewEndpointNameCommon("create-record.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"1.2.3.4"},
 			},
 			{
-				DNSName:    "some-record.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"8.8.8.8"},
+				Name:       ep.NewEndpointNameCommon("some-record.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"8.8.8.8"},
 			},
 		},
-		endpoint.NewDomainFilter([]string{"used.tld"}),
-		[]*endpoint.Endpoint{
+		ep.NewDomainFilter([]string{"used.tld"}),
+		[]*ep.Endpoint{
 			{
-				DNSName:    "some-record.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"8.8.8.8"},
+				Name:       ep.NewEndpointNameCommon("some-record.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"8.8.8.8"},
 			},
 			{
-				DNSName:    "create-record.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"1.2.3.4"},
+				Name:       ep.NewEndpointNameCommon("create-record.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"1.2.3.4"},
 			},
 		},
 		[]*plan.Changes{},
 	)
-	assert.Equal(t, math.Float64bits(2), valueFromMetric(verifiedARecords))
+	assert.Equal(t, math.Float64bits(2), valueFromMetric(ctrl.ps.verifiedByRecordType[ep.RecordTypeA]))
+	ctrl.Stop()
 
-	testControllerFiltersDomains(
+	ctrl = testControllerFiltersDomains(
 		t,
-		[]*endpoint.Endpoint{
+		[]*ep.Endpoint{
 			{
-				DNSName:    "some-record.1.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"1.2.3.4"},
+				Name:       ep.NewEndpointNameCommon("some-record.1.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"1.2.3.4"},
 			},
 			{
-				DNSName:    "some-record.2.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"8.8.8.8"},
+				Name:       ep.NewEndpointNameCommon("some-record.2.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"8.8.8.8"},
 			},
 			{
-				DNSName:    "some-record.3.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"24.24.24.24"},
+				Name:       ep.NewEndpointNameCommon("some-record.3.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"24.24.24.24"},
 			},
 		},
-		endpoint.NewDomainFilter([]string{"used.tld"}),
-		[]*endpoint.Endpoint{
+		ep.NewDomainFilter([]string{"used.tld"}),
+		[]*ep.Endpoint{
 			{
-				DNSName:    "some-record.1.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"1.2.3.4"},
+				Name:       ep.NewEndpointNameCommon("some-record.1.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"1.2.3.4"},
 			},
 			{
-				DNSName:    "some-record.2.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"8.8.8.8"},
+				Name:       ep.NewEndpointNameCommon("some-record.2.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"8.8.8.8"},
 			},
 		},
 		[]*plan.Changes{{
-			Create: []*endpoint.Endpoint{
+			Create: []*ep.Endpoint{
 				{
-					DNSName:    "some-record.3.used.tld",
-					RecordType: endpoint.RecordTypeA,
-					Targets:    endpoint.Targets{"24.24.24.24"},
+					Name:       ep.NewEndpointNameCommon("some-record.3.used.tld"),
+					RecordType: ep.RecordTypeA,
+					Targets:    ep.Targets{"24.24.24.24"},
 				},
 			},
 		}},
 	)
-	assert.Equal(t, math.Float64bits(2), valueFromMetric(verifiedARecords))
-	assert.Equal(t, math.Float64bits(0), valueFromMetric(verifiedAAAARecords))
+	assert.Equal(t, math.Float64bits(2), valueFromMetric(ctrl.ps.verifiedByRecordType["A"]))
+	assert.Equal(t, math.Float64bits(0), valueFromMetric(ctrl.ps.verifiedByRecordType["AAAA"]))
+	ctrl.Stop()
 }
 
 func TestVerifyAAAARecords(t *testing.T) {
-	testControllerFiltersDomains(
+	ctrl := testControllerFiltersDomains(
 		t,
-		[]*endpoint.Endpoint{
+		[]*ep.Endpoint{
 			{
-				DNSName:    "create-record.used.tld",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::1"},
+				Name:       ep.NewEndpointNameCommon("create-record.used.tld"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::1"},
 			},
 			{
-				DNSName:    "some-record.used.tld",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::2"},
+				Name:       ep.NewEndpointNameCommon("some-record.used.tld"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::2"},
 			},
 		},
-		endpoint.NewDomainFilter([]string{"used.tld"}),
-		[]*endpoint.Endpoint{
+		ep.NewDomainFilter([]string{"used.tld"}),
+		[]*ep.Endpoint{
 			{
-				DNSName:    "some-record.used.tld",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::2"},
+				Name:       ep.NewEndpointNameCommon("some-record.used.tld"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::2"},
 			},
 			{
-				DNSName:    "create-record.used.tld",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::1"},
+				Name:       ep.NewEndpointNameCommon("create-record.used.tld"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::1"},
 			},
 		},
 		[]*plan.Changes{},
 	)
-	assert.Equal(t, math.Float64bits(2), valueFromMetric(verifiedAAAARecords))
+	ctrl.Stop()
+	assert.Equal(t, math.Float64bits(2), valueFromMetric(ctrl.ps.verifiedByRecordType[ep.RecordTypeAAAA]))
 
-	testControllerFiltersDomains(
+	ctrl = testControllerFiltersDomains(
 		t,
-		[]*endpoint.Endpoint{
+		[]*ep.Endpoint{
 			{
-				DNSName:    "some-record.1.used.tld",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::1"},
+				Name:       ep.NewEndpointNameCommon("some-record.1.used.tld"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::1"},
 			},
 			{
-				DNSName:    "some-record.2.used.tld",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::2"},
+				Name:       ep.NewEndpointNameCommon("some-record.2.used.tld"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::2"},
 			},
 			{
-				DNSName:    "some-record.3.used.tld",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::3"},
+				Name:       ep.NewEndpointNameCommon("some-record.3.used.tld"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::3"},
 			},
 		},
-		endpoint.NewDomainFilter([]string{"used.tld"}),
-		[]*endpoint.Endpoint{
+		ep.NewDomainFilter([]string{"used.tld"}),
+		[]*ep.Endpoint{
 			{
-				DNSName:    "some-record.1.used.tld",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::1"},
+				Name:       ep.NewEndpointNameCommon("some-record.1.used.tld"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::1"},
 			},
 			{
-				DNSName:    "some-record.2.used.tld",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::2"},
+				Name:       ep.NewEndpointNameCommon("some-record.2.used.tld"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::2"},
 			},
 		},
 		[]*plan.Changes{{
-			Create: []*endpoint.Endpoint{
+			Create: []*ep.Endpoint{
 				{
-					DNSName:    "some-record.3.used.tld",
-					RecordType: endpoint.RecordTypeAAAA,
-					Targets:    endpoint.Targets{"2001:DB8::3"},
+					Name:       ep.NewEndpointNameCommon("some-record.3.used.tld"),
+					RecordType: ep.RecordTypeAAAA,
+					Targets:    ep.Targets{"2001:DB8::3"},
 				},
 			},
 		}},
 	)
-	assert.Equal(t, math.Float64bits(0), valueFromMetric(verifiedARecords))
-	assert.Equal(t, math.Float64bits(2), valueFromMetric(verifiedAAAARecords))
+	ctrl.Stop()
+	assert.Equal(t, math.Float64bits(0), valueFromMetric(ctrl.ps.verifiedByRecordType[ep.RecordTypeA]))
+	assert.Equal(t, math.Float64bits(2), valueFromMetric(ctrl.ps.verifiedByRecordType[ep.RecordTypeAAAA]))
 }
 
 func TestARecords(t *testing.T) {
-	testControllerFiltersDomains(
+	ctrl := testControllerFiltersDomains(
 		t,
-		[]*endpoint.Endpoint{
+		[]*ep.Endpoint{
 			{
-				DNSName:    "record1.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"1.2.3.4"},
+				Name:       ep.NewEndpointNameCommon("record1.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"1.2.3.4"},
 			},
 			{
-				DNSName:    "record2.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"8.8.8.8"},
+				Name:       ep.NewEndpointNameCommon("record2.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"8.8.8.8"},
 			},
 			{
-				DNSName:    "_mysql-svc._tcp.mysql.used.tld",
-				RecordType: endpoint.RecordTypeSRV,
-				Targets:    endpoint.Targets{"0 50 30007 mysql.used.tld"},
+				Name:       ep.NewEndpointNameCommon("_mysql-svc._tcp.mysql.used.tld"),
+				RecordType: ep.RecordTypeSRV,
+				Targets:    ep.Targets{"0 50 30007 mysql.used.tld"},
 			},
 		},
-		endpoint.NewDomainFilter([]string{"used.tld"}),
-		[]*endpoint.Endpoint{
+		ep.NewDomainFilter([]string{"used.tld"}),
+		[]*ep.Endpoint{
 			{
-				DNSName:    "record1.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"1.2.3.4"},
+				Name:       ep.NewEndpointNameCommon("record1.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"1.2.3.4"},
 			},
 			{
-				DNSName:    "_mysql-svc._tcp.mysql.used.tld",
-				RecordType: endpoint.RecordTypeSRV,
-				Targets:    endpoint.Targets{"0 50 30007 mysql.used.tld"},
+				Name:       ep.NewEndpointNameCommon("_mysql-svc._tcp.mysql.used.tld"),
+				RecordType: ep.RecordTypeSRV,
+				Targets:    ep.Targets{"0 50 30007 mysql.used.tld"},
 			},
 		},
 		[]*plan.Changes{{
-			Create: []*endpoint.Endpoint{
+			Create: []*ep.Endpoint{
 				{
-					DNSName:    "record2.used.tld",
-					RecordType: endpoint.RecordTypeA,
-					Targets:    endpoint.Targets{"8.8.8.8"},
+					Name:       ep.NewEndpointNameCommon("record2.used.tld"),
+					RecordType: ep.RecordTypeA,
+					Targets:    ep.Targets{"8.8.8.8"},
 				},
 			},
 		}},
 	)
-	assert.Equal(t, math.Float64bits(2), valueFromMetric(sourceARecords))
-	assert.Equal(t, math.Float64bits(1), valueFromMetric(registryARecords))
+	ctrl.Stop()
+	assert.Equal(t, math.Float64bits(2), valueFromMetric(ctrl.ps.sourceByRecordType[ep.RecordTypeA]))
+	assert.Equal(t, math.Float64bits(1), valueFromMetric(ctrl.ps.registryByRecordType[ep.RecordTypeA]))
 }
 
 // TestMissingRecordsApply validates that the missing records result in the dedicated plan apply.
 func TestMissingRecordsApply(t *testing.T) {
 	testControllerFiltersDomainsWithMissing(
 		t,
-		[]*endpoint.Endpoint{
+		[]*ep.Endpoint{
 			{
-				DNSName:    "record1.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"1.2.3.4"},
+				Name:       ep.NewEndpointNameCommon("record1.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"1.2.3.4"},
 			},
 			{
-				DNSName:    "record2.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"8.8.8.8"},
-			},
-		},
-		endpoint.NewDomainFilter([]string{"used.tld"}),
-		[]*endpoint.Endpoint{
-			{
-				DNSName:    "record1.used.tld",
-				RecordType: endpoint.RecordTypeA,
-				Targets:    endpoint.Targets{"1.2.3.4"},
+				Name:       ep.NewEndpointNameCommon("record2.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"8.8.8.8"},
 			},
 		},
-		[]*endpoint.Endpoint{
+		ep.NewDomainFilter([]string{"used.tld"}),
+		[]*ep.Endpoint{
 			{
-				DNSName:    "a-record1.used.tld",
-				RecordType: endpoint.RecordTypeTXT,
-				Targets:    endpoint.Targets{"\"heritage=external-dns,external-dns/owner=owner\""},
+				Name:       ep.NewEndpointNameCommon("record1.used.tld"),
+				RecordType: ep.RecordTypeA,
+				Targets:    ep.Targets{"1.2.3.4"},
+			},
+		},
+		[]*ep.Endpoint{
+			{
+				Name:       ep.NewEndpointNameCommon("a-record1.used.tld"),
+				RecordType: ep.RecordTypeTXT,
+				Targets:    ep.Targets{"\"heritage=external-dns,external-dns/owner=owner\""},
 			},
 		},
 		[]*plan.Changes{
 			// Missing record had its own plan applied.
 			{
-				Create: []*endpoint.Endpoint{
+				Create: []*ep.Endpoint{
 					{
-						DNSName:    "a-record1.used.tld",
-						RecordType: endpoint.RecordTypeTXT,
-						Targets:    endpoint.Targets{"\"heritage=external-dns,external-dns/owner=owner\""},
+						Name:       ep.NewEndpointNameCommon("a-record1.used.tld"),
+						RecordType: ep.RecordTypeTXT,
+						Targets:    ep.Targets{"\"heritage=external-dns,external-dns/owner=owner\""},
+					},
+					{
+						Name:       ep.NewEndpointNameCommon("record2.used.tld"),
+						RecordType: ep.RecordTypeA,
+						Targets:    ep.Targets{"8.8.8.8"},
 					},
 				},
 			},
-			{
-				Create: []*endpoint.Endpoint{
-					{
-						DNSName:    "record2.used.tld",
-						RecordType: endpoint.RecordTypeA,
-						Targets:    endpoint.Targets{"8.8.8.8"},
-					},
-				},
-			},
-		})
+		}).Stop()
 }
 
 func TestAAAARecords(t *testing.T) {
-	testControllerFiltersDomains(
+	ctrl := testControllerFiltersDomains(
 		t,
-		[]*endpoint.Endpoint{
+		[]*ep.Endpoint{
 			{
-				DNSName:    "record1.used.tld",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::1"},
+				Name:       ep.NewEndpointNameCommon("record1.used.tld"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::1"},
 			},
 			{
-				DNSName:    "record2.used.tld",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::2"},
+				Name:       ep.NewEndpointNameCommon("record2.used.tld"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::2"},
 			},
 			{
-				DNSName:    "_mysql-svc._tcp.mysql.used.tld",
-				RecordType: endpoint.RecordTypeSRV,
-				Targets:    endpoint.Targets{"0 50 30007 mysql.used.tld"},
+				Name:       ep.NewEndpointNameCommon("_mysql-svc._tcp.mysql.used.tld"),
+				RecordType: ep.RecordTypeSRV,
+				Targets:    ep.Targets{"0 50 30007 mysql.used.tld"},
 			},
 		},
-		endpoint.NewDomainFilter([]string{"used.tld"}),
-		[]*endpoint.Endpoint{
+		ep.NewDomainFilter([]string{"used.tld"}),
+		[]*ep.Endpoint{
 			{
-				DNSName:    "record1.used.tld",
-				RecordType: endpoint.RecordTypeAAAA,
-				Targets:    endpoint.Targets{"2001:DB8::1"},
+				Name:       ep.NewEndpointNameCommon("record1.used.tld"),
+				RecordType: ep.RecordTypeAAAA,
+				Targets:    ep.Targets{"2001:DB8::1"},
 			},
 			{
-				DNSName:    "_mysql-svc._tcp.mysql.used.tld",
-				RecordType: endpoint.RecordTypeSRV,
-				Targets:    endpoint.Targets{"0 50 30007 mysql.used.tld"},
+				Name:       ep.NewEndpointNameCommon("_mysql-svc._tcp.mysql.used.tld"),
+				RecordType: ep.RecordTypeSRV,
+				Targets:    ep.Targets{"0 50 30007 mysql.used.tld"},
 			},
 		},
 		[]*plan.Changes{{
-			Create: []*endpoint.Endpoint{
+			Create: []*ep.Endpoint{
 				{
-					DNSName:    "record2.used.tld",
-					RecordType: endpoint.RecordTypeAAAA,
-					Targets:    endpoint.Targets{"2001:DB8::2"},
+					Name:       ep.NewEndpointNameCommon("record2.used.tld"),
+					RecordType: ep.RecordTypeAAAA,
+					Targets:    ep.Targets{"2001:DB8::2"},
 				},
 			},
 		}},
 	)
-	assert.Equal(t, math.Float64bits(2), valueFromMetric(sourceAAAARecords))
-	assert.Equal(t, math.Float64bits(1), valueFromMetric(registryAAAARecords))
+	assert.Equal(t, math.Float64bits(2), valueFromMetric(ctrl.ps.sourceByRecordType[ep.RecordTypeAAAA]))
+	assert.Equal(t, math.Float64bits(1), valueFromMetric(ctrl.ps.registryByRecordType[ep.RecordTypeAAAA]))
+	ctrl.Stop()
 }

@@ -120,7 +120,7 @@ func TestRfc2136GetRecordsMultipleTargets(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1, len(recs), "expected single record")
-	assert.Equal(t, recs[0].DNSName, "foo.com")
+	assert.Equal(t, recs[0].Name.Fqdn(), "foo.com")
 	assert.Equal(t, 2, len(recs[0].Targets), "expected two targets")
 	assert.True(t, recs[0].Targets[0] == "1.1.1.1" || recs[0].Targets[1] == "1.1.1.1") // ignore order
 	assert.True(t, recs[0].Targets[0] == "2.2.2.2" || recs[0].Targets[1] == "2.2.2.2") // ignore order
@@ -162,30 +162,30 @@ func TestRfc2136ApplyChanges(t *testing.T) {
 	p := &plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "v1.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foo.com"),
 				RecordType: "A",
 				Targets:    []string{"1.2.3.4"},
 				RecordTTL:  endpoint.TTL(400),
 			},
 			{
-				DNSName:    "v1.foobar.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foobar.com"),
 				RecordType: "TXT",
 				Targets:    []string{"boom"},
 			},
 			{
-				DNSName:    "ns.foobar.com",
+				Name:       endpoint.NewEndpointNameCommon("ns.foobar.com"),
 				RecordType: "NS",
 				Targets:    []string{"boom"},
 			},
 		},
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "v2.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("v2.foo.com"),
 				RecordType: "A",
 				Targets:    []string{"1.2.3.4"},
 			},
 			{
-				DNSName:    "v2.foobar.com",
+				Name:       endpoint.NewEndpointNameCommon("v2.foobar.com"),
 				RecordType: "TXT",
 				Targets:    []string{"boom2"},
 			},
@@ -219,19 +219,19 @@ func TestRfc2136ApplyChangesWithDifferentTTLs(t *testing.T) {
 	p := &plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "v1.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foo.com"),
 				RecordType: "A",
 				Targets:    []string{"2.1.1.1"},
 				RecordTTL:  endpoint.TTL(400),
 			},
 			{
-				DNSName:    "v2.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("v2.foo.com"),
 				RecordType: "A",
 				Targets:    []string{"3.2.2.2"},
 				RecordTTL:  endpoint.TTL(200),
 			},
 			{
-				DNSName:    "v3.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("v3.foo.com"),
 				RecordType: "A",
 				Targets:    []string{"4.3.3.3"},
 			},
@@ -263,13 +263,13 @@ func TestRfc2136ApplyChangesWithUpdate(t *testing.T) {
 	p := &plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "v1.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foo.com"),
 				RecordType: "A",
 				Targets:    []string{"1.2.3.4"},
 				RecordTTL:  endpoint.TTL(400),
 			},
 			{
-				DNSName:    "v1.foobar.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foobar.com"),
 				RecordType: "TXT",
 				Targets:    []string{"boom"},
 			},
@@ -282,26 +282,26 @@ func TestRfc2136ApplyChangesWithUpdate(t *testing.T) {
 	p = &plan.Changes{
 		UpdateOld: []*endpoint.Endpoint{
 			{
-				DNSName:    "v1.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foo.com"),
 				RecordType: "A",
 				Targets:    []string{"1.2.3.4"},
 				RecordTTL:  endpoint.TTL(400),
 			},
 			{
-				DNSName:    "v1.foobar.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foobar.com"),
 				RecordType: "TXT",
 				Targets:    []string{"boom"},
 			},
 		},
 		UpdateNew: []*endpoint.Endpoint{
 			{
-				DNSName:    "v1.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foo.com"),
 				RecordType: "A",
 				Targets:    []string{"1.2.3.5"},
 				RecordTTL:  endpoint.TTL(400),
 			},
 			{
-				DNSName:    "v1.foobar.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foobar.com"),
 				RecordType: "TXT",
 				Targets:    []string{"kablui"},
 			},
@@ -336,7 +336,7 @@ func TestChunkBy(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		records = append(records, &endpoint.Endpoint{
-			DNSName:    "v1.foo.com",
+			Name:       endpoint.NewEndpointNameCommon("v1.foo.com"),
 			RecordType: "A",
 			Targets:    []string{"1.1.2.2"},
 			RecordTTL:  endpoint.TTL(400),
@@ -351,7 +351,7 @@ func TestChunkBy(t *testing.T) {
 
 func contains(arr []*endpoint.Endpoint, name string) bool {
 	for _, a := range arr {
-		if a.DNSName == name {
+		if a.Name.Fqdn() == name {
 			return true
 		}
 	}

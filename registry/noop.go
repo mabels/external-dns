@@ -46,9 +46,13 @@ func (im *NoopRegistry) Records(ctx context.Context) ([]*endpoint.Endpoint, erro
 }
 
 // MissingRecords returns nil because there is no missing records for Noop registry
-func (im *NoopRegistry) MissingRecords() []*endpoint.Endpoint {
-	return nil
+func (im *NoopRegistry) EnsureOwnerShipRecords(eps []*endpoint.Endpoint) []*endpoint.Endpoint {
+	return eps
 }
+
+// func (im *NoopRegistry) RemoveUnownedRecords(registry, source []*endpoint.Endpoint) ([]*endpoint.Endpoint, []*endpoint.Endpoint) {
+// 	return registry, source
+// }
 
 // ApplyChanges propagates changes to the dns provider
 func (im *NoopRegistry) ApplyChanges(ctx context.Context, changes *plan.Changes) error {

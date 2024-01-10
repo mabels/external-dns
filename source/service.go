@@ -216,8 +216,8 @@ func (sc *serviceSource) Endpoints(ctx context.Context) ([]*endpoint.Endpoint, e
 		})
 		// Use stable sort to not disrupt the order of services
 		sort.SliceStable(endpoints, func(i, j int) bool {
-			if endpoints[i].DNSName != endpoints[j].DNSName {
-				return endpoints[i].DNSName < endpoints[j].DNSName
+			if endpoints[i].Name.Fqdn() != endpoints[j].Name.Fqdn() {
+				return endpoints[i].Name.Fqdn() < endpoints[j].Name.Fqdn()
 			}
 			return endpoints[i].RecordType < endpoints[j].RecordType
 		})
@@ -225,7 +225,7 @@ func (sc *serviceSource) Endpoints(ctx context.Context) ([]*endpoint.Endpoint, e
 		mergedEndpoints = append(mergedEndpoints, endpoints[0])
 		for i := 1; i < len(endpoints); i++ {
 			lastMergedEndpoint := len(mergedEndpoints) - 1
-			if mergedEndpoints[lastMergedEndpoint].DNSName == endpoints[i].DNSName &&
+			if mergedEndpoints[lastMergedEndpoint].Name.Fqdn() == endpoints[i].Name.Fqdn() &&
 				mergedEndpoints[lastMergedEndpoint].RecordType == endpoints[i].RecordType &&
 				mergedEndpoints[lastMergedEndpoint].SetIdentifier == endpoints[i].SetIdentifier &&
 				mergedEndpoints[lastMergedEndpoint].RecordTTL == endpoints[i].RecordTTL {

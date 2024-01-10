@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/ovh/go-ovh/ovh"
 	log "github.com/sirupsen/logrus"
@@ -282,7 +281,7 @@ func ovhGroupByNameAndType(records []ovhRecord) []*endpoint.Endpoint {
 			targets = append(targets, record.Target)
 		}
 		endpoint := endpoint.NewEndpointWithTTL(
-			strings.TrimPrefix(records[0].SubDomain+"."+records[0].Zone, "."),
+			endpoint.NewEndpointName(records[0].SubDomain, records[0].Zone),
 			records[0].FieldType,
 			endpoint.TTL(records[0].TTL),
 			targets...,
@@ -301,9 +300,9 @@ func newOvhChange(action int, endpoints []*endpoint.Endpoint, zones []string, re
 	}
 
 	for _, e := range endpoints {
-		zone, _ := zoneNameIDMapper.FindZone(e.DNSName)
+		zone, _ := zoneNameIDMapper.FindZone(e.Name.Fqdn())
 		if zone == "" {
-			log.Debugf("Skipping record %s because no hosted zone matching record DNS Name was detected", e.DNSName)
+			log.Debugf("Skipping record %s because no hosted zone matching record DNS Name was detected", e.Name.Fqdn())
 			continue
 		}
 		for _, target := range e.Targets {
@@ -316,7 +315,7 @@ func newOvhChange(action int, endpoints []*endpoint.Endpoint, zones []string, re
 					Zone: zone,
 					ovhRecordFields: ovhRecordFields{
 						FieldType: e.RecordType,
-						SubDomain: strings.TrimSuffix(e.DNSName, "."+zone),
+						SubDomain: e.Name.Fqdn(),
 						TTL:       ovhDefaultTTL,
 						Target:    target,
 					},

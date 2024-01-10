@@ -36,10 +36,10 @@ type byAllFields []*endpoint.Endpoint
 func (b byAllFields) Len() int      { return len(b) }
 func (b byAllFields) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 func (b byAllFields) Less(i, j int) bool {
-	if b[i].DNSName < b[j].DNSName {
+	if b[i].Name.Fqdn() < b[j].Name.Fqdn() {
 		return true
 	}
-	if b[i].DNSName == b[j].DNSName {
+	if b[i].Name.Fqdn() == b[j].Name.Fqdn() {
 		// This rather bad, we need a more complex comparison for Targets, which considers all elements
 		if b[i].Targets.Same(b[j].Targets) {
 			if b[i].RecordType == (b[j].RecordType) {
@@ -59,11 +59,28 @@ func (b byAllFields) Less(i, j int) bool {
 // SameEndpoint returns true if two endpoints are same
 // considers example.org. and example.org DNSName/Target as different endpoints
 func SameEndpoint(a, b *endpoint.Endpoint) bool {
-	return a.DNSName == b.DNSName && a.Targets.Same(b.Targets) && a.RecordType == b.RecordType && a.SetIdentifier == b.SetIdentifier &&
+	return a.Name.Fqdn() == b.Name.Fqdn() && a.Targets.Same(b.Targets) && a.RecordType == b.RecordType && a.SetIdentifier == b.SetIdentifier &&
 		a.Labels[endpoint.OwnerLabelKey] == b.Labels[endpoint.OwnerLabelKey] && a.RecordTTL == b.RecordTTL &&
 		a.Labels[endpoint.ResourceLabelKey] == b.Labels[endpoint.ResourceLabelKey] &&
 		a.Labels[endpoint.OwnedRecordLabelKey] == b.Labels[endpoint.OwnedRecordLabelKey] &&
 		SameProviderSpecific(a.ProviderSpecific, b.ProviderSpecific)
+}
+
+func SortEndpoints(endpoints []*endpoint.Endpoint) {
+	for _, ep := range endpoints {
+		// Sort targets
+		sort.Slice(ep.Targets, func(i, j int) bool {
+			return ep.Targets[i] < ep.Targets[j]
+		})
+		// ProviderSpecific is already sorted
+		sort.Slice(ep.ProviderSpecific, func(i, j int) bool {
+			return ep.ProviderSpecific[i].Name < ep.ProviderSpecific[j].Name
+		})
+		if ep.Labels == nil {
+			ep.Labels = map[string]string{}
+		}
+	}
+	sort.Sort(byAllFields(endpoints))
 }
 
 // SameEndpoints compares two slices of endpoints regardless of order

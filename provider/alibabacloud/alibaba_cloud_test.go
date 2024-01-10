@@ -276,7 +276,7 @@ func TestAlibabaCloudProvider_Records(t *testing.T) {
 func TestAlibabaCloudProvider_ApplyChanges(t *testing.T) {
 	p := newTestAlibabaCloudProvider(false)
 	defaultTtlPlan := &endpoint.Endpoint{
-		DNSName:    "ttl.container-service.top",
+		Name: endpoint.NewEndpointNameCommon("ttl.container-service.top"),
 		RecordType: "A",
 		RecordTTL:  defaultAlibabaCloudRecordTTL,
 		Targets:    endpoint.NewTargets("4.3.2.1"),
@@ -284,7 +284,7 @@ func TestAlibabaCloudProvider_ApplyChanges(t *testing.T) {
 	changes := plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "xyz.container-service.top",
+				Name: endpoint.NewEndpointNameCommon("xyz.container-service.top"),
 				RecordType: "A",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("4.3.2.1"),
@@ -293,7 +293,7 @@ func TestAlibabaCloudProvider_ApplyChanges(t *testing.T) {
 		},
 		UpdateNew: []*endpoint.Endpoint{
 			{
-				DNSName:    "abc.container-service.top",
+				Name: endpoint.NewEndpointNameCommon("abc.container-service.top"),
 				RecordType: "A",
 				RecordTTL:  500,
 				Targets:    endpoint.NewTargets("1.2.3.4", "5.6.7.8"),
@@ -301,7 +301,7 @@ func TestAlibabaCloudProvider_ApplyChanges(t *testing.T) {
 		},
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "abc.container-service.top",
+				Name: endpoint.NewEndpointNameCommon("abc.container-service.top"),
 				RecordType: "TXT",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("\"heritage=external-dns,external-dns/owner=default\""),
@@ -350,7 +350,7 @@ func TestAlibabaCloudProvider_ApplyChanges_PrivateZone(t *testing.T) {
 	changes := plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "xyz.container-service.top",
+				Name: endpoint.NewEndpointNameCommon("xyz.container-service.top"),
 				RecordType: "A",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("4.3.2.1"),
@@ -358,7 +358,7 @@ func TestAlibabaCloudProvider_ApplyChanges_PrivateZone(t *testing.T) {
 		},
 		UpdateNew: []*endpoint.Endpoint{
 			{
-				DNSName:    "abc.container-service.top",
+				Name: endpoint.NewEndpointNameCommon("abc.container-service.top"),
 				RecordType: "A",
 				RecordTTL:  500,
 				Targets:    endpoint.NewTargets("1.2.3.4", "5.6.7.8"),
@@ -366,7 +366,7 @@ func TestAlibabaCloudProvider_ApplyChanges_PrivateZone(t *testing.T) {
 		},
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "abc.container-service.top",
+				Name: endpoint.NewEndpointNameCommon("abc.container-service.top"),
 				RecordType: "TXT",
 				RecordTTL:  300,
 				Targets:    endpoint.NewTargets("\"heritage=external-dns,external-dns/owner=default\""),

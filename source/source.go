@@ -258,7 +258,7 @@ func suitableType(target string) string {
 }
 
 // endpointsForHostname returns the endpoint objects for each host-target combination.
-func endpointsForHostname(hostname string, targets endpoint.Targets, ttl endpoint.TTL, providerSpecific endpoint.ProviderSpecific, setIdentifier string) []*endpoint.Endpoint {
+func endpointsForHostname(hostname endpoint.EndpointName, targets endpoint.Targets, ttl endpoint.TTL, providerSpecific endpoint.ProviderSpecific, setIdentifier string) []*endpoint.Endpoint {
 	var endpoints []*endpoint.Endpoint
 
 	var aTargets endpoint.Targets
@@ -284,7 +284,7 @@ func endpointsForHostname(hostname string, targets endpoint.Targets, ttl endpoin
 
 	if len(aTargets) > 0 {
 		epA := &endpoint.Endpoint{
-			DNSName:          strings.TrimSuffix(hostname, "."),
+			Name:             hostname,
 			Targets:          aTargets,
 			RecordTTL:        ttl,
 			RecordType:       endpoint.RecordTypeA,
@@ -297,7 +297,7 @@ func endpointsForHostname(hostname string, targets endpoint.Targets, ttl endpoin
 
 	if len(aaaaTargets) > 0 {
 		epAAAA := &endpoint.Endpoint{
-			DNSName:          strings.TrimSuffix(hostname, "."),
+			Name:             hostname,
 			Targets:          aaaaTargets,
 			RecordTTL:        ttl,
 			RecordType:       endpoint.RecordTypeAAAA,
@@ -310,7 +310,7 @@ func endpointsForHostname(hostname string, targets endpoint.Targets, ttl endpoin
 
 	if len(cnameTargets) > 0 {
 		epCNAME := &endpoint.Endpoint{
-			DNSName:          strings.TrimSuffix(hostname, "."),
+			Name:             hostname,
 			Targets:          cnameTargets,
 			RecordTTL:        ttl,
 			RecordType:       endpoint.RecordTypeCNAME,

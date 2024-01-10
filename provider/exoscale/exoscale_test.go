@@ -102,7 +102,7 @@ func (ep *ExoscaleClientStub) GetDomains(ctx context.Context) ([]egoscale.DNSDom
 
 func contains(arr []*endpoint.Endpoint, name string) bool {
 	for _, a := range arr {
-		if a.DNSName == name {
+		if a.Name.Fqdn() == name {
 			return true
 		}
 	}
@@ -130,48 +130,48 @@ func TestExoscaleApplyChanges(t *testing.T) {
 	plan := &plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "v1.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foo.com"),
 				RecordType: "A",
 				Targets:    []string{""},
 			},
 			{
-				DNSName:    "v1.foobar.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foobar.com"),
 				RecordType: "TXT",
 				Targets:    []string{""},
 			},
 		},
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "v1.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foo.com"),
 				RecordType: "A",
 				Targets:    []string{""},
 			},
 			{
-				DNSName:    "v1.foobar.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foobar.com"),
 				RecordType: "TXT",
 				Targets:    []string{""},
 			},
 		},
 		UpdateOld: []*endpoint.Endpoint{
 			{
-				DNSName:    "v1.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foo.com"),
 				RecordType: "A",
 				Targets:    []string{""},
 			},
 			{
-				DNSName:    "v1.foobar.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foobar.com"),
 				RecordType: "TXT",
 				Targets:    []string{""},
 			},
 		},
 		UpdateNew: []*endpoint.Endpoint{
 			{
-				DNSName:    "v1.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foo.com"),
 				RecordType: "A",
 				Targets:    []string{""},
 			},
 			{
-				DNSName:    "v1.foobar.com",
+				Name:       endpoint.NewEndpointNameCommon("v1.foobar.com"),
 				RecordType: "TXT",
 				Targets:    []string{""},
 			},
@@ -198,13 +198,13 @@ func TestExoscaleApplyChanges(t *testing.T) {
 func TestExoscaleMerge_NoUpdateOnTTL0Changes(t *testing.T) {
 	updateOld := []*endpoint.Endpoint{
 		{
-			DNSName:    "name1",
+			Name:       endpoint.NewEndpointNameCommon("name1"),
 			Targets:    endpoint.Targets{"target1"},
 			RecordTTL:  endpoint.TTL(1),
 			RecordType: endpoint.RecordTypeA,
 		},
 		{
-			DNSName:    "name2",
+			Name:       endpoint.NewEndpointNameCommon("name2"),
 			Targets:    endpoint.Targets{"target2"},
 			RecordTTL:  endpoint.TTL(1),
 			RecordType: endpoint.RecordTypeA,
@@ -213,13 +213,13 @@ func TestExoscaleMerge_NoUpdateOnTTL0Changes(t *testing.T) {
 
 	updateNew := []*endpoint.Endpoint{
 		{
-			DNSName:    "name1",
+			Name:       endpoint.NewEndpointNameCommon("name1"),
 			Targets:    endpoint.Targets{"target1"},
 			RecordTTL:  endpoint.TTL(0),
 			RecordType: endpoint.RecordTypeCNAME,
 		},
 		{
-			DNSName:    "name2",
+			Name:       endpoint.NewEndpointNameCommon("name2"),
 			Targets:    endpoint.Targets{"target2"},
 			RecordTTL:  endpoint.TTL(0),
 			RecordType: endpoint.RecordTypeCNAME,
@@ -232,13 +232,13 @@ func TestExoscaleMerge_NoUpdateOnTTL0Changes(t *testing.T) {
 func TestExoscaleMerge_UpdateOnTTLChanges(t *testing.T) {
 	updateOld := []*endpoint.Endpoint{
 		{
-			DNSName:    "name1",
+			Name:       endpoint.NewEndpointNameCommon("name1"),
 			Targets:    endpoint.Targets{"target1"},
 			RecordTTL:  endpoint.TTL(1),
 			RecordType: endpoint.RecordTypeCNAME,
 		},
 		{
-			DNSName:    "name2",
+			Name:       endpoint.NewEndpointNameCommon("name2"),
 			Targets:    endpoint.Targets{"target2"},
 			RecordTTL:  endpoint.TTL(1),
 			RecordType: endpoint.RecordTypeCNAME,
@@ -247,13 +247,13 @@ func TestExoscaleMerge_UpdateOnTTLChanges(t *testing.T) {
 
 	updateNew := []*endpoint.Endpoint{
 		{
-			DNSName:    "name1",
+			Name:       endpoint.NewEndpointNameCommon("name1"),
 			Targets:    endpoint.Targets{"target1"},
 			RecordTTL:  endpoint.TTL(77),
 			RecordType: endpoint.RecordTypeCNAME,
 		},
 		{
-			DNSName:    "name2",
+			Name:       endpoint.NewEndpointNameCommon("name2"),
 			Targets:    endpoint.Targets{"target2"},
 			RecordTTL:  endpoint.TTL(10),
 			RecordType: endpoint.RecordTypeCNAME,
@@ -262,19 +262,19 @@ func TestExoscaleMerge_UpdateOnTTLChanges(t *testing.T) {
 
 	merged := merge(updateOld, updateNew)
 	assert.Equal(t, 2, len(merged))
-	assert.Equal(t, "name1", merged[0].DNSName)
+	assert.Equal(t, "name1", merged[0].Name.Fqdn())
 }
 
 func TestExoscaleMerge_AlwaysUpdateTarget(t *testing.T) {
 	updateOld := []*endpoint.Endpoint{
 		{
-			DNSName:    "name1",
+			Name:       endpoint.NewEndpointNameCommon("name1"),
 			Targets:    endpoint.Targets{"target1"},
 			RecordTTL:  endpoint.TTL(1),
 			RecordType: endpoint.RecordTypeCNAME,
 		},
 		{
-			DNSName:    "name2",
+			Name:       endpoint.NewEndpointNameCommon("name2"),
 			Targets:    endpoint.Targets{"target2"},
 			RecordTTL:  endpoint.TTL(1),
 			RecordType: endpoint.RecordTypeCNAME,
@@ -283,13 +283,13 @@ func TestExoscaleMerge_AlwaysUpdateTarget(t *testing.T) {
 
 	updateNew := []*endpoint.Endpoint{
 		{
-			DNSName:    "name1",
+			Name:       endpoint.NewEndpointNameCommon("name1"),
 			Targets:    endpoint.Targets{"target1-changed"},
 			RecordTTL:  endpoint.TTL(0),
 			RecordType: endpoint.RecordTypeCNAME,
 		},
 		{
-			DNSName:    "name2",
+			Name:       endpoint.NewEndpointNameCommon("name2"),
 			Targets:    endpoint.Targets{"target2"},
 			RecordTTL:  endpoint.TTL(0),
 			RecordType: endpoint.RecordTypeCNAME,
@@ -304,13 +304,13 @@ func TestExoscaleMerge_AlwaysUpdateTarget(t *testing.T) {
 func TestExoscaleMerge_NoUpdateIfTTLUnchanged(t *testing.T) {
 	updateOld := []*endpoint.Endpoint{
 		{
-			DNSName:    "name1",
+			Name:       endpoint.NewEndpointNameCommon("name1"),
 			Targets:    endpoint.Targets{"target1"},
 			RecordTTL:  endpoint.TTL(55),
 			RecordType: endpoint.RecordTypeCNAME,
 		},
 		{
-			DNSName:    "name2",
+			Name:       endpoint.NewEndpointNameCommon("name2"),
 			Targets:    endpoint.Targets{"target2"},
 			RecordTTL:  endpoint.TTL(55),
 			RecordType: endpoint.RecordTypeCNAME,
@@ -319,13 +319,13 @@ func TestExoscaleMerge_NoUpdateIfTTLUnchanged(t *testing.T) {
 
 	updateNew := []*endpoint.Endpoint{
 		{
-			DNSName:    "name1",
+			Name:       endpoint.NewEndpointNameCommon("name1"),
 			Targets:    endpoint.Targets{"target1"},
 			RecordTTL:  endpoint.TTL(55),
 			RecordType: endpoint.RecordTypeCNAME,
 		},
 		{
-			DNSName:    "name2",
+			Name:       endpoint.NewEndpointNameCommon("name2"),
 			Targets:    endpoint.Targets{"target2"},
 			RecordTTL:  endpoint.TTL(55),
 			RecordType: endpoint.RecordTypeCNAME,

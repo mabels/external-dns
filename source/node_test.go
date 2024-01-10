@@ -110,7 +110,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 			map[string]string{},
 			map[string]string{},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1", Targets: endpoint.Targets{"1.2.3.4"}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 			false,
 		},
@@ -123,7 +123,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 			map[string]string{},
 			map[string]string{},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1.example.org", Targets: endpoint.Targets{"1.2.3.4"}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1.example.org"), Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 			false,
 		},
@@ -136,7 +136,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 			map[string]string{},
 			map[string]string{},
 			[]*endpoint.Endpoint{
-				{RecordType: "AAAA", DNSName: "node1.example.org", Targets: endpoint.Targets{"2001:DB8::8"}},
+				{RecordType: "AAAA", Name: endpoint.NewEndpointNameCommon("node1.example.org"), Targets: endpoint.Targets{"2001:DB8::8"}},
 			},
 			false,
 		},
@@ -149,7 +149,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 			map[string]string{},
 			map[string]string{},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1.example.org", Targets: endpoint.Targets{"1.2.3.4"}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1.example.org"), Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 			false,
 		},
@@ -162,7 +162,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 			map[string]string{},
 			map[string]string{},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1.example.org.example.org", Targets: endpoint.Targets{"1.2.3.4"}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1.example.org.example.org"), Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 			false,
 		},
@@ -175,7 +175,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 			map[string]string{},
 			map[string]string{},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1.example.org", Targets: endpoint.Targets{"1.2.3.4", "5.6.7.8"}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1.example.org"), Targets: endpoint.Targets{"1.2.3.4", "5.6.7.8"}},
 			},
 			false,
 		},
@@ -188,8 +188,8 @@ func testNodeSourceEndpoints(t *testing.T) {
 			map[string]string{},
 			map[string]string{},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1.example.org", Targets: endpoint.Targets{"1.2.3.4"}},
-				{RecordType: "AAAA", DNSName: "node1.example.org", Targets: endpoint.Targets{"2001:DB8::8"}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1.example.org"), Targets: endpoint.Targets{"1.2.3.4"}},
+				{RecordType: "AAAA", Name: endpoint.NewEndpointNameCommon("node1.example.org"), Targets: endpoint.Targets{"2001:DB8::8"}},
 			},
 			false,
 		},
@@ -202,7 +202,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 			map[string]string{},
 			map[string]string{},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1", Targets: endpoint.Targets{"1.2.3.4"}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 			false,
 		},
@@ -215,8 +215,8 @@ func testNodeSourceEndpoints(t *testing.T) {
 			map[string]string{},
 			map[string]string{},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1", Targets: endpoint.Targets{"1.2.3.4"}},
-				{RecordType: "AAAA", DNSName: "node1", Targets: endpoint.Targets{"2001:DB8::8"}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"1.2.3.4"}},
+				{RecordType: "AAAA", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"2001:DB8::8"}},
 			},
 			false,
 		},
@@ -229,7 +229,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 			map[string]string{},
 			map[string]string{},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1", Targets: endpoint.Targets{"2.3.4.5"}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"2.3.4.5"}},
 			},
 			false,
 		},
@@ -242,8 +242,8 @@ func testNodeSourceEndpoints(t *testing.T) {
 			map[string]string{},
 			map[string]string{},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1", Targets: endpoint.Targets{"2.3.4.5"}},
-				{RecordType: "AAAA", DNSName: "node1", Targets: endpoint.Targets{"2001:DB8::8"}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"2.3.4.5"}},
+				{RecordType: "AAAA", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"2001:DB8::8"}},
 			},
 			false,
 		},
@@ -269,7 +269,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 				"service.beta.kubernetes.io/external-traffic": "OnlyLocal",
 			},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1", Targets: endpoint.Targets{"1.2.3.4"}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 			false,
 		},
@@ -284,7 +284,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 				"service.beta.kubernetes.io/external-traffic": "OnlyLocal",
 			},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1", Targets: endpoint.Targets{"1.2.3.4"}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 			false,
 		},
@@ -312,7 +312,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 				controllerAnnotationKey: controllerAnnotationValue,
 			},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1", Targets: endpoint.Targets{"1.2.3.4"}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 			false,
 		},
@@ -338,7 +338,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 			map[string]string{},
 			map[string]string{},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1", Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(0)},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(0)},
 			},
 			false,
 		},
@@ -353,7 +353,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 				ttlAnnotationKey: "foo",
 			},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1", Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(0)},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(0)},
 			},
 			false,
 		},
@@ -368,7 +368,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 				ttlAnnotationKey: "10",
 			},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1", Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(10)},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(10)},
 			},
 			false,
 		},
@@ -381,7 +381,7 @@ func testNodeSourceEndpoints(t *testing.T) {
 			nil,
 			map[string]string{},
 			[]*endpoint.Endpoint{
-				{RecordType: "A", DNSName: "node1", Targets: endpoint.Targets{"1.2.3.4"}, Labels: map[string]string{}},
+				{RecordType: "A", Name: endpoint.NewEndpointNameCommon("node1"), Targets: endpoint.Targets{"1.2.3.4"}, Labels: map[string]string{}},
 			},
 			false,
 		},

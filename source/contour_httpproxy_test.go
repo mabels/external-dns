@@ -220,7 +220,7 @@ func testEndpointsFromHTTPProxy(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "foo.bar",
+					Name: endpoint.NewEndpointNameCommon("foo.bar"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"lb.com"},
 				},
@@ -236,7 +236,7 @@ func testEndpointsFromHTTPProxy(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "foo.bar",
+					Name: endpoint.NewEndpointNameCommon("foo.bar"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"8.8.8.8"},
 				},
@@ -253,12 +253,12 @@ func testEndpointsFromHTTPProxy(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "foo.bar",
+					Name: endpoint.NewEndpointNameCommon("foo.bar"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"8.8.8.8", "127.0.0.1"},
 				},
 				{
-					DNSName:    "foo.bar",
+					Name: endpoint.NewEndpointNameCommon("foo.bar"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"elb.com", "alb.com"},
 				},
@@ -346,22 +346,22 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"8.8.8.8"},
 				},
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"lb.com"},
 				},
 				{
-					DNSName:    "new.org",
+					Name: endpoint.NewEndpointNameCommon("new.org"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"8.8.8.8"},
 				},
 				{
-					DNSName:    "new.org",
+					Name: endpoint.NewEndpointNameCommon("new.org"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"lb.com"},
 				},
@@ -388,22 +388,22 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"8.8.8.8"},
 				},
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"lb.com"},
 				},
 				{
-					DNSName:    "new.org",
+					Name: endpoint.NewEndpointNameCommon("new.org"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"8.8.8.8"},
 				},
 				{
-					DNSName:    "new.org",
+					Name: endpoint.NewEndpointNameCommon("new.org"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"lb.com"},
 				},
@@ -430,12 +430,12 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"8.8.8.8"},
 				},
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"lb.com"},
 				},
@@ -460,7 +460,7 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"8.8.8.8"},
 				},
@@ -524,7 +524,7 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"8.8.8.8"},
 				},
@@ -567,7 +567,7 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"8.8.8.8"},
 				},
@@ -610,12 +610,12 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "fake1.ext-dns.test.com",
+					Name: endpoint.NewEndpointNameCommon("fake1.ext-dns.test.com"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"8.8.8.8"},
 				},
 				{
-					DNSName:    "fake1.ext-dns.test.com",
+					Name: endpoint.NewEndpointNameCommon("fake1.ext-dns.test.com"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"elb.com"},
 				},
@@ -657,12 +657,12 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "fake1.ext-dns.test.com",
+					Name: endpoint.NewEndpointNameCommon("fake1.ext-dns.test.com"),
 					Targets:    endpoint.Targets{"8.8.8.8"},
 					RecordType: endpoint.RecordTypeA,
 				},
 				{
-					DNSName:    "fake1.ext-dna.test.com",
+					Name: endpoint.NewEndpointNameCommon("fake1.ext-dna.test.com"),
 					Targets:    endpoint.Targets{"8.8.8.8"},
 					RecordType: endpoint.RecordTypeA,
 				},
@@ -693,27 +693,27 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "fake1.ext-dns.test.com",
+					Name: endpoint.NewEndpointNameCommon("fake1.ext-dns.test.com"),
 					Targets:    endpoint.Targets{"8.8.8.8"},
 					RecordType: endpoint.RecordTypeA,
 				},
 				{
-					DNSName:    "fake1.ext-dna.test.com",
+					Name: endpoint.NewEndpointNameCommon("fake1.ext-dna.test.com"),
 					Targets:    endpoint.Targets{"8.8.8.8"},
 					RecordType: endpoint.RecordTypeA,
 				},
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					Targets:    endpoint.Targets{"httpproxy-target.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 				},
 				{
-					DNSName:    "fake2.ext-dns.test.com",
+					Name: endpoint.NewEndpointNameCommon("fake2.ext-dns.test.com"),
 					Targets:    endpoint.Targets{"httpproxy-target.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 				},
 				{
-					DNSName:    "fake2.ext-dna.test.com",
+					Name: endpoint.NewEndpointNameCommon("fake2.ext-dna.test.com"),
 					Targets:    endpoint.Targets{"httpproxy-target.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 				},
@@ -755,17 +755,17 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					Targets:    endpoint.Targets{"httpproxy-target.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 				},
 				{
-					DNSName:    "example2.org",
+					Name: endpoint.NewEndpointNameCommon("example2.org"),
 					Targets:    endpoint.Targets{"httpproxy-target.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 				},
 				{
-					DNSName:    "example3.org",
+					Name: endpoint.NewEndpointNameCommon("example3.org"),
 					Targets:    endpoint.Targets{"1.2.3.4"},
 					RecordType: endpoint.RecordTypeA,
 				},
@@ -789,12 +789,12 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					Targets:    endpoint.Targets{"1.2.3.4"},
 					RecordType: endpoint.RecordTypeA,
 				},
 				{
-					DNSName:    "dns-through-hostname.com",
+					Name: endpoint.NewEndpointNameCommon("dns-through-hostname.com"),
 					Targets:    endpoint.Targets{"1.2.3.4"},
 					RecordType: endpoint.RecordTypeA,
 				},
@@ -818,17 +818,17 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					Targets:    endpoint.Targets{"1.2.3.4"},
 					RecordType: endpoint.RecordTypeA,
 				},
 				{
-					DNSName:    "dns-through-hostname.com",
+					Name: endpoint.NewEndpointNameCommon("dns-through-hostname.com"),
 					Targets:    endpoint.Targets{"1.2.3.4"},
 					RecordType: endpoint.RecordTypeA,
 				},
 				{
-					DNSName:    "another-dns-through-hostname.com",
+					Name: endpoint.NewEndpointNameCommon("another-dns-through-hostname.com"),
 					Targets:    endpoint.Targets{"1.2.3.4"},
 					RecordType: endpoint.RecordTypeA,
 				},
@@ -853,12 +853,12 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					Targets:    endpoint.Targets{"httpproxy-target.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 				},
 				{
-					DNSName:    "dns-through-hostname.com",
+					Name: endpoint.NewEndpointNameCommon("dns-through-hostname.com"),
 					Targets:    endpoint.Targets{"httpproxy-target.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 				},
@@ -901,19 +901,19 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"httpproxy-target.com"},
 					RecordTTL:  endpoint.TTL(6),
 				},
 				{
-					DNSName:    "example2.org",
+					Name: endpoint.NewEndpointNameCommon("example2.org"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"httpproxy-target.com"},
 					RecordTTL:  endpoint.TTL(1),
 				},
 				{
-					DNSName:    "example3.org",
+					Name: endpoint.NewEndpointNameCommon("example3.org"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"httpproxy-target.com"},
 					RecordTTL:  endpoint.TTL(10),
@@ -955,17 +955,17 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "fake1.ext-dns.test.com",
+					Name: endpoint.NewEndpointNameCommon("fake1.ext-dns.test.com"),
 					Targets:    endpoint.Targets{"httpproxy-target.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 				},
 				{
-					DNSName:    "fake2.ext-dns.test.com",
+					Name: endpoint.NewEndpointNameCommon("fake2.ext-dns.test.com"),
 					Targets:    endpoint.Targets{"httpproxy-target.com"},
 					RecordType: endpoint.RecordTypeCNAME,
 				},
 				{
-					DNSName:    "fake3.ext-dns.test.com",
+					Name: endpoint.NewEndpointNameCommon("fake3.ext-dns.test.com"),
 					Targets:    endpoint.Targets{"1.2.3.4"},
 					RecordType: endpoint.RecordTypeA,
 				},
@@ -1019,22 +1019,22 @@ func testHTTPProxyEndpoints(t *testing.T) {
 			},
 			expected: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"8.8.8.8"},
 				},
 				{
-					DNSName:    "example.org",
+					Name: endpoint.NewEndpointNameCommon("example.org"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"lb.com"},
 				},
 				{
-					DNSName:    "new.org",
+					Name: endpoint.NewEndpointNameCommon("new.org"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"8.8.8.8"},
 				},
 				{
-					DNSName:    "new.org",
+					Name: endpoint.NewEndpointNameCommon("new.org"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"lb.com"},
 				},

@@ -191,7 +191,7 @@ func TestNS1BuildRecord(t *testing.T) {
 	change := &ns1Change{
 		Action: ns1Create,
 		Endpoint: &endpoint.Endpoint{
-			DNSName:    "new",
+			Name:       endpoint.NewEndpointNameCommon("new"),
 			Targets:    endpoint.Targets{"target"},
 			RecordType: "A",
 		},
@@ -212,7 +212,7 @@ func TestNS1BuildRecord(t *testing.T) {
 	changeWithTTL := &ns1Change{
 		Action: ns1Create,
 		Endpoint: &endpoint.Endpoint{
-			DNSName:    "new-b",
+			Name:       endpoint.NewEndpointNameCommon("new-b"),
 			Targets:    endpoint.Targets{"target"},
 			RecordType: "A",
 			RecordTTL:  3600,
@@ -230,11 +230,11 @@ func TestNS1ApplyChanges(t *testing.T) {
 		client: &MockNS1DomainClient{},
 	}
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "new.foo.com", Targets: endpoint.Targets{"target"}},
-		{DNSName: "new.subdomain.bar.com", Targets: endpoint.Targets{"target"}},
+		{Name: endpoint.NewEndpointNameCommon("new.foo.com"), Targets: endpoint.Targets{"target"}},
+		{Name: endpoint.NewEndpointNameCommon("new.subdomain.bar.com"), Targets: endpoint.Targets{"target"}},
 	}
-	changes.Delete = []*endpoint.Endpoint{{DNSName: "test.foo.com", Targets: endpoint.Targets{"target"}}}
-	changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "test.foo.com", Targets: endpoint.Targets{"target-new"}}}
+	changes.Delete = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test.foo.com"), Targets: endpoint.Targets{"target"}}}
+	changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("test.foo.com"), Targets: endpoint.Targets{"target-new"}}}
 	err := provider.ApplyChanges(context.Background(), changes)
 	require.NoError(t, err)
 
@@ -249,12 +249,12 @@ func TestNS1ApplyChanges(t *testing.T) {
 func TestNewNS1Changes(t *testing.T) {
 	endpoints := []*endpoint.Endpoint{
 		{
-			DNSName:    "testa.foo.com",
+			Name:       endpoint.NewEndpointNameCommon("testa.foo.com"),
 			Targets:    endpoint.Targets{"target-old"},
 			RecordType: "A",
 		},
 		{
-			DNSName:    "testba.bar.com",
+			Name:       endpoint.NewEndpointNameCommon("testba.bar.com"),
 			Targets:    endpoint.Targets{"target-new"},
 			RecordType: "A",
 		},
@@ -283,7 +283,7 @@ func TestNewNS1ChangesByZone(t *testing.T) {
 		{
 			Action: "ns1Create",
 			Endpoint: &endpoint.Endpoint{
-				DNSName:    "new.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("new.foo.com"),
 				Targets:    endpoint.Targets{"target"},
 				RecordType: "A",
 			},
@@ -291,7 +291,7 @@ func TestNewNS1ChangesByZone(t *testing.T) {
 		{
 			Action: "ns1Create",
 			Endpoint: &endpoint.Endpoint{
-				DNSName:    "unrelated.bar.com",
+				Name:       endpoint.NewEndpointNameCommon("unrelated.bar.com"),
 				Targets:    endpoint.Targets{"target"},
 				RecordType: "A",
 			},
@@ -299,7 +299,7 @@ func TestNewNS1ChangesByZone(t *testing.T) {
 		{
 			Action: "ns1Delete",
 			Endpoint: &endpoint.Endpoint{
-				DNSName:    "test.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("test.foo.com"),
 				Targets:    endpoint.Targets{"target"},
 				RecordType: "A",
 			},
@@ -307,7 +307,7 @@ func TestNewNS1ChangesByZone(t *testing.T) {
 		{
 			Action: "ns1Update",
 			Endpoint: &endpoint.Endpoint{
-				DNSName:    "test.foo.com",
+				Name:       endpoint.NewEndpointNameCommon("test.foo.com"),
 				Targets:    endpoint.Targets{"target-new"},
 				RecordType: "A",
 			},

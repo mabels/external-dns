@@ -73,8 +73,8 @@ func TestAServiceTranslation(t *testing.T) {
 	if len(endpoints) != 1 {
 		t.Fatalf("got unexpected number of endpoints: %d", len(endpoints))
 	}
-	if endpoints[0].DNSName != expectedDNSName {
-		t.Errorf("got unexpected DNS name: %s != %s", endpoints[0].DNSName, expectedDNSName)
+	if endpoints[0].Name.Fqdn() != expectedDNSName {
+		t.Errorf("got unexpected DNS name: %s != %s", endpoints[0].Name.Fqdn(), expectedDNSName)
 	}
 	if endpoints[0].Targets[0] != expectedTarget {
 		t.Errorf("got unexpected DNS target: %s != %s", endpoints[0].Targets[0], expectedTarget)
@@ -105,8 +105,8 @@ func TestCNAMEServiceTranslation(t *testing.T) {
 	if len(endpoints) != 1 {
 		t.Fatalf("got unexpected number of endpoints: %d", len(endpoints))
 	}
-	if endpoints[0].DNSName != expectedDNSName {
-		t.Errorf("got unexpected DNS name: %s != %s", endpoints[0].DNSName, expectedDNSName)
+	if endpoints[0].Name.Fqdn() != expectedDNSName {
+		t.Errorf("got unexpected DNS name: %s != %s", endpoints[0].Name.Fqdn(), expectedDNSName)
 	}
 	if endpoints[0].Targets[0] != expectedTarget {
 		t.Errorf("got unexpected DNS target: %s != %s", endpoints[0].Targets[0], expectedTarget)
@@ -137,8 +137,8 @@ func TestTXTServiceTranslation(t *testing.T) {
 	if len(endpoints) != 1 {
 		t.Fatalf("got unexpected number of endpoints: %d", len(endpoints))
 	}
-	if endpoints[0].DNSName != expectedDNSName {
-		t.Errorf("got unexpected DNS name: %s != %s", endpoints[0].DNSName, expectedDNSName)
+	if endpoints[0].Name.Fqdn() != expectedDNSName {
+		t.Errorf("got unexpected DNS name: %s != %s", endpoints[0].Name.Fqdn(), expectedDNSName)
 	}
 	if endpoints[0].Targets[0] != expectedTarget {
 		t.Errorf("got unexpected DNS target: %s != %s", endpoints[0].Targets[0], expectedTarget)
@@ -180,8 +180,8 @@ func TestAWithTXTServiceTranslation(t *testing.T) {
 		}
 		delete(expectedTargets, ep.RecordType)
 
-		if ep.DNSName != expectedDNSName {
-			t.Errorf("got unexpected DNS name: %s != %s", ep.DNSName, expectedDNSName)
+		if ep.Name.Fqdn() != expectedDNSName {
+			t.Errorf("got unexpected DNS name: %s != %s", ep.Name.Fqdn(), expectedDNSName)
 		}
 
 		if ep.Targets[0] != expectedTarget {
@@ -222,8 +222,8 @@ func TestCNAMEWithTXTServiceTranslation(t *testing.T) {
 		}
 		delete(expectedTargets, ep.RecordType)
 
-		if ep.DNSName != expectedDNSName {
-			t.Errorf("got unexpected DNS name: %s != %s", ep.DNSName, expectedDNSName)
+		if ep.Name.Fqdn() != expectedDNSName {
+			t.Errorf("got unexpected DNS name: %s != %s", ep.Name.Fqdn(), expectedDNSName)
 		}
 
 		if ep.Targets[0] != expectedTarget {
@@ -243,9 +243,9 @@ func TestCoreDNSApplyChanges(t *testing.T) {
 
 	changes1 := &plan.Changes{
 		Create: []*endpoint.Endpoint{
-			endpoint.NewEndpoint("domain1.local", endpoint.RecordTypeA, "5.5.5.5"),
-			endpoint.NewEndpoint("domain1.local", endpoint.RecordTypeTXT, "string1"),
-			endpoint.NewEndpoint("domain2.local", endpoint.RecordTypeCNAME, "site.local"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("domain1.local"), endpoint.RecordTypeA, "5.5.5.5"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("domain1.local"), endpoint.RecordTypeTXT, "string1"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("domain2.local"), endpoint.RecordTypeCNAME, "site.local"),
 		},
 	}
 	coredns.ApplyChanges(context.Background(), changes1)
@@ -258,15 +258,15 @@ func TestCoreDNSApplyChanges(t *testing.T) {
 
 	changes2 := &plan.Changes{
 		Create: []*endpoint.Endpoint{
-			endpoint.NewEndpoint("domain3.local", endpoint.RecordTypeA, "7.7.7.7"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("domain3.local"), endpoint.RecordTypeA, "7.7.7.7"),
 		},
 		UpdateNew: []*endpoint.Endpoint{
-			endpoint.NewEndpoint("domain1.local", "A", "6.6.6.6"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("domain1.local"), "A", "6.6.6.6"),
 		},
 	}
 	records, _ := coredns.Records(context.Background())
 	for _, ep := range records {
-		if ep.DNSName == "domain1.local" {
+		if ep.Name.Fqdn() == "domain1.local" {
 			changes2.UpdateOld = append(changes2.UpdateOld, ep)
 		}
 	}
@@ -281,9 +281,9 @@ func TestCoreDNSApplyChanges(t *testing.T) {
 
 	changes3 := &plan.Changes{
 		Delete: []*endpoint.Endpoint{
-			endpoint.NewEndpoint("domain1.local", endpoint.RecordTypeA, "6.6.6.6"),
-			endpoint.NewEndpoint("domain1.local", endpoint.RecordTypeTXT, "string"),
-			endpoint.NewEndpoint("domain3.local", endpoint.RecordTypeA, "7.7.7.7"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("domain1.local"), endpoint.RecordTypeA, "6.6.6.6"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("domain1.local"), endpoint.RecordTypeTXT, "string"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("domain3.local"), endpoint.RecordTypeA, "7.7.7.7"),
 		},
 	}
 
@@ -297,9 +297,9 @@ func TestCoreDNSApplyChanges(t *testing.T) {
 	// Test for multiple A records for the same FQDN
 	changes4 := &plan.Changes{
 		Create: []*endpoint.Endpoint{
-			endpoint.NewEndpoint("domain1.local", endpoint.RecordTypeA, "5.5.5.5"),
-			endpoint.NewEndpoint("domain1.local", endpoint.RecordTypeA, "6.6.6.6"),
-			endpoint.NewEndpoint("domain1.local", endpoint.RecordTypeA, "7.7.7.7"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("domain1.local"), endpoint.RecordTypeA, "5.5.5.5"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("domain1.local"), endpoint.RecordTypeA, "6.6.6.6"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("domain1.local"), endpoint.RecordTypeA, "7.7.7.7"),
 		},
 	}
 	coredns.ApplyChanges(context.Background(), changes4)
@@ -319,7 +319,7 @@ func applyServiceChanges(provider coreDNSProvider, changes *plan.Changes) {
 	for _, col := range [][]*endpoint.Endpoint{changes.Create, changes.UpdateNew, changes.Delete} {
 		for _, record := range col {
 			for _, existingRecord := range records {
-				if existingRecord.DNSName == record.DNSName && existingRecord.RecordType == record.RecordType {
+				if existingRecord.Name.Fqdn() == record.Name.Fqdn() && existingRecord.RecordType == record.RecordType {
 					mergeLabels(record, existingRecord.Labels)
 				}
 			}

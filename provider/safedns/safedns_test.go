@@ -196,42 +196,42 @@ func TestRecords(t *testing.T) {
 
 	expected := []*endpoint.Endpoint{
 		{
-			DNSName:    "foo.com",
+			Name:       endpoint.NewEndpointNameCommon("foo.com"),
 			Targets:    []string{"targetFoo"},
 			RecordType: "A",
 			RecordTTL:  3600,
 			Labels:     endpoint.NewLabels(),
 		},
 		{
-			DNSName:    "foo.com",
+			Name:       endpoint.NewEndpointNameCommon("foo.com"),
 			Targets:    []string{"text"},
 			RecordType: "TXT",
 			RecordTTL:  3600,
 			Labels:     endpoint.NewLabels(),
 		},
 		{
-			DNSName:    "baz.org",
+			Name:       endpoint.NewEndpointNameCommon("baz.org"),
 			Targets:    []string{"targetBaz"},
 			RecordType: "A",
 			RecordTTL:  3600,
 			Labels:     endpoint.NewLabels(),
 		},
 		{
-			DNSName:    "baz.org",
+			Name:       endpoint.NewEndpointNameCommon("baz.org"),
 			Targets:    []string{"text"},
 			RecordType: "TXT",
 			RecordTTL:  3600,
 			Labels:     endpoint.NewLabels(),
 		},
 		{
-			DNSName:    "api.baz.org",
+			Name:       endpoint.NewEndpointNameCommon("api.baz.org"),
 			Targets:    []string{"targetBazAPI"},
 			RecordType: "A",
 			RecordTTL:  3600,
 			Labels:     endpoint.NewLabels(),
 		},
 		{
-			DNSName:    "api.baz.org",
+			Name:       endpoint.NewEndpointNameCommon("api.baz.org"),
 			Targets:    []string{"text"},
 			RecordType: "TXT",
 			RecordTTL:  3600,
@@ -328,13 +328,13 @@ func TestSafeDNSApplyChanges(t *testing.T) {
 	err := provider.ApplyChanges(context.Background(), &plan.Changes{
 		Create: []*endpoint.Endpoint{
 			{
-				DNSName:    "create.bar.io",
+				Name:       endpoint.NewEndpointNameCommon("create.bar.io"),
 				RecordType: "A",
 				Targets:    []string{"targetBar"},
 				RecordTTL:  3600,
 			},
 			{
-				DNSName:    "bar.io",
+				Name:       endpoint.NewEndpointNameCommon("bar.io"),
 				RecordType: "A",
 				Targets:    []string{"targetBar"},
 				RecordTTL:  3600,
@@ -342,17 +342,17 @@ func TestSafeDNSApplyChanges(t *testing.T) {
 		},
 		Delete: []*endpoint.Endpoint{
 			{
-				DNSName:    "api.baz.org",
+				Name:       endpoint.NewEndpointNameCommon("api.baz.org"),
 				RecordType: "A",
 			},
 			{
-				DNSName:    "api.baz.org",
+				Name:       endpoint.NewEndpointNameCommon("api.baz.org"),
 				RecordType: "TXT",
 			},
 		},
 		UpdateNew: []*endpoint.Endpoint{
 			{
-				DNSName:    "foo.com",
+				Name:       endpoint.NewEndpointNameCommon("foo.com"),
 				RecordType: "A",
 				RecordTTL:  300,
 				Targets:    []string{"targetFoo"},

@@ -101,22 +101,22 @@ func TestPluralRecords(t *testing.T) {
 			},
 			expectedEndpoints: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.com",
+					Name:       endpoint.NewEndpointNameCommon("example.com"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"123.123.123.122"},
 				},
 				{
-					DNSName:    "nginx.example.com",
+					Name:       endpoint.NewEndpointNameCommon("nginx.example.com"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"123.123.123.123"},
 				},
 				{
-					DNSName:    "hack.example.com",
+					Name:       endpoint.NewEndpointNameCommon("hack.example.com"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"bluecatnetworks.com"},
 				},
 				{
-					DNSName:    "kdb.example.com",
+					Name:       endpoint.NewEndpointNameCommon("kdb.example.com"),
 					RecordType: endpoint.RecordTypeTXT,
 					Targets:    endpoint.Targets{"heritage=external-dns,external-dns/owner=default,external-dns/resource=service/openshift-ingress/router-default"},
 				},
@@ -146,22 +146,22 @@ func TestPluralApplyChangesCreate(t *testing.T) {
 			name: "create new endpoints",
 			expectedEndpoints: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.com",
+					Name:       endpoint.NewEndpointNameCommon("example.com"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"123.123.123.122"},
 				},
 				{
-					DNSName:    "nginx.example.com",
+					Name:       endpoint.NewEndpointNameCommon("nginx.example.com"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"123.123.123.123"},
 				},
 				{
-					DNSName:    "hack.example.com",
+					Name:       endpoint.NewEndpointNameCommon("hack.example.com"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"bluecatnetworks.com"},
 				},
 				{
-					DNSName:    "kdb.example.com",
+					Name:       endpoint.NewEndpointNameCommon("kdb.example.com"),
 					RecordType: endpoint.RecordTypeTXT,
 					Targets:    endpoint.Targets{"heritage=external-dns,external-dns/owner=default,external-dns/resource=service/openshift-ingress/router-default"},
 				},
@@ -227,29 +227,29 @@ func TestPluralApplyChangesDelete(t *testing.T) {
 			},
 			deleteEndpoints: []*endpoint.Endpoint{
 				{
-					DNSName:    "fake.com",
+					Name:       endpoint.NewEndpointNameCommon("fake.com"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"1.2.3.4"},
 				},
 			},
 			expectedEndpoints: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.com",
+					Name:       endpoint.NewEndpointNameCommon("example.com"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"123.123.123.122"},
 				},
 				{
-					DNSName:    "nginx.example.com",
+					Name:       endpoint.NewEndpointNameCommon("nginx.example.com"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"123.123.123.123"},
 				},
 				{
-					DNSName:    "hack.example.com",
+					Name:       endpoint.NewEndpointNameCommon("hack.example.com"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"bluecatnetworks.com"},
 				},
 				{
-					DNSName:    "kdb.example.com",
+					Name:       endpoint.NewEndpointNameCommon("kdb.example.com"),
 					RecordType: endpoint.RecordTypeTXT,
 					Targets:    endpoint.Targets{"heritage=external-dns,external-dns/owner=default,external-dns/resource=service/openshift-ingress/router-default"},
 				},
@@ -281,24 +281,24 @@ func TestPluralApplyChangesDelete(t *testing.T) {
 			},
 			deleteEndpoints: []*endpoint.Endpoint{
 				{
-					DNSName:    "kdb.example.com",
+					Name:       endpoint.NewEndpointNameCommon("kdb.example.com"),
 					RecordType: endpoint.RecordTypeTXT,
 					Targets:    endpoint.Targets{"heritage=external-dns,external-dns/owner=default,external-dns/resource=service/openshift-ingress/router-default"},
 				},
 			},
 			expectedEndpoints: []*endpoint.Endpoint{
 				{
-					DNSName:    "example.com",
+					Name:       endpoint.NewEndpointNameCommon("example.com"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"123.123.123.122"},
 				},
 				{
-					DNSName:    "nginx.example.com",
+					Name:       endpoint.NewEndpointNameCommon("nginx.example.com"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"123.123.123.123"},
 				},
 				{
-					DNSName:    "hack.example.com",
+					Name:       endpoint.NewEndpointNameCommon("hack.example.com"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"bluecatnetworks.com"},
 				},
@@ -330,22 +330,22 @@ func TestPluralApplyChangesDelete(t *testing.T) {
 			},
 			deleteEndpoints: []*endpoint.Endpoint{
 				{
-					DNSName:    "kdb.example.com",
+					Name:       endpoint.NewEndpointNameCommon("kdb.example.com"),
 					RecordType: endpoint.RecordTypeTXT,
 					Targets:    endpoint.Targets{"heritage=external-dns,external-dns/owner=default,external-dns/resource=service/openshift-ingress/router-default"},
 				},
 				{
-					DNSName:    "example.com",
+					Name:       endpoint.NewEndpointNameCommon("example.com"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"123.123.123.122"},
 				},
 				{
-					DNSName:    "nginx.example.com",
+					Name:       endpoint.NewEndpointNameCommon("nginx.example.com"),
 					RecordType: endpoint.RecordTypeA,
 					Targets:    endpoint.Targets{"123.123.123.123"},
 				},
 				{
-					DNSName:    "hack.example.com",
+					Name:       endpoint.NewEndpointNameCommon("hack.example.com"),
 					RecordType: endpoint.RecordTypeCNAME,
 					Targets:    endpoint.Targets{"bluecatnetworks.com"},
 				},

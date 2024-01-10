@@ -69,7 +69,7 @@ func TestAWSSDRegistryTest_Records(t *testing.T) {
 	}, nil)
 	expectedRecords := []*endpoint.Endpoint{
 		{
-			DNSName:    "foo1.test-zone.example.org",
+			Name:       endpoint.NewEndpointNameCommon("foo1.test-zone.example.org"),
 			Targets:    endpoint.Targets{"1.2.3.4"},
 			RecordType: endpoint.RecordTypeA,
 			Labels: map[string]string{
@@ -77,7 +77,7 @@ func TestAWSSDRegistryTest_Records(t *testing.T) {
 			},
 		},
 		{
-			DNSName:    "foo2.test-zone.example.org",
+			Name:       endpoint.NewEndpointNameCommon("foo2.test-zone.example.org"),
 			Targets:    endpoint.Targets{"1.2.3.4"},
 			RecordType: endpoint.RecordTypeA,
 			Labels: map[string]string{
@@ -85,7 +85,7 @@ func TestAWSSDRegistryTest_Records(t *testing.T) {
 			},
 		},
 		{
-			DNSName:    "foo3.test-zone.example.org",
+			Name:       endpoint.NewEndpointNameCommon("foo3.test-zone.example.org"),
 			Targets:    endpoint.Targets{"my-domain.com"},
 			RecordType: endpoint.RecordTypeCNAME,
 			Labels: map[string]string{
@@ -93,7 +93,7 @@ func TestAWSSDRegistryTest_Records(t *testing.T) {
 			},
 		},
 		{
-			DNSName:    "foo4.test-zone.example.org",
+			Name:       endpoint.NewEndpointNameCommon("foo4.test-zone.example.org"),
 			Targets:    endpoint.Targets{"my-domain.com"},
 			RecordType: endpoint.RecordTypeCNAME,
 			Labels: map[string]string{
@@ -160,7 +160,7 @@ func TestAWSSDRegistry_Records_ApplyChanges(t *testing.T) {
 }
 
 func newEndpointWithOwnerAndDescription(dnsName, target, recordType, ownerID string, description string) *endpoint.Endpoint {
-	e := endpoint.NewEndpoint(dnsName, recordType, target)
+	e := endpoint.NewEndpoint(endpoint.NewEndpointNameCommon(dnsName), recordType, target)
 	e.Labels[endpoint.OwnerLabelKey] = ownerID
 	e.Labels[endpoint.AWSSDDescriptionLabel] = description
 	return e

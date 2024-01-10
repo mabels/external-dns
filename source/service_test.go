@@ -235,7 +235,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -280,8 +280,8 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.fqdn.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "foo.fqdn.com", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.fqdn.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.fqdn.com"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -297,8 +297,8 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                      []string{"1.2.3.4"},
 			serviceTypesFilter:       []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.fqdn.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "foo.fqdn.com", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.fqdn.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.fqdn.com"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -316,10 +316,10 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "bar.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "foo.fqdn.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "foo.fqdn.com", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("bar.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.fqdn.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.fqdn.com"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -338,8 +338,8 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.fqdn.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "foo.fqdn.com", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.fqdn.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.fqdn.com"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -355,8 +355,8 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "bar.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("bar.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -372,8 +372,8 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "bar.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("bar.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -389,7 +389,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"lb.example.com"}, // Kubernetes omits the trailing dot
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"lb.example.com"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"lb.example.com"}},
 			},
 		},
 		{
@@ -406,8 +406,8 @@ func testServiceSourceEndpoints(t *testing.T) {
 			serviceTypesFilter:          []string{},
 			resolveLoadBalancerHostname: true,
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"93.184.216.34"}},
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2606:2800:220:1:248:1893:25c8:1946"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"93.184.216.34"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2606:2800:220:1:248:1893:25c8:1946"}},
 			},
 		},
 		{
@@ -423,8 +423,8 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4", "lb.example.com"}, // Kubernetes omits the trailing dot
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"lb.example.com"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"lb.example.com"}},
 			},
 		},
 		{
@@ -441,7 +441,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -474,7 +474,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -505,7 +505,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -523,7 +523,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -574,7 +574,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -620,7 +620,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"10.2.3.4", "11.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"10.2.3.4", "11.2.3.4"}},
 			},
 		},
 		{
@@ -636,7 +636,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4", "8.8.8.8"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4", "8.8.8.8"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4", "8.8.8.8"}},
 			},
 		},
 		{
@@ -667,7 +667,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -686,8 +686,8 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "bar.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("bar.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -704,8 +704,8 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4", "lb.example.com"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "internal.foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "internal.foo.example.org", RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"lb.example.com"}},
+				{Name: endpoint.NewEndpointNameCommon("internal.foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("internal.foo.example.org"), RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"lb.example.com"}},
 			},
 		},
 		{
@@ -723,10 +723,10 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "bar.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "internal.foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "internal.bar.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("bar.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("internal.foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("internal.bar.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -741,8 +741,8 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4", "elb.com"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.bar.example.com", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "foo.bar.example.com", RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"elb.com"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.bar.example.com"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.bar.example.com"), RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"elb.com"}},
 			},
 		},
 		{
@@ -759,8 +759,8 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4", "elb.com"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"elb.com"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"elb.com"}},
 			},
 		},
 		{
@@ -778,7 +778,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "mate.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("mate.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -808,7 +808,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(0)},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(0)},
 			},
 		},
 		{
@@ -825,7 +825,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(0)},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(0)},
 			},
 		},
 		{
@@ -842,7 +842,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(10)},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(10)},
 			},
 		},
 		{
@@ -859,7 +859,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(60)},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(60)},
 			},
 		},
 		{
@@ -876,7 +876,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(0)},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}, RecordTTL: endpoint.TTL(0)},
 			},
 		},
 		{
@@ -892,7 +892,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{string(v1.ServiceTypeLoadBalancer)},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -923,7 +923,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.internal.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.internal.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
 			},
 		},
 		{
@@ -941,8 +941,8 @@ func testServiceSourceEndpoints(t *testing.T) {
 			lbs:                []string{"1.2.3.4"},
 			serviceTypesFilter: []string{},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.internal.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.internal.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -960,7 +960,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			serviceLabelSelector: "app=web-external",
 			fqdnTemplate:         "{{.Name}}.bar.example.com",
 			expected: []*endpoint.Endpoint{
-				{DNSName: "fqdn.bar.example.com", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("fqdn.bar.example.com"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -978,7 +978,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			serviceLabelSelector: "app=web-external",
 			annotations:          map[string]string{hostnameAnnotationKey: "annotation.bar.example.com"},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "annotation.bar.example.com", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("annotation.bar.example.com"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -1025,8 +1025,8 @@ func testServiceSourceEndpoints(t *testing.T) {
 			serviceTypesFilter: []string{},
 			annotations:        map[string]string{hostnameAnnotationKey: "foobar.example.org"},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foobar.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
-				{DNSName: "foobar.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1"}},
+				{Name: endpoint.NewEndpointNameCommon("foobar.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("foobar.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1"}},
 			},
 		},
 		{
@@ -1041,7 +1041,7 @@ func testServiceSourceEndpoints(t *testing.T) {
 			serviceTypesFilter: []string{},
 			annotations:        map[string]string{hostnameAnnotationKey: "foobar-v6.example.org"},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foobar-v6.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::2"}},
+				{Name: endpoint.NewEndpointNameCommon("foobar-v6.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::2"}},
 			},
 		},
 	} {
@@ -1165,7 +1165,7 @@ func testMultipleServicesEndpoints(t *testing.T) {
 			},
 			[]string{},
 			[]*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/foo1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/foo1.2.3.4"}},
 			},
 			false,
 		},
@@ -1189,7 +1189,7 @@ func testMultipleServicesEndpoints(t *testing.T) {
 			},
 			[]string{},
 			[]*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4", "1.2.3.5", "1.2.3.6"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/foo1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4", "1.2.3.5", "1.2.3.6"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/foo1.2.3.4"}},
 			},
 			false,
 		},
@@ -1217,9 +1217,9 @@ func testMultipleServicesEndpoints(t *testing.T) {
 			},
 			[]string{},
 			[]*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4", "1.2.3.5", "1.2.3.6"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/foo1.2.3.4"}},
-				{DNSName: "bar.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"10.1.1.1", "10.1.1.2", "10.1.1.3"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/foo10.1.1.1"}},
-				{DNSName: "foobar.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"20.1.1.1"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/foo20.1.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4", "1.2.3.5", "1.2.3.6"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/foo1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("bar.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"10.1.1.1", "10.1.1.2", "10.1.1.3"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/foo10.1.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("foobar.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"20.1.1.1"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/foo20.1.1.1"}},
 			},
 			false,
 		},
@@ -1242,8 +1242,8 @@ func testMultipleServicesEndpoints(t *testing.T) {
 			},
 			[]string{},
 			[]*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"a.elb.com"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/fooa.elb.com"}, SetIdentifier: "a"},
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"b.elb.com"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/foob.elb.com"}, SetIdentifier: "b"},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"a.elb.com"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/fooa.elb.com"}, SetIdentifier: "a"},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"b.elb.com"}, Labels: map[string]string{endpoint.ResourceLabelKey: "service/testing/foob.elb.com"}, SetIdentifier: "b"},
 			},
 			false,
 		},
@@ -1312,10 +1312,10 @@ func testMultipleServicesEndpoints(t *testing.T) {
 			validateEndpoints(t, res, tc.expected)
 			// Test that endpoint resourceLabelKey matches desired endpoint
 			sort.SliceStable(res, func(i, j int) bool {
-				return strings.Compare(res[i].DNSName, res[j].DNSName) < 0
+				return strings.Compare(res[i].Name.Fqdn(), res[j].Name.Fqdn()) < 0
 			})
 			sort.SliceStable(tc.expected, func(i, j int) bool {
-				return strings.Compare(tc.expected[i].DNSName, tc.expected[j].DNSName) < 0
+				return strings.Compare(tc.expected[i].Name.Fqdn(), tc.expected[j].Name.Fqdn()) < 0
 			})
 
 			for i := range res {
@@ -1358,7 +1358,7 @@ func TestClusterIpServices(t *testing.T) {
 			},
 			clusterIP: "1.2.3.4",
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 		},
 		{
@@ -1372,7 +1372,7 @@ func TestClusterIpServices(t *testing.T) {
 			},
 			clusterIP: "1.2.3.4",
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"4.3.2.1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"4.3.2.1"}},
 			},
 		},
 		{
@@ -1386,7 +1386,7 @@ func TestClusterIpServices(t *testing.T) {
 			},
 			clusterIP: "1.2.3.4",
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"bar.example.org"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"bar.example.org"}},
 			},
 		},
 		{
@@ -1400,7 +1400,7 @@ func TestClusterIpServices(t *testing.T) {
 			},
 			clusterIP: "1.2.3.4",
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1"}},
 			},
 		},
 		{
@@ -1414,7 +1414,7 @@ func TestClusterIpServices(t *testing.T) {
 			},
 			clusterIP: "1.2.3.4",
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"bar.example.org", "baz.example.org"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"bar.example.org", "baz.example.org"}},
 			},
 		},
 		{
@@ -1428,8 +1428,8 @@ func TestClusterIpServices(t *testing.T) {
 			},
 			clusterIP: "1.2.3.4",
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"bar.example.org", "baz.example.org"}},
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"bar.example.org", "baz.example.org"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1"}},
 			},
 		},
 		{
@@ -1468,7 +1468,7 @@ func TestClusterIpServices(t *testing.T) {
 			},
 			clusterIP: "1.2.3.4",
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"bar.example.org"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"bar.example.org"}},
 			},
 		},
 		{
@@ -1479,7 +1479,7 @@ func TestClusterIpServices(t *testing.T) {
 			fqdnTemplate: "{{.Name}}.bar.example.com",
 			clusterIP:    "4.5.6.7",
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.bar.example.com", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"4.5.6.7"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.bar.example.com"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"4.5.6.7"}},
 			},
 		},
 		{
@@ -1501,7 +1501,7 @@ func TestClusterIpServices(t *testing.T) {
 			},
 			clusterIP: v1.ClusterIPNone,
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"bar.example.org"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"bar.example.org"}},
 			},
 		},
 		{
@@ -1513,7 +1513,7 @@ func TestClusterIpServices(t *testing.T) {
 			labels:       map[string]string{"app": "web-internal"},
 			clusterIP:    "4.5.6.7",
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.bar.example.com", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"4.5.6.7"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.bar.example.com"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"4.5.6.7"}},
 			},
 			labelSelector: "app=web-internal",
 		},
@@ -1527,7 +1527,7 @@ func TestClusterIpServices(t *testing.T) {
 			annotations:  map[string]string{targetAnnotationKey: "bar.example.com."},
 			clusterIP:    "4.5.6.7",
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.bar.example.com", RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"bar.example.com"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.bar.example.com"), RecordType: endpoint.RecordTypeCNAME, Targets: endpoint.Targets{"bar.example.com"}},
 			},
 			labelSelector: "app=web-internal",
 		},
@@ -1642,9 +1642,9 @@ func TestServiceSourceNodePortServices(t *testing.T) {
 				hostnameAnnotationKey: "foo.example.org.",
 			},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "_foo._tcp.foo.example.org", Targets: endpoint.Targets{"0 50 30192 foo.example.org"}, RecordType: endpoint.RecordTypeSRV},
-				{DNSName: "foo.example.org", Targets: endpoint.Targets{"54.10.11.1", "54.10.11.2"}, RecordType: endpoint.RecordTypeA},
-				{DNSName: "foo.example.org", Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
+				{Name: endpoint.NewEndpointNameCommon("_foo._tcp.foo.example.org"), Targets: endpoint.Targets{"0 50 30192 foo.example.org"}, RecordType: endpoint.RecordTypeSRV},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), Targets: endpoint.Targets{"54.10.11.1", "54.10.11.2"}, RecordType: endpoint.RecordTypeA},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
 			},
 			nodes: []*v1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1713,9 +1713,9 @@ func TestServiceSourceNodePortServices(t *testing.T) {
 			svcTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeCluster,
 			fqdnTemplate:     "{{.Name}}.bar.example.com",
 			expected: []*endpoint.Endpoint{
-				{DNSName: "_foo._tcp.foo.bar.example.com", Targets: endpoint.Targets{"0 50 30192 foo.bar.example.com"}, RecordType: endpoint.RecordTypeSRV},
-				{DNSName: "foo.bar.example.com", Targets: endpoint.Targets{"54.10.11.1", "54.10.11.2"}, RecordType: endpoint.RecordTypeA},
-				{DNSName: "foo.bar.example.com", Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
+				{Name: endpoint.NewEndpointNameCommon("_foo._tcp.foo.bar.example.com"), Targets: endpoint.Targets{"0 50 30192 foo.bar.example.com"}, RecordType: endpoint.RecordTypeSRV},
+				{Name: endpoint.NewEndpointNameCommon("foo.bar.example.com"), Targets: endpoint.Targets{"54.10.11.1", "54.10.11.2"}, RecordType: endpoint.RecordTypeA},
+				{Name: endpoint.NewEndpointNameCommon("foo.bar.example.com"), Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
 			},
 			nodes: []*v1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1751,9 +1751,9 @@ func TestServiceSourceNodePortServices(t *testing.T) {
 				hostnameAnnotationKey: "foo.example.org.",
 			},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "_foo._tcp.foo.example.org", Targets: endpoint.Targets{"0 50 30192 foo.example.org"}, RecordType: endpoint.RecordTypeSRV},
-				{DNSName: "foo.example.org", Targets: endpoint.Targets{"10.0.1.1", "10.0.1.2"}, RecordType: endpoint.RecordTypeA},
-				{DNSName: "foo.example.org", Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
+				{Name: endpoint.NewEndpointNameCommon("_foo._tcp.foo.example.org"), Targets: endpoint.Targets{"0 50 30192 foo.example.org"}, RecordType: endpoint.RecordTypeSRV},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), Targets: endpoint.Targets{"10.0.1.1", "10.0.1.2"}, RecordType: endpoint.RecordTypeA},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
 			},
 			nodes: []*v1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1787,9 +1787,9 @@ func TestServiceSourceNodePortServices(t *testing.T) {
 				hostnameAnnotationKey: "foo.example.org.",
 			},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "_foo._tcp.foo.example.org", Targets: endpoint.Targets{"0 50 30192 foo.example.org"}, RecordType: endpoint.RecordTypeSRV},
-				{DNSName: "foo.example.org", Targets: endpoint.Targets{"54.10.11.2"}, RecordType: endpoint.RecordTypeA},
-				{DNSName: "foo.example.org", Targets: endpoint.Targets{"2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
+				{Name: endpoint.NewEndpointNameCommon("_foo._tcp.foo.example.org"), Targets: endpoint.Targets{"0 50 30192 foo.example.org"}, RecordType: endpoint.RecordTypeSRV},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), Targets: endpoint.Targets{"54.10.11.2"}, RecordType: endpoint.RecordTypeA},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), Targets: endpoint.Targets{"2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
 			},
 			nodes: []*v1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1829,9 +1829,9 @@ func TestServiceSourceNodePortServices(t *testing.T) {
 				hostnameAnnotationKey: "foo.example.org.",
 			},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "_foo._tcp.foo.example.org", Targets: endpoint.Targets{"0 50 30192 foo.example.org"}, RecordType: endpoint.RecordTypeSRV},
-				{DNSName: "foo.example.org", Targets: endpoint.Targets{"54.10.11.2"}, RecordType: endpoint.RecordTypeA},
-				{DNSName: "foo.example.org", Targets: endpoint.Targets{"2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
+				{Name: endpoint.NewEndpointNameCommon("_foo._tcp.foo.example.org"), Targets: endpoint.Targets{"0 50 30192 foo.example.org"}, RecordType: endpoint.RecordTypeSRV},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), Targets: endpoint.Targets{"54.10.11.2"}, RecordType: endpoint.RecordTypeA},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), Targets: endpoint.Targets{"2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
 			},
 			nodes: []*v1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1872,9 +1872,9 @@ func TestServiceSourceNodePortServices(t *testing.T) {
 				accessAnnotationKey:   "private",
 			},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "_foo._tcp.foo.example.org", Targets: endpoint.Targets{"0 50 30192 foo.example.org"}, RecordType: endpoint.RecordTypeSRV},
-				{DNSName: "foo.example.org", Targets: endpoint.Targets{"10.0.1.1", "10.0.1.2"}, RecordType: endpoint.RecordTypeA},
-				{DNSName: "foo.example.org", Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
+				{Name: endpoint.NewEndpointNameCommon("_foo._tcp.foo.example.org"), Targets: endpoint.Targets{"0 50 30192 foo.example.org"}, RecordType: endpoint.RecordTypeSRV},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), Targets: endpoint.Targets{"10.0.1.1", "10.0.1.2"}, RecordType: endpoint.RecordTypeA},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
 			},
 			nodes: []*v1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1912,9 +1912,9 @@ func TestServiceSourceNodePortServices(t *testing.T) {
 				accessAnnotationKey:   "public",
 			},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "_foo._tcp.foo.example.org", Targets: endpoint.Targets{"0 50 30192 foo.example.org"}, RecordType: endpoint.RecordTypeSRV},
-				{DNSName: "foo.example.org", Targets: endpoint.Targets{"54.10.11.1", "54.10.11.2"}, RecordType: endpoint.RecordTypeA},
-				{DNSName: "foo.example.org", Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
+				{Name: endpoint.NewEndpointNameCommon("_foo._tcp.foo.example.org"), Targets: endpoint.Targets{"0 50 30192 foo.example.org"}, RecordType: endpoint.RecordTypeSRV},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), Targets: endpoint.Targets{"54.10.11.1", "54.10.11.2"}, RecordType: endpoint.RecordTypeA},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}, RecordType: endpoint.RecordTypeAAAA},
 			},
 			nodes: []*v1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1952,10 +1952,10 @@ func TestServiceSourceNodePortServices(t *testing.T) {
 				kopsDNSControllerInternalHostnameAnnotationKey: "internal.foo.example.org., internal.bar.example.org",
 			},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "internal.foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"10.0.1.1"}},
-				{DNSName: "internal.foo.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1"}},
-				{DNSName: "internal.bar.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"10.0.1.1"}},
-				{DNSName: "internal.bar.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1"}},
+				{Name: endpoint.NewEndpointNameCommon("internal.foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"10.0.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("internal.foo.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1"}},
+				{Name: endpoint.NewEndpointNameCommon("internal.bar.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"10.0.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("internal.bar.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1"}},
 			},
 			nodes: []*v1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1998,10 +1998,10 @@ func TestServiceSourceNodePortServices(t *testing.T) {
 				kopsDNSControllerInternalHostnameAnnotationKey: "internal.foo.example.org., internal.bar.example.org",
 			},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "internal.foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"10.0.1.1", "10.0.1.2"}},
-				{DNSName: "internal.foo.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}},
-				{DNSName: "internal.bar.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"10.0.1.1", "10.0.1.2"}},
-				{DNSName: "internal.bar.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}},
+				{Name: endpoint.NewEndpointNameCommon("internal.foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"10.0.1.1", "10.0.1.2"}},
+				{Name: endpoint.NewEndpointNameCommon("internal.foo.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}},
+				{Name: endpoint.NewEndpointNameCommon("internal.bar.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"10.0.1.1", "10.0.1.2"}},
+				{Name: endpoint.NewEndpointNameCommon("internal.bar.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}},
 			},
 			nodes: []*v1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
@@ -2044,10 +2044,10 @@ func TestServiceSourceNodePortServices(t *testing.T) {
 				kopsDNSControllerHostnameAnnotationKey: "foo.example.org., bar.example.org",
 			},
 			expected: []*endpoint.Endpoint{
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"54.10.11.1", "54.10.11.2"}},
-				{DNSName: "foo.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}},
-				{DNSName: "bar.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"54.10.11.1", "54.10.11.2"}},
-				{DNSName: "bar.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"54.10.11.1", "54.10.11.2"}},
+				{Name: endpoint.NewEndpointNameCommon("foo.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}},
+				{Name: endpoint.NewEndpointNameCommon("bar.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"54.10.11.1", "54.10.11.2"}},
+				{Name: endpoint.NewEndpointNameCommon("bar.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:DB8::1", "2001:DB8::2"}},
 			},
 			nodes: []*v1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
@@ -2270,9 +2270,9 @@ func TestHeadlessServices(t *testing.T) {
 			false,
 			[]v1.Node{},
 			[]*endpoint.Endpoint{
-				{DNSName: "foo-0.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
-				{DNSName: "foo-1.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.2"}},
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-0.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-1.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.2"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
 			},
 			false,
 		},
@@ -2303,9 +2303,9 @@ func TestHeadlessServices(t *testing.T) {
 			false,
 			[]v1.Node{},
 			[]*endpoint.Endpoint{
-				{DNSName: "foo-0.service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1"}},
-				{DNSName: "foo-1.service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::2"}},
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1", "2001:db8::2"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-0.service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-1.service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::2"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1", "2001:db8::2"}},
 			},
 			false,
 		},
@@ -2366,9 +2366,9 @@ func TestHeadlessServices(t *testing.T) {
 			false,
 			[]v1.Node{},
 			[]*endpoint.Endpoint{
-				{DNSName: "foo-0.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}, RecordTTL: endpoint.TTL(1)},
-				{DNSName: "foo-1.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.2"}, RecordTTL: endpoint.TTL(1)},
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}, RecordTTL: endpoint.TTL(1)},
+				{Name: endpoint.NewEndpointNameCommon("foo-0.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}, RecordTTL: endpoint.TTL(1)},
+				{Name: endpoint.NewEndpointNameCommon("foo-1.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.2"}, RecordTTL: endpoint.TTL(1)},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}, RecordTTL: endpoint.TTL(1)},
 			},
 			false,
 		},
@@ -2400,9 +2400,9 @@ func TestHeadlessServices(t *testing.T) {
 			false,
 			[]v1.Node{},
 			[]*endpoint.Endpoint{
-				{DNSName: "foo-0.service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1"}, RecordTTL: endpoint.TTL(1)},
-				{DNSName: "foo-1.service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::2"}, RecordTTL: endpoint.TTL(1)},
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1", "2001:db8::2"}, RecordTTL: endpoint.TTL(1)},
+				{Name: endpoint.NewEndpointNameCommon("foo-0.service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1"}, RecordTTL: endpoint.TTL(1)},
+				{Name: endpoint.NewEndpointNameCommon("foo-1.service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::2"}, RecordTTL: endpoint.TTL(1)},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1", "2001:db8::2"}, RecordTTL: endpoint.TTL(1)},
 			},
 			false,
 		},
@@ -2433,8 +2433,8 @@ func TestHeadlessServices(t *testing.T) {
 			false,
 			[]v1.Node{},
 			[]*endpoint.Endpoint{
-				{DNSName: "foo-0.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-0.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
 			},
 			false,
 		},
@@ -2465,9 +2465,9 @@ func TestHeadlessServices(t *testing.T) {
 			true,
 			[]v1.Node{},
 			[]*endpoint.Endpoint{
-				{DNSName: "foo-0.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
-				{DNSName: "foo-1.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.2"}},
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-0.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-1.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.2"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
 			},
 			false,
 		},
@@ -2498,7 +2498,7 @@ func TestHeadlessServices(t *testing.T) {
 			false,
 			[]v1.Node{},
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
 			},
 			false,
 		},
@@ -2529,7 +2529,7 @@ func TestHeadlessServices(t *testing.T) {
 			false,
 			[]v1.Node{},
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
 			},
 			false,
 		},
@@ -2560,7 +2560,7 @@ func TestHeadlessServices(t *testing.T) {
 			false,
 			[]v1.Node{},
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1", "2001:db8::2"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1", "2001:db8::2"}},
 			},
 			false,
 		},
@@ -2593,7 +2593,7 @@ func TestHeadlessServices(t *testing.T) {
 			false,
 			[]v1.Node{},
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 			false,
 		},
@@ -2626,7 +2626,7 @@ func TestHeadlessServices(t *testing.T) {
 			false,
 			[]v1.Node{},
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::4"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::4"}},
 			},
 			false,
 		},
@@ -2669,7 +2669,7 @@ func TestHeadlessServices(t *testing.T) {
 				},
 			},
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 			false,
 		},
@@ -2712,7 +2712,7 @@ func TestHeadlessServices(t *testing.T) {
 				},
 			},
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::4"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::4"}},
 			},
 			false,
 		},
@@ -2759,8 +2759,8 @@ func TestHeadlessServices(t *testing.T) {
 				},
 			},
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::4"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::4"}},
 			},
 			false,
 		},
@@ -2792,7 +2792,7 @@ func TestHeadlessServices(t *testing.T) {
 			false,
 			[]v1.Node{},
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.2.3.4"}},
 			},
 			false,
 		},
@@ -2824,7 +2824,7 @@ func TestHeadlessServices(t *testing.T) {
 			false,
 			[]v1.Node{},
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::4"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::4"}},
 			},
 			false,
 		},
@@ -2997,9 +2997,9 @@ func TestHeadlessServicesHostIP(t *testing.T) {
 			},
 			false,
 			[]*endpoint.Endpoint{
-				{DNSName: "foo-0.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
-				{DNSName: "foo-1.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.2"}},
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-0.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-1.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.2"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
 			},
 			false,
 		},
@@ -3031,9 +3031,9 @@ func TestHeadlessServicesHostIP(t *testing.T) {
 			},
 			false,
 			[]*endpoint.Endpoint{
-				{DNSName: "foo-0.service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1"}},
-				{DNSName: "foo-1.service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::2"}},
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1", "2001:db8::2"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-0.service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-1.service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::2"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1", "2001:db8::2"}},
 			},
 			false,
 		},
@@ -3096,9 +3096,9 @@ func TestHeadlessServicesHostIP(t *testing.T) {
 			},
 			false,
 			[]*endpoint.Endpoint{
-				{DNSName: "foo-0.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}, RecordTTL: endpoint.TTL(1)},
-				{DNSName: "foo-1.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.2"}, RecordTTL: endpoint.TTL(1)},
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}, RecordTTL: endpoint.TTL(1)},
+				{Name: endpoint.NewEndpointNameCommon("foo-0.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}, RecordTTL: endpoint.TTL(1)},
+				{Name: endpoint.NewEndpointNameCommon("foo-1.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.2"}, RecordTTL: endpoint.TTL(1)},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}, RecordTTL: endpoint.TTL(1)},
 			},
 			false,
 		},
@@ -3131,9 +3131,9 @@ func TestHeadlessServicesHostIP(t *testing.T) {
 			},
 			false,
 			[]*endpoint.Endpoint{
-				{DNSName: "foo-0.service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1"}, RecordTTL: endpoint.TTL(1)},
-				{DNSName: "foo-1.service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::2"}, RecordTTL: endpoint.TTL(1)},
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1", "2001:db8::2"}, RecordTTL: endpoint.TTL(1)},
+				{Name: endpoint.NewEndpointNameCommon("foo-0.service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1"}, RecordTTL: endpoint.TTL(1)},
+				{Name: endpoint.NewEndpointNameCommon("foo-1.service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::2"}, RecordTTL: endpoint.TTL(1)},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1", "2001:db8::2"}, RecordTTL: endpoint.TTL(1)},
 			},
 			false,
 		},
@@ -3165,8 +3165,8 @@ func TestHeadlessServicesHostIP(t *testing.T) {
 			},
 			false,
 			[]*endpoint.Endpoint{
-				{DNSName: "foo-0.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-0.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
 			},
 			false,
 		},
@@ -3198,9 +3198,9 @@ func TestHeadlessServicesHostIP(t *testing.T) {
 			},
 			true,
 			[]*endpoint.Endpoint{
-				{DNSName: "foo-0.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
-				{DNSName: "foo-1.service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.2"}},
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-0.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1"}},
+				{Name: endpoint.NewEndpointNameCommon("foo-1.service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.2"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
 			},
 			false,
 		},
@@ -3232,7 +3232,7 @@ func TestHeadlessServicesHostIP(t *testing.T) {
 			},
 			false,
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeA, Targets: endpoint.Targets{"1.1.1.1", "1.1.1.2"}},
 			},
 			false,
 		},
@@ -3264,7 +3264,7 @@ func TestHeadlessServicesHostIP(t *testing.T) {
 			},
 			false,
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1", "2001:db8::2"}},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), RecordType: endpoint.RecordTypeAAAA, Targets: endpoint.Targets{"2001:db8::1", "2001:db8::2"}},
 			},
 			false,
 		},
@@ -3435,7 +3435,7 @@ func TestExternalServices(t *testing.T) {
 			},
 			"111.111.111.111",
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", Targets: endpoint.Targets{"111.111.111.111"}, RecordType: endpoint.RecordTypeA},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), Targets: endpoint.Targets{"111.111.111.111"}, RecordType: endpoint.RecordTypeA},
 			},
 			false,
 		},
@@ -3454,7 +3454,7 @@ func TestExternalServices(t *testing.T) {
 			},
 			"2001:db8::111",
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", Targets: endpoint.Targets{"2001:db8::111"}, RecordType: endpoint.RecordTypeAAAA},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), Targets: endpoint.Targets{"2001:db8::111"}, RecordType: endpoint.RecordTypeAAAA},
 			},
 			false,
 		},
@@ -3473,7 +3473,7 @@ func TestExternalServices(t *testing.T) {
 			},
 			"remote.example.com",
 			[]*endpoint.Endpoint{
-				{DNSName: "service.example.org", Targets: endpoint.Targets{"remote.example.com"}, RecordType: endpoint.RecordTypeCNAME},
+				{Name: endpoint.NewEndpointNameCommon("service.example.org"), Targets: endpoint.Targets{"remote.example.com"}, RecordType: endpoint.RecordTypeCNAME},
 			},
 			false,
 		},

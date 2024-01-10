@@ -283,7 +283,9 @@ func (sc *gatewaySource) endpointsFromGateway(hostnames []string, gateway networ
 	providerSpecific, setIdentifier := getProviderSpecificAnnotations(annotations)
 
 	for _, host := range hostnames {
-		endpoints = append(endpoints, endpointsForHostname(host, targets, ttl, providerSpecific, setIdentifier)...)
+		endpoints = append(endpoints, endpointsForHostname(
+			endpoint.NewEndpointNameNoZone(host),
+			targets, ttl, providerSpecific, setIdentifier)...)
 	}
 
 	return endpoints, nil

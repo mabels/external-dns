@@ -117,11 +117,15 @@ func (p *RcodeZeroProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, 
 				if len(r.Records) > 1 {
 					for _, _r := range r.Records {
 						if !_r.Disabled {
-							endpoints = append(endpoints, endpoint.NewEndpointWithTTL(r.Name, r.Type, endpoint.TTL(r.TTL), _r.Content))
+							endpoints = append(endpoints, endpoint.NewEndpointWithTTL(
+								endpoint.NewEndpointName(r.Name, zone.Domain),
+								r.Type, endpoint.TTL(r.TTL), _r.Content))
 						}
 					}
 				} else if !r.Records[0].Disabled {
-					endpoints = append(endpoints, endpoint.NewEndpointWithTTL(r.Name, r.Type, endpoint.TTL(r.TTL), r.Records[0].Content))
+					endpoints = append(endpoints, endpoint.NewEndpointWithTTL(
+						endpoint.NewEndpointName(r.Name, zone.Domain),
+						r.Type, endpoint.TTL(r.TTL), r.Records[0].Content))
 				}
 			}
 		}
@@ -298,7 +302,7 @@ func (p *RcodeZeroProvider) NewRcodezeroChange(action string, endpoint *endpoint
 	change := &rc0.RRSetChange{
 		Type:       endpoint.RecordType,
 		ChangeType: action,
-		Name:       endpoint.DNSName,
+		Name:       endpoint.Name.Fqdn(),
 		Records: []*rc0.Record{{
 			Disabled: false,
 			Content:  endpoint.Targets[0],

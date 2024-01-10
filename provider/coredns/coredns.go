@@ -263,7 +263,7 @@ func NewCoreDNSProvider(domainFilter endpoint.DomainFilter, prefix string, dryRu
 // return Endpoint, otherwise it will return nil and a bool of false.
 func findEp(slice []*endpoint.Endpoint, dnsName string) (*endpoint.Endpoint, bool) {
 	for _, item := range slice {
-		if item.DNSName == dnsName {
+		if item.Name.Fqdn() == dnsName {
 			return item, true
 		}
 	}
@@ -334,12 +334,12 @@ func (p coreDNSProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, err
 func (p coreDNSProvider) ApplyChanges(ctx context.Context, changes *plan.Changes) error {
 	grouped := map[string][]*endpoint.Endpoint{}
 	for _, ep := range changes.Create {
-		grouped[ep.DNSName] = append(grouped[ep.DNSName], ep)
+		grouped[ep.Name.Fqdn()] = append(grouped[ep.Name.Fqdn()], ep)
 	}
 	for i, ep := range changes.UpdateNew {
 		ep.Labels = changes.UpdateOld[i].Labels
 		log.Debugf("Updating labels (%s) with old labels(%s)", ep.Labels, changes.UpdateOld[i].Labels)
-		grouped[ep.DNSName] = append(grouped[ep.DNSName], ep)
+		grouped[ep.Name.Fqdn()] = append(grouped[ep.Name.Fqdn()], ep)
 	}
 	for dnsName, group := range grouped {
 		if !p.domainFilter.Match(dnsName) {
@@ -384,7 +384,7 @@ func (p coreDNSProvider) ApplyChanges(ctx context.Context, changes *plan.Changes
 				log.Debugf("Finding label (%s) in targets(%v)", label, ep.Targets)
 				if _, ok := findLabelInTargets(ep.Targets, label); !ok {
 					log.Debugf("Found non existing label(%s) in targets(%v)", label, ep.Targets)
-					dnsName := ep.DNSName
+					dnsName := ep.Name.Fqdn()
 					dnsName = labelPrefix + "." + dnsName
 					key := p.etcdKeyFor(dnsName)
 					log.Infof("Delete key %s", key)
@@ -433,7 +433,7 @@ func (p coreDNSProvider) ApplyChanges(ctx context.Context, changes *plan.Changes
 	}
 
 	for _, ep := range changes.Delete {
-		dnsName := ep.DNSName
+		dnsName := ep.Name.Fqdn()
 		if ep.Labels[randomPrefixLabel] != "" {
 			dnsName = ep.Labels[randomPrefixLabel] + "." + dnsName
 		}

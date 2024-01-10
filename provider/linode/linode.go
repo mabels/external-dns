@@ -129,14 +129,7 @@ func (p *LinodeProvider) Records(ctx context.Context) ([]*endpoint.Endpoint, err
 
 		for _, r := range records {
 			if provider.SupportedRecordType(string(r.Type)) {
-				name := fmt.Sprintf("%s.%s", r.Name, zone.Domain)
-
-				// root name is identified by the empty string and should be
-				// translated to zone name for the endpoint entry.
-				if r.Name == "" {
-					name = zone.Domain
-				}
-
+				name := endpoint.NewEndpointName(r.Name, zone.Domain)
 				endpoints = append(endpoints, endpoint.NewEndpointWithTTL(name, string(r.Type), endpoint.TTL(r.TTLSec), r.Target))
 			}
 		}
@@ -313,7 +306,7 @@ func (p *LinodeProvider) ApplyChanges(ctx context.Context, changes *plan.Changes
 				log.WithFields(log.Fields{
 					"zoneID":     zoneID,
 					"zoneName":   zone.Domain,
-					"dnsName":    ep.DNSName,
+					"dnsName":    ep.Name.Fqdn(),
 					"recordType": ep.RecordType,
 				}).Warn("Records found which should not exist")
 			}
@@ -360,7 +353,7 @@ func (p *LinodeProvider) ApplyChanges(ctx context.Context, changes *plan.Changes
 			if len(matchedRecords) == 0 {
 				log.WithFields(log.Fields{
 					"zoneID":     zoneID,
-					"dnsName":    ep.DNSName,
+					"dnsName":    ep.Name.Fqdn(),
 					"zoneName":   zone.Domain,
 					"recordType": ep.RecordType,
 				}).Warn("Update Records not found.")
@@ -381,7 +374,7 @@ func (p *LinodeProvider) ApplyChanges(ctx context.Context, changes *plan.Changes
 				if record, ok := matchedRecordsByTarget[target]; ok {
 					log.WithFields(log.Fields{
 						"zoneID":     zoneID,
-						"dnsName":    ep.DNSName,
+						"dnsName":    ep.Name.Fqdn(),
 						"zoneName":   zone.Domain,
 						"recordType": ep.RecordType,
 						"target":     target,
@@ -406,7 +399,7 @@ func (p *LinodeProvider) ApplyChanges(ctx context.Context, changes *plan.Changes
 					// Record did not previously exist, create new 'target'
 					log.WithFields(log.Fields{
 						"zoneID":     zoneID,
-						"dnsName":    ep.DNSName,
+						"dnsName":    ep.Name.Fqdn(),
 						"zoneName":   zone.Domain,
 						"recordType": ep.RecordType,
 						"target":     target,
@@ -431,7 +424,7 @@ func (p *LinodeProvider) ApplyChanges(ctx context.Context, changes *plan.Changes
 			for _, record := range matchedRecordsByTarget {
 				log.WithFields(log.Fields{
 					"zoneID":     zoneID,
-					"dnsName":    ep.DNSName,
+					"dnsName":    ep.Name.Fqdn(),
 					"zoneName":   zone.Domain,
 					"recordType": ep.RecordType,
 					"target":     record.Target,
@@ -465,7 +458,7 @@ func (p *LinodeProvider) ApplyChanges(ctx context.Context, changes *plan.Changes
 			if len(matchedRecords) == 0 {
 				log.WithFields(log.Fields{
 					"zoneID":     zoneID,
-					"dnsName":    ep.DNSName,
+					"dnsName":    ep.Name.Fqdn(),
 					"zoneName":   zone.Domain,
 					"recordType": ep.RecordType,
 				}).Warn("Records to Delete not found.")
@@ -491,9 +484,9 @@ func endpointsByZone(zoneNameIDMapper provider.ZoneIDName, endpoints []*endpoint
 	endpointsByZone := make(map[string][]endpoint.Endpoint)
 
 	for _, ep := range endpoints {
-		zoneID, _ := zoneNameIDMapper.FindZone(ep.DNSName)
+		zoneID, _ := zoneNameIDMapper.FindZone(ep.Name.Fqdn())
 		if zoneID == "" {
-			log.Debugf("Skipping record %s because no hosted zone matching record DNS Name was detected", ep.DNSName)
+			log.Debugf("Skipping record %s because no hosted zone matching record DNS Name was detected", ep.Name.Fqdn())
 			continue
 		}
 		endpointsByZone[zoneID] = append(endpointsByZone[zoneID], *ep)
@@ -521,11 +514,11 @@ func convertRecordType(recordType string) (linodego.DomainRecordType, error) {
 
 func getStrippedRecordName(zone linodego.Domain, ep endpoint.Endpoint) string {
 	// Handle root
-	if ep.DNSName == zone.Domain {
+	if ep.Name.Fqdn() == zone.Domain {
 		return ""
 	}
 
-	return strings.TrimSuffix(ep.DNSName, "."+zone.Domain)
+	return strings.TrimSuffix(ep.Name.Fqdn(), "."+zone.Domain)
 }
 
 func getRecordID(records []linodego.DomainRecord, zone linodego.Domain, ep endpoint.Endpoint) []linodego.DomainRecord {

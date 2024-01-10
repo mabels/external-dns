@@ -35,7 +35,8 @@ type Registry interface {
 	PropertyValuesEqual(attribute string, previous string, current string) bool
 	AdjustEndpoints(endpoints []*endpoint.Endpoint) []*endpoint.Endpoint
 	GetDomainFilter() endpoint.DomainFilterInterface
-	MissingRecords() []*endpoint.Endpoint
+	EnsureOwnerShipRecords(endpoints []*endpoint.Endpoint) []*endpoint.Endpoint
+	// RemoveUnownedRecords(registry, source []*endpoint.Endpoint) ([]*endpoint.Endpoint, []*endpoint.Endpoint)
 }
 
 // TODO(ideahitme): consider moving this to Plan

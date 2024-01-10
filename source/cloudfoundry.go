@@ -55,7 +55,9 @@ func (rs *cloudfoundrySource) Endpoints(ctx context.Context) ([]*endpoint.Endpoi
 		routes, _ := rs.client.ListRoutesByQuery(q)
 		for _, element := range routes {
 			endpoints = append(endpoints,
-				endpoint.NewEndpointWithTTL(element.Host+"."+domain.Name, endpoint.RecordTypeCNAME, 300, u.Host))
+				endpoint.NewEndpointWithTTL(
+					endpoint.NewEndpointName(element.Host, domain.Name),
+					endpoint.RecordTypeCNAME, 300, u.Host))
 		}
 	}
 

@@ -255,7 +255,7 @@ func NewPDNSProvider(ctx context.Context, config PDNSConfig) (*PDNSProvider, err
 	return provider, nil
 }
 
-func (p *PDNSProvider) convertRRSetToEndpoints(rr pgo.RrSet) (endpoints []*endpoint.Endpoint, _ error) {
+func (p *PDNSProvider) convertRRSetToEndpoints(rr pgo.RrSet, zone string) (endpoints []*endpoint.Endpoint, _ error) {
 	endpoints = []*endpoint.Endpoint{}
 	targets := []string{}
 
@@ -266,7 +266,9 @@ func (p *PDNSProvider) convertRRSetToEndpoints(rr pgo.RrSet) (endpoints []*endpo
 		}
 	}
 
-	endpoints = append(endpoints, endpoint.NewEndpointWithTTL(rr.Name, rr.Type_, endpoint.TTL(rr.Ttl), targets...))
+	endpoints = append(endpoints, endpoint.NewEndpointWithTTL(
+		endpoint.NewEndpointName(rr.Name, zone),
+		rr.Type_, endpoint.TTL(rr.Ttl), targets...))
 	return endpoints, nil
 }
 
@@ -280,10 +282,10 @@ func (p *PDNSProvider) ConvertEndpointsToZones(eps []*endpoint.Endpoint, changet
 	sort.SliceStable(endpoints,
 		func(i, j int) bool {
 			// We only care about sorting endpoints with the same dnsname
-			if endpoints[i].DNSName == endpoints[j].DNSName {
+			if endpoints[i].Name.Fqdn() == endpoints[j].Name.Fqdn() {
 				return endpoints[i].RecordType < endpoints[j].RecordType
 			}
-			return endpoints[i].DNSName < endpoints[j].DNSName
+			return endpoints[i].Name.Fqdn() < endpoints[j].Name.Fqdn()
 		})
 
 	zones, _, err := p.client.ListZones()
@@ -305,7 +307,7 @@ func (p *PDNSProvider) ConvertEndpointsToZones(eps []*endpoint.Endpoint, changet
 		zone.Rrsets = []pgo.RrSet{}
 		for i := 0; i < len(endpoints); {
 			ep := endpoints[i]
-			dnsname := provider.EnsureTrailingDot(ep.DNSName)
+			dnsname := provider.EnsureTrailingDot(ep.Name.FqdnDot())
 			if dnsname == zone.Name || strings.HasSuffix(dnsname, "."+zone.Name) {
 				// The assumption here is that there will only ever be one target
 				// per (ep.DNSName, ep.RecordType) tuple, which holds true for
@@ -356,7 +358,7 @@ func (p *PDNSProvider) ConvertEndpointsToZones(eps []*endpoint.Endpoint, changet
 	for _, zone := range residualZones {
 		for i := 0; i < len(endpoints); {
 			ep := endpoints[i]
-			dnsname := provider.EnsureTrailingDot(ep.DNSName)
+			dnsname := provider.EnsureTrailingDot(ep.Name.FqdnDot())
 			if dnsname == zone.Name || strings.HasSuffix(dnsname, "."+zone.Name) {
 				// "pop" endpoint if it's matched to a residual zone... essentially a no-op
 				log.Debugf("Ignoring Endpoint because it was matched to a zone that was not specified within Domain Filter(s): %s", dnsname)
@@ -415,7 +417,7 @@ func (p *PDNSProvider) Records(ctx context.Context) (endpoints []*endpoint.Endpo
 		}
 
 		for _, rr := range z.Rrsets {
-			e, err := p.convertRRSetToEndpoints(rr)
+			e, err := p.convertRRSetToEndpoints(rr, z.Name)
 			if err != nil {
 				return nil, err
 			}

@@ -310,7 +310,7 @@ func AssertActions(t *testing.T, provider *CloudFlareProvider, endpoints []*endp
 		ManagedRecords: managedRecords,
 	}
 
-	plan, err = plan.CalculateWithError()
+	plan, err = plan.Calculate()
 	if err != nil {
 		t.Fatalf("cannot calculate plan, %s", err)
 	}
@@ -336,7 +336,7 @@ func TestCloudflareA(t *testing.T) {
 	endpoints := []*endpoint.Endpoint{
 		{
 			RecordType: "A",
-			DNSName:    "bar.com",
+			Name:       endpoint.NewEndpointNameCommon("bar.com"),
 			Targets:    endpoint.Targets{"127.0.0.1", "127.0.0.2"},
 		},
 	}
@@ -373,7 +373,7 @@ func TestCloudflareCname(t *testing.T) {
 	endpoints := []*endpoint.Endpoint{
 		{
 			RecordType: "CNAME",
-			DNSName:    "cname.bar.com",
+			Name:       endpoint.NewEndpointNameCommon("cname.bar.com"),
 			// it's not possible to have multiple targets for a CNAME record
 			Targets: endpoint.Targets{"google.com" /* , "facebook.com" */},
 		},
@@ -400,7 +400,7 @@ func TestCloudflareCustomTTL(t *testing.T) {
 	endpoints := []*endpoint.Endpoint{
 		{
 			RecordType: "A",
-			DNSName:    "ttl.bar.com",
+			Name:       endpoint.NewEndpointNameCommon("ttl.bar.com"),
 			Targets:    endpoint.Targets{"127.0.0.1"},
 			RecordTTL:  120,
 		},
@@ -427,7 +427,7 @@ func TestCloudflareProxiedDefault(t *testing.T) {
 	endpoints := []*endpoint.Endpoint{
 		{
 			RecordType: "A",
-			DNSName:    "bar.com",
+			Name:       endpoint.NewEndpointNameCommon("bar.com"),
 			Targets:    endpoint.Targets{"127.0.0.1"},
 		},
 	}
@@ -453,7 +453,7 @@ func TestCloudflareProxiedOverrideTrue(t *testing.T) {
 	endpoints := []*endpoint.Endpoint{
 		{
 			RecordType: "A",
-			DNSName:    "bar.com",
+			Name:       endpoint.NewEndpointNameCommon("bar.com"),
 			Targets:    endpoint.Targets{"127.0.0.1"},
 			ProviderSpecific: endpoint.ProviderSpecific{
 				endpoint.ProviderSpecificProperty{
@@ -485,7 +485,7 @@ func TestCloudflareProxiedOverrideFalse(t *testing.T) {
 	endpoints := []*endpoint.Endpoint{
 		{
 			RecordType: "A",
-			DNSName:    "bar.com",
+			Name:       endpoint.NewEndpointNameCommon("bar.com"),
 			Targets:    endpoint.Targets{"127.0.0.1"},
 			ProviderSpecific: endpoint.ProviderSpecific{
 				endpoint.ProviderSpecificProperty{
@@ -517,7 +517,7 @@ func TestCloudflareProxiedOverrideIllegal(t *testing.T) {
 	endpoints := []*endpoint.Endpoint{
 		{
 			RecordType: "A",
-			DNSName:    "bar.com",
+			Name:       endpoint.NewEndpointNameCommon("bar.com"),
 			Targets:    endpoint.Targets{"127.0.0.1"},
 			ProviderSpecific: endpoint.ProviderSpecific{
 				endpoint.ProviderSpecificProperty{
@@ -568,7 +568,7 @@ func TestCloudflareSetProxied(t *testing.T) {
 		endpoints := []*endpoint.Endpoint{
 			{
 				RecordType: testCase.recordType,
-				DNSName:    testCase.domain,
+				Name:       endpoint.NewEndpointNameCommon(testCase.domain),
 				Targets:    endpoint.Targets{"127.0.0.1"},
 				ProviderSpecific: endpoint.ProviderSpecific{
 					endpoint.ProviderSpecificProperty{
@@ -722,22 +722,22 @@ func TestCloudflareApplyChanges(t *testing.T) {
 		Client: client,
 	}
 	changes.Create = []*endpoint.Endpoint{{
-		DNSName: "new.bar.com",
+		Name:    endpoint.NewEndpointNameCommon("new.bar.com"),
 		Targets: endpoint.Targets{"target"},
 	}, {
-		DNSName: "new.ext-dns-test.unrelated.to",
+		Name:    endpoint.NewEndpointNameCommon("new.ext-dns-test.unrelated.to"),
 		Targets: endpoint.Targets{"target"},
 	}}
 	changes.Delete = []*endpoint.Endpoint{{
-		DNSName: "foobar.bar.com",
+		Name:    endpoint.NewEndpointNameCommon("foobar.bar.com"),
 		Targets: endpoint.Targets{"target"},
 	}}
 	changes.UpdateOld = []*endpoint.Endpoint{{
-		DNSName: "foobar.bar.com",
+		Name:    endpoint.NewEndpointNameCommon("foobar.bar.com"),
 		Targets: endpoint.Targets{"target-old"},
 	}}
 	changes.UpdateNew = []*endpoint.Endpoint{{
-		DNSName: "foobar.bar.com",
+		Name:    endpoint.NewEndpointNameCommon("foobar.bar.com"),
 		Targets: endpoint.Targets{"target-new"},
 	}}
 	err := provider.ApplyChanges(context.Background(), changes)
@@ -855,7 +855,7 @@ func TestCloudflareGroupByNameAndType(t *testing.T) {
 			},
 			ExpectedEndpoints: []*endpoint.Endpoint{
 				{
-					DNSName:    "foo.com",
+					Name:       endpoint.NewEndpointNameCommon("foo.com"),
 					Targets:    endpoint.Targets{"10.10.10.1"},
 					RecordType: endpoint.RecordTypeA,
 					RecordTTL:  endpoint.TTL(defaultCloudFlareRecordTTL),
@@ -889,7 +889,7 @@ func TestCloudflareGroupByNameAndType(t *testing.T) {
 			},
 			ExpectedEndpoints: []*endpoint.Endpoint{
 				{
-					DNSName:    "foo.com",
+					Name:       endpoint.NewEndpointNameCommon("foo.com"),
 					Targets:    endpoint.Targets{"10.10.10.1", "10.10.10.2"},
 					RecordType: endpoint.RecordTypeA,
 					RecordTTL:  endpoint.TTL(defaultCloudFlareRecordTTL),
@@ -937,7 +937,7 @@ func TestCloudflareGroupByNameAndType(t *testing.T) {
 			},
 			ExpectedEndpoints: []*endpoint.Endpoint{
 				{
-					DNSName:    "foo.com",
+					Name:       endpoint.NewEndpointNameCommon("foo.com"),
 					Targets:    endpoint.Targets{"10.10.10.1", "10.10.10.2"},
 					RecordType: endpoint.RecordTypeA,
 					RecordTTL:  endpoint.TTL(defaultCloudFlareRecordTTL),
@@ -950,7 +950,7 @@ func TestCloudflareGroupByNameAndType(t *testing.T) {
 					},
 				},
 				{
-					DNSName:    "bar.de",
+					Name:       endpoint.NewEndpointNameCommon("bar.de"),
 					Targets:    endpoint.Targets{"10.10.10.1", "10.10.10.2"},
 					RecordType: endpoint.RecordTypeA,
 					RecordTTL:  endpoint.TTL(defaultCloudFlareRecordTTL),
@@ -991,7 +991,7 @@ func TestCloudflareGroupByNameAndType(t *testing.T) {
 			},
 			ExpectedEndpoints: []*endpoint.Endpoint{
 				{
-					DNSName:    "foo.com",
+					Name:       endpoint.NewEndpointNameCommon("foo.com"),
 					Targets:    endpoint.Targets{"10.10.10.1", "10.10.10.2"},
 					RecordType: endpoint.RecordTypeA,
 					RecordTTL:  endpoint.TTL(defaultCloudFlareRecordTTL),
@@ -1004,7 +1004,7 @@ func TestCloudflareGroupByNameAndType(t *testing.T) {
 					},
 				},
 				{
-					DNSName:    "bar.de",
+					Name:       endpoint.NewEndpointNameCommon("bar.de"),
 					Targets:    endpoint.Targets{"10.10.10.1"},
 					RecordType: endpoint.RecordTypeA,
 					RecordTTL:  endpoint.TTL(defaultCloudFlareRecordTTL),
@@ -1045,7 +1045,7 @@ func TestCloudflareGroupByNameAndType(t *testing.T) {
 			},
 			ExpectedEndpoints: []*endpoint.Endpoint{
 				{
-					DNSName:    "foo.com",
+					Name:       endpoint.NewEndpointNameCommon("foo.com"),
 					Targets:    endpoint.Targets{"10.10.10.1", "10.10.10.2"},
 					RecordType: endpoint.RecordTypeA,
 					RecordTTL:  endpoint.TTL(defaultCloudFlareRecordTTL),
@@ -1133,7 +1133,7 @@ func TestProviderPropertiesIdempotency(t *testing.T) {
 			for _, c := range current {
 				// Copy all except ProviderSpecific fields
 				desired = append(desired, &endpoint.Endpoint{
-					DNSName:       c.DNSName,
+					Name:          c.Name,
 					Targets:       c.Targets,
 					RecordType:    c.RecordType,
 					SetIdentifier: c.SetIdentifier,
@@ -1155,7 +1155,7 @@ func TestProviderPropertiesIdempotency(t *testing.T) {
 				ManagedRecords:     []string{endpoint.RecordTypeA, endpoint.RecordTypeCNAME},
 			}
 
-			plan, err = plan.CalculateWithError()
+			plan, err = plan.Calculate()
 			assert.NoError(t, err, "should not fail")
 
 			assert.NotNil(t, plan.Changes, "should have plan")
@@ -1195,7 +1195,7 @@ func TestCloudflareComplexUpdate(t *testing.T) {
 		Current: records,
 		Desired: []*endpoint.Endpoint{
 			{
-				DNSName:    "foobar.bar.com",
+				Name:       endpoint.NewEndpointNameCommon("foobar.bar.com"),
 				Targets:    endpoint.Targets{"1.2.3.4", "2.3.4.5"},
 				RecordType: endpoint.RecordTypeA,
 				RecordTTL:  endpoint.TTL(defaultCloudFlareRecordTTL),
@@ -1212,7 +1212,7 @@ func TestCloudflareComplexUpdate(t *testing.T) {
 		ManagedRecords: []string{endpoint.RecordTypeA, endpoint.RecordTypeCNAME},
 	}
 
-	planned, err := plan.CalculateWithError()
+	planned, err := plan.Calculate()
 	if err != nil {
 		t.Errorf("should not fail, %s", err)
 	}
@@ -1281,7 +1281,7 @@ func TestCustomTTLWithEnabledProxyNotChanged(t *testing.T) {
 
 	endpoints := []*endpoint.Endpoint{
 		{
-			DNSName:    "foobar.bar.com",
+			Name:       endpoint.NewEndpointNameCommon("foobar.bar.com"),
 			Targets:    endpoint.Targets{"1.2.3.4"},
 			RecordType: endpoint.RecordTypeA,
 			RecordTTL:  300,
@@ -1304,7 +1304,7 @@ func TestCustomTTLWithEnabledProxyNotChanged(t *testing.T) {
 		ManagedRecords: []string{endpoint.RecordTypeA, endpoint.RecordTypeCNAME},
 	}
 
-	planned, err := plan.CalculateWithError()
+	planned, err := plan.Calculate()
 	if err != nil {
 		t.Errorf("should not fail, %s", err)
 	}

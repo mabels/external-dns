@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -102,20 +101,20 @@ func (p *TencentCloudProvider) ApplyChanges(ctx context.Context, changes *plan.C
 	return p.applyChangesForDNS(changes)
 }
 
-func getSubDomain(domain string, endpoint *endpoint.Endpoint) string {
-	name := endpoint.DNSName
-	name = name[:len(name)-len(domain)]
-	name = strings.TrimSuffix(name, ".")
+// func getSubDomain(domain string, endpoint *endpoint.Endpoint) endpoint.EndpointName {
+// 	name := endpoint.DNSName
+// 	name = name[:len(name)-len(domain)]
+// 	name = strings.TrimSuffix(name, ".")
 
-	if name == "" {
-		return TencentCloudEmptyPrefix
-	}
-	return name
-}
+// 	if name == "" {
+// 		return TencentCloudEmptyPrefix
+// 	}
+// 	return name
+// }
 
-func getDnsDomain(subDomain string, domain string) string {
-	if subDomain == TencentCloudEmptyPrefix {
-		return domain
-	}
-	return subDomain + "." + domain
-}
+// func getDnsDomain(subDomain string, domain string) endpoint.EndpointName {
+// 	if subDomain == TencentCloudEmptyPrefix {
+// 		return domain
+// 	}
+// 	return subDomain + "." + domain
+// }

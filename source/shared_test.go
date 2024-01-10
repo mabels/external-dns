@@ -31,8 +31,8 @@ func sortEndpoints(endpoints []*endpoint.Endpoint) {
 	sort.Slice(endpoints, func(i, k int) bool {
 		// Sort by DNSName, RecordType, and Targets
 		ei, ek := endpoints[i], endpoints[k]
-		if ei.DNSName != ek.DNSName {
-			return ei.DNSName < ek.DNSName
+		if ei.Name.Fqdn() != ek.Name.Fqdn() {
+			return ei.Name.Fqdn() < ek.Name.Fqdn()
 		}
 		if ei.RecordType != ek.RecordType {
 			return ei.RecordType < ek.RecordType
@@ -69,8 +69,8 @@ func validateEndpoints(t *testing.T, endpoints, expected []*endpoint.Endpoint) {
 func validateEndpoint(t *testing.T, endpoint, expected *endpoint.Endpoint) {
 	t.Helper()
 
-	if endpoint.DNSName != expected.DNSName {
-		t.Errorf("DNSName expected %q, got %q", expected.DNSName, endpoint.DNSName)
+	if endpoint.Name.Fqdn() != expected.Name.Fqdn() {
+		t.Errorf("DNSName expected %q, got %q", expected.Name.Fqdn(), endpoint.Name.Fqdn())
 	}
 
 	if !endpoint.Targets.Same(expected.Targets) {

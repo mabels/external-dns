@@ -352,14 +352,14 @@ func TestDigitalOceanApplyChanges(t *testing.T) {
 		Client: &mockDigitalOceanClient{},
 	}
 	changes.Create = []*endpoint.Endpoint{
-		{DNSName: "new.ext-dns-test.bar.com", Targets: endpoint.Targets{"target"}},
-		{DNSName: "new.ext-dns-test-with-ttl.bar.com", Targets: endpoint.Targets{"target"}, RecordTTL: 100},
-		{DNSName: "new.ext-dns-test.unexpected.com", Targets: endpoint.Targets{"target"}},
-		{DNSName: "bar.com", Targets: endpoint.Targets{"target"}},
+		{Name: endpoint.NewEndpointNameCommon("new.ext-dns-test.bar.com"), Targets: endpoint.Targets{"target"}},
+		{Name: endpoint.NewEndpointNameCommon("new.ext-dns-test-with-ttl.bar.com"), Targets: endpoint.Targets{"target"}, RecordTTL: 100},
+		{Name: endpoint.NewEndpointNameCommon("new.ext-dns-test.unexpected.com"), Targets: endpoint.Targets{"target"}},
+		{Name: endpoint.NewEndpointNameCommon("bar.com"), Targets: endpoint.Targets{"target"}},
 	}
-	changes.Delete = []*endpoint.Endpoint{{DNSName: "foobar.ext-dns-test.bar.com", Targets: endpoint.Targets{"target"}}}
-	changes.UpdateOld = []*endpoint.Endpoint{{DNSName: "foobar.ext-dns-test.bar.de", Targets: endpoint.Targets{"target-old"}}}
-	changes.UpdateNew = []*endpoint.Endpoint{{DNSName: "foobar.ext-dns-test.foo.com", Targets: endpoint.Targets{"target-new"}, RecordType: "CNAME", RecordTTL: 100}}
+	changes.Delete = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("foobar.ext-dns-test.bar.com"), Targets: endpoint.Targets{"target"}}}
+	changes.UpdateOld = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("foobar.ext-dns-test.bar.de"), Targets: endpoint.Targets{"target-old"}}}
+	changes.UpdateNew = []*endpoint.Endpoint{{Name: endpoint.NewEndpointNameCommon("foobar.ext-dns-test.foo.com"), Targets: endpoint.Targets{"target-new"}, RecordType: "CNAME", RecordTTL: 100}}
 	err := provider.ApplyChanges(context.Background(), changes)
 	if err != nil {
 		t.Errorf("should not fail, %s", err)
@@ -373,8 +373,8 @@ func TestDigitalOceanProcessCreateActions(t *testing.T) {
 
 	createsByDomain := map[string][]*endpoint.Endpoint{
 		"example.com": {
-			endpoint.NewEndpoint("foo.example.com", endpoint.RecordTypeA, "1.2.3.4"),
-			endpoint.NewEndpoint("example.com", endpoint.RecordTypeCNAME, "foo.example.com"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("foo.example.com"), endpoint.RecordTypeA, "1.2.3.4"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("example.com"), endpoint.RecordTypeCNAME, "foo.example.com"),
 		},
 	}
 
@@ -441,8 +441,8 @@ func TestDigitalOceanProcessUpdateActions(t *testing.T) {
 
 	updatesByDomain := map[string][]*endpoint.Endpoint{
 		"example.com": {
-			endpoint.NewEndpoint("foo.example.com", endpoint.RecordTypeA, "10.11.12.13"),
-			endpoint.NewEndpoint("example.com", endpoint.RecordTypeCNAME, "bar.example.com"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("foo.example.com"), endpoint.RecordTypeA, "10.11.12.13"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("example.com"), endpoint.RecordTypeCNAME, "bar.example.com"),
 		},
 	}
 
@@ -529,8 +529,8 @@ func TestDigitalOceanProcessDeleteActions(t *testing.T) {
 
 	deletesByDomain := map[string][]*endpoint.Endpoint{
 		"example.com": {
-			endpoint.NewEndpoint("foo.example.com", endpoint.RecordTypeA, "1.2.3.4"),
-			endpoint.NewEndpoint("example.com", endpoint.RecordTypeCNAME, "foo.example.com"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("foo.example.com"), endpoint.RecordTypeA, "1.2.3.4"),
+			endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("example.com"), endpoint.RecordTypeCNAME, "foo.example.com"),
 		},
 	}
 
@@ -599,13 +599,13 @@ func TestDigitalOceanGetMatchingDomainRecords(t *testing.T) {
 		},
 	}
 
-	ep1 := endpoint.NewEndpoint("foo.com", endpoint.RecordTypeCNAME)
+	ep1 := endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("foo.com"), endpoint.RecordTypeCNAME)
 	assert.Equal(t, 1, len(getMatchingDomainRecords(records, "com", ep1)))
 
-	ep2 := endpoint.NewEndpoint("foo.com", endpoint.RecordTypeA)
+	ep2 := endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("foo.com"), endpoint.RecordTypeA)
 	assert.Equal(t, 0, len(getMatchingDomainRecords(records, "com", ep2)))
 
-	ep3 := endpoint.NewEndpoint("baz.org", endpoint.RecordTypeA)
+	ep3 := endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("baz.org"), endpoint.RecordTypeA)
 	r := getMatchingDomainRecords(records, "org", ep3)
 	assert.Equal(t, 2, len(r))
 	assert.ElementsMatch(t, r, []godo.DomainRecord{
@@ -623,7 +623,7 @@ func TestDigitalOceanGetMatchingDomainRecords(t *testing.T) {
 		},
 	})
 
-	ep4 := endpoint.NewEndpoint("example.com", endpoint.RecordTypeA)
+	ep4 := endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("example.com"), endpoint.RecordTypeA)
 	r2 := getMatchingDomainRecords(records, "example.com", ep4)
 	assert.Equal(t, 1, len(r2))
 	assert.Equal(t, "9.10.11.12", r2[0].Data)
@@ -674,32 +674,32 @@ func TestDigitalOceanAllRecords(t *testing.T) {
 
 func TestDigitalOceanMergeRecordsByNameType(t *testing.T) {
 	xs := []*endpoint.Endpoint{
-		endpoint.NewEndpoint("foo.example.com", "A", "1.2.3.4"),
-		endpoint.NewEndpoint("bar.example.com", "A", "1.2.3.4"),
-		endpoint.NewEndpoint("foo.example.com", "A", "5.6.7.8"),
-		endpoint.NewEndpoint("foo.example.com", "CNAME", "somewhere.out.there.com"),
+		endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("foo.example.com"), "A", "1.2.3.4"),
+		endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("bar.example.com"), "A", "1.2.3.4"),
+		endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("foo.example.com"), "A", "5.6.7.8"),
+		endpoint.NewEndpoint(endpoint.NewEndpointNameCommon("foo.example.com"), "CNAME", "somewhere.out.there.com"),
 	}
 
 	merged := mergeEndpointsByNameType(xs)
 
 	assert.Equal(t, 3, len(merged))
 	sort.SliceStable(merged, func(i, j int) bool {
-		if merged[i].DNSName != merged[j].DNSName {
-			return merged[i].DNSName < merged[j].DNSName
+		if merged[i].Name.Fqdn() != merged[j].Name.Fqdn() {
+			return merged[i].Name.Fqdn() < merged[j].Name.Fqdn()
 		}
 		return merged[i].RecordType < merged[j].RecordType
 	})
-	assert.Equal(t, "bar.example.com", merged[0].DNSName)
+	assert.Equal(t, "bar.example.com", merged[0].Name.Fqdn())
 	assert.Equal(t, "A", merged[0].RecordType)
 	assert.Equal(t, 1, len(merged[0].Targets))
 	assert.Equal(t, "1.2.3.4", merged[0].Targets[0])
 
-	assert.Equal(t, "foo.example.com", merged[1].DNSName)
+	assert.Equal(t, "foo.example.com", merged[1].Name.Fqdn())
 	assert.Equal(t, "A", merged[1].RecordType)
 	assert.Equal(t, 2, len(merged[1].Targets))
 	assert.ElementsMatch(t, []string{"1.2.3.4", "5.6.7.8"}, merged[1].Targets)
 
-	assert.Equal(t, "foo.example.com", merged[2].DNSName)
+	assert.Equal(t, "foo.example.com", merged[2].Name.Fqdn())
 	assert.Equal(t, "CNAME", merged[2].RecordType)
 	assert.Equal(t, 1, len(merged[2].Targets))
 	assert.Equal(t, "somewhere.out.there.com", merged[2].Targets[0])

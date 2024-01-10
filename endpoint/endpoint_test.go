@@ -21,16 +21,16 @@ import (
 )
 
 func TestNewEndpoint(t *testing.T) {
-	e := NewEndpoint("example.org", "CNAME", "foo.com")
-	if e.DNSName != "example.org" || e.Targets[0] != "foo.com" || e.RecordType != "CNAME" {
+	e := NewEndpoint(NewEndpointName("example.org", "example.org"), "CNAME", "foo.com")
+	if e.Name.Fqdn() != "example.org" || e.Targets[0] != "foo.com" || e.RecordType != "CNAME" {
 		t.Error("endpoint is not initialized correctly")
 	}
 	if e.Labels == nil {
 		t.Error("Labels is not initialized")
 	}
 
-	w := NewEndpoint("example.org.", "", "load-balancer.com.")
-	if w.DNSName != "example.org" || w.Targets[0] != "load-balancer.com" || w.RecordType != "" {
+	w := NewEndpoint(NewEndpointName("example.org.", "example.org"), "", "load-balancer.com.")
+	if w.Name.Fqdn() != "example.org" || w.Targets[0] != "load-balancer.com." || w.RecordType != "" {
 		t.Error("endpoint is not initialized correctly")
 	}
 }
